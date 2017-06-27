@@ -29,7 +29,9 @@
 #include "inc/hw_types.h"
 #include "driverlib/gpio.h"
 #include "driverlib/rom.h"
+#ifdef  RGB
 #include "drivers/rgb.h"
+#endif
 #include "drivers/buttons.h"
 #include "utils/uartstdio.h"
 #include "led_task.h"
@@ -134,8 +136,9 @@ LEDTask(void *pvParameters)
                 //
                 // Configure the new LED settings.
                 //
+#ifdef RGB
                 RGBColorSet(g_pui32Colors);
-
+#endif
                 //
                 // Guard UART from concurrent access. Print the currently
                 // blinking LED.
@@ -170,8 +173,9 @@ LEDTask(void *pvParameters)
         //
         // Turn on the LED.
         //
+#ifdef RGB
         RGBEnable();
-
+#endif
         //
         // Wait for the required amount of time.
         //
@@ -180,8 +184,9 @@ LEDTask(void *pvParameters)
         //
         // Turn off the LED.
         //
+#ifdef RGB
         RGBDisable();
-
+#endif
         //
         // Wait for the required amount of time.
         //
@@ -200,16 +205,18 @@ LEDTaskInit(void)
     //
     // Initialize the GPIOs and Timers that drive the three LEDs.
     //
+#ifdef RGB
     RGBInit(1);
     RGBIntensitySet(0.3f);
-
+#endif
     //
     // Turn on the Green LED
     //
     g_ui8ColorsIndx = 0;
     g_pui32Colors[g_ui8ColorsIndx] = 0x8000;
+#ifdef RGB
     RGBColorSet(g_pui32Colors);
-
+#endif
     //
     // Print the current loggling LED and frequency.
     //
