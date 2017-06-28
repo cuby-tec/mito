@@ -5,9 +5,19 @@
  *      Author: walery
  */
 
-
 #include <stdint.h>
 #include <stdbool.h>
+
+#include "inc/hw_gpio.h"
+#include "inc/hw_types.h"
+#include "driverlib/rom.h"
+#include "driverlib/rom_map.h"
+#include "driverlib/sysctl.h"
+#include "driverlib/pin_map.h"
+#include "driverlib/timer.h"
+#include "driverlib/gpio.h"
+#include "driverlib/interrupt.h"
+
 #include "inc/hw_types.h"
 #include "inc/hw_memmap.h"
 #include "inc/hw_timer.h"
@@ -17,10 +27,6 @@
 #include "driverlib/rom.h"
 #include "driverlib/rom_map.h"
 #endif
-#include "driverlib/pin_map.h"
-#include "driverlib/timer.h"
-#include "driverlib/gpio.h"
-#include "driverlib/interrupt.h"
 
 
 #include "drivers/pinout.h"
@@ -39,6 +45,49 @@
 
 //-------------- function
 
+void rgb_enable(void){
+    //
+    // Configure the GPIO Pin Mux for PF1
+    // for T0CCP1
+    //
+//    MAP_GPIOPinConfigure(GPIO_PF1_T0CCP1);
+//    MAP_GPIOPinTypeTimer(GPIO_PORTF_BASE, GPIO_PIN_1);//red
+
+    //
+    // Configure the GPIO Pin Mux for PF2
+    // for T1CCP0
+    //
+    MAP_GPIOPinConfigure(GPIO_PF2_T1CCP0);
+    MAP_GPIOPinTypeTimer(GPIO_PORTF_BASE, GPIO_PIN_2);//blue
+
+    //
+    // Configure the GPIO Pin Mux for PF3
+    // for T1CCP1
+    //
+    MAP_GPIOPinConfigure(GPIO_PF3_T1CCP1);
+    MAP_GPIOPinTypeTimer(GPIO_PORTF_BASE, GPIO_PIN_3);//green
+}
+
+void rgb_disable(void){
+    //
+    // Configure the GPIO pads as general purpose inputs.
+    //
+//    ROM_GPIOPinTypeGPIOInput(RED_GPIO_BASE, RED_GPIO_PIN);
+    ROM_GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GREEN_GPIO_PIN);
+    ROM_GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, BLUE_GPIO_PIN);
+}
+
+// ISR WTIMER5======================
+void Timer_callback(void){
+    static uint32_t cnt_int = 0;
+    TimerIntClear(WTIMER5_BASE,TIMER_TIMB_MATCH+TIMER_TIMB_TIMEOUT);//TIMER_TIMB_TIMEOUT
+    cnt_int++;
+    if(( cnt_int & 1)){
+        rgb_enable();
+    }else{
+        rgb_disable();
+    }
+}
 
 //*****************************************************************************
 //
@@ -230,6 +279,20 @@ void msInit(uint32_t ui32Enable){
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN; //
     HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN; // green
     HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN; // blue
+
+
+    //
+    // Setup the blink functionality
+    //
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER5);
+    TimerConfigure(WTIMER5_BASE, TIMER_CFG_B_PERIODIC | TIMER_CFG_SPLIT_PAIR);
+    HWREG(WTIMER5_BASE + TIMER_O_TBMR) = 0x0012;
+//    ROM_TimerConfigure(WTIMER5_BASE, TIMER_CFG_B_PERIODIC);
+    TimerLoadSet64(WTIMER5_BASE, 0x00FFFFFFFFFFFFFF);
+    IntEnable(INT_WTIMER5B);
+    TimerIntEnable(WTIMER5_BASE, TIMER_TIMB_TIMEOUT);
+    TimerEnable(WTIMER5_BASE,TIMER_B);
+
 
 
 //    GPIOPinConfigure(GPIO_PF1_T0CCP1);

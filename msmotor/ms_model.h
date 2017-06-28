@@ -23,7 +23,7 @@
 //--------- vars
 extern stepper_state sts;
 
-extern uint32_t cnt_int;    // debug counter;
+//extern uint32_t cnt_int;    // debug counter;
 
 //-------- function
 

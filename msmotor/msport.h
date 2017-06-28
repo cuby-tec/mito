@@ -22,6 +22,11 @@
 #define TIMER_Z_AXIS_PERIPH     SYSCTL_PERIPH_TIMER2
 #define TIMER_E_AXIS_PERIPH     SYSCTL_PERIPH_TIMER2
 
+#define RED_GPIO_PIN            GPIO_PIN_1
+#define BLUE_GPIO_PIN           GPIO_PIN_2
+#define GREEN_GPIO_PIN          GPIO_PIN_3
+
+
 
 #define PORT_PULS_WIDTH     0x2F
 

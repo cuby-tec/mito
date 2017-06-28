@@ -186,6 +186,9 @@ main(void)
     //
     g_pUARTSemaphore = xSemaphoreCreateMutex();
 
+
+    msInit(0);
+
     //
     // Create the LED task.
     //
