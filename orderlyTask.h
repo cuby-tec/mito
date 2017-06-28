@@ -10,11 +10,17 @@
 
 //#include <sysbiosHeader.h>
 
+#include <stdint.h>
+
+#include "FreeRTOS.h"
+#include "task.h"
 
 
+//---------- vars
+extern TaskHandle_t orderlyHandling;
 
 //--------- Function
-extern void createtask_orderly(void);
+extern uint32_t createtask_orderly(void);
 
 
 #endif /* ORDERLYTASK_H_ */

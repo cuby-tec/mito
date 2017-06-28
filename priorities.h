@@ -32,6 +32,6 @@
 //*****************************************************************************
 #define PRIORITY_SWITCH_TASK    2
 #define PRIORITY_LED_TASK       1
-
+#define PRIORITY_ORDERLY_TASK   3
 
 #endif // __PRIORITIES_H__

@@ -211,6 +211,12 @@ main(void)
         }
     }
 
+    // Create orderly task.
+    if(createtask_orderly() != 0){
+        while(1){
+        }
+    }
+
     //
     // Start the scheduler.  This should not return.
     //

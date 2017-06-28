@@ -38,6 +38,12 @@
 //#include "xdc/runtime/Error.h"
 //#include "xdc/runtime/System.h"
 //#include "ti/sysbios/hal/Timer.h"
+
+#include "FreeRTOS.h"
+#include "task.h"
+#include "orderlyTask.h"
+
+
 //------------- defs
 
 //#define TIVA
@@ -83,9 +89,12 @@ void Timer_callback(void){
     TimerIntClear(WTIMER5_BASE,TIMER_TIMB_MATCH+TIMER_TIMB_TIMEOUT);//TIMER_TIMB_TIMEOUT
     cnt_int++;
     if(( cnt_int & 1)){
-        rgb_enable();
+//        rgb_enable();
+        xTaskNotifyFromISR(orderlyHandling,0x01,eSetBits,NULL);
+
     }else{
-        rgb_disable();
+//        rgb_disable();
+        xTaskNotifyFromISR(orderlyHandling,0x02,eSetBits,NULL);
     }
 }
 
