@@ -27,6 +27,7 @@
 #include "inc/hw_types.h"
 //#include "drivers/rgb.h"
 #include "msmotor/ms_init.h"
+#include "msmotor/ms_model.h"
 //*****************************************************************************
 //
 // Forward declaration of the default fault handlers.
@@ -109,7 +110,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Watchdog timer
     IntDefaultHandler,                      // Timer 0 subtimer A
     IntDefaultHandler,                      // Timer 0 subtimer B
-    IntDefaultHandler,                      // Timer 1 subtimer A
+    Timer_X_isr,                      // Timer 1 subtimer A
     IntDefaultHandler,                      // Timer 1 subtimer B
     IntDefaultHandler,                      // Timer 2 subtimer A
     IntDefaultHandler,                      // Timer 2 subtimer B

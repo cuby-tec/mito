@@ -83,6 +83,14 @@ void rgb_disable(void){
     ROM_GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, BLUE_GPIO_PIN);
 }
 
+
+void Timer_X_isr(void){
+    static uint32_t cnt_x;
+    TimerIntClear(TIMER_BASE_X_AXIS,TIMER_CAPA_EVENT);//TIMER_TIMB_TIMEOUT CAEIM
+    cnt_x++;
+
+}
+
 // ISR WTIMER5======================
 void Timer_callback(void){
     static uint32_t cnt_int = 0;
@@ -221,11 +229,15 @@ void msInit(uint32_t ui32Enable){
     //
     // Configure each timer for output mode
     //0x4 For a 16/32-bit timer, this value selects the 16-bit timer configuration.
-    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CFG) = 0x04;
-    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAMR) = 0x0A;   //
-    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = 0xFFFF;    //
-    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= 0x0040; //  TABPWML inverted
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TAEN; //
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CFG) = TIMER_CFG_16_BIT;
+//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAMR) = 0x0A|TIMER_TAMR_TAPWMIE;   //TIMER_TAMR_TAMR_PERIOD|TIMER_TAMR_TAAMS
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAMR) = TIMER_TAMR_TAMR_PERIOD|TIMER_TAMR_TAAMS|TIMER_TAMR_TAPWMIE;
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = 0x0FFF;    //
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAPWML|TIMER_CTL_TAEVENT_NEG; //  TABPWML inverted
     HWREG(TIMER_BASE_X_AXIS  + TIMER_O_TAMATCHR) = PORT_PULS_WIDTH;
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_IMR) = TIMER_IMR_CAEIM;
+    IntEnable(INT_TIMER1A); // NVIC register setup.
 
     HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CFG) = 0x04;
     HWREG(TIMER_BASE_Y_AXIS + TIMER_O_TBMR) = 0x0A;   //

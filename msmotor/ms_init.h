@@ -19,7 +19,13 @@
 //--------  function
 // extern void RGBInit(uint32_t ui32Enable);
 extern void msInit(uint32_t ui32Enable);
-void Timer_callback(void);
 
+extern void rgb_enable(void);
+
+extern void rgb_disable(void);
+
+extern void Timer_callback(void);
+
+extern void Timer_X_isr(void);
 
 #endif /* MSMOTOR_MS_INIT_H_ */

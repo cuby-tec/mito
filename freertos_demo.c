@@ -39,6 +39,8 @@
 #include "queue.h"
 #include "semphr.h"
 
+#include "orderlyTask.h"
+#include "msmotor/ms_init.h"
 //*****************************************************************************
 //
 //! \addtogroup example_list
@@ -199,6 +201,7 @@ main(void)
         {
         }
     }
+
 
     //
     // Create the switch task.

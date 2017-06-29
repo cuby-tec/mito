@@ -17,6 +17,8 @@
 
 #include "msmotor/block_state.h"
 #include "ms_model.h"
+#include "msport.h"
+
 
 #include "Ktf_model.h"
 #include "msmotor/mem_flash.h"
@@ -166,7 +168,7 @@ void testPrepare(void){
         break;
     }
 
-    TimerEnable(TIMER0_BASE, TIMER_B);
+//    TimerEnable(TIMER0_BASE, TIMER_B);
     TimerEnable(TIMER1_BASE, TIMER_BOTH);
 
 //  START_Y;
@@ -179,15 +181,14 @@ uint32_t cnt_int = 0;
 
 // Keep track of remainder from new_step-delay calculation to increase accuracy
 static unsigned int rest = 0;
-#define DEBUG_INT
+#define DEBUG_INT_no
 /**
  * Обработчик прерываний оси X
  */
 void axisX_intrrupt_handler(void){
 
-//    TimerIntClear(TIMER0_BASE, TIMER_CAPB_EVENT);
-//    ROM_TimerIntClear(WTIMER5_BASE,TIMER_TIMB_TIMEOUT);
-    TimerIntClear(WTIMER5_BASE, TIMER_TIMB_TIMEOUT);
+    TimerIntClear(TIMER_BASE_X_AXIS, TIMER_CAPA_EVENT);
+//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_ICR) |= TIMER_ICR_CAECINT;
 
 #ifdef DEBUG_INT
 //    uint32_t val;
@@ -219,7 +220,8 @@ void axisX_intrrupt_handler(void){
 //        System_printf("Load timer 0_B .\n");
     }
     else{
-        System_printf("Error:axisX_intrrupt_handler: sts.rate_y = %lu  \n",sts.rate_y);
+//        System_printf("Error:axisX_intrrupt_handler: sts.rate_y = %lu  \n",sts.rate_y);
+        while(1);
     }
 
 
