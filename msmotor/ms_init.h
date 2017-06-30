@@ -32,5 +32,7 @@ extern void Timer_Y_isr(void);
 
 extern void Timer_Z_isr(void);
 
+extern void Timer_E_isr(void);
+
 
 #endif /* MSMOTOR_MS_INIT_H_ */

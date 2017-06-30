@@ -113,7 +113,7 @@ void (* const g_pfnVectors[])(void) =
     Timer_X_isr,                      // Timer 1 subtimer A
     Timer_Y_isr,                      // Timer 1 subtimer B
     Timer_Z_isr,                      // Timer 2 subtimer A
-    IntDefaultHandler,                      // Timer 2 subtimer B
+    Timer_E_isr,                      // Timer 2 subtimer B
     IntDefaultHandler,                      // Analog Comparator 0
     IntDefaultHandler,                      // Analog Comparator 1
     IntDefaultHandler,                      // Analog Comparator 2
