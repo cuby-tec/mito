@@ -28,4 +28,9 @@ extern void Timer_callback(void);
 
 extern void Timer_X_isr(void);
 
+extern void Timer_Y_isr(void);
+
+extern void Timer_Z_isr(void);
+
+
 #endif /* MSMOTOR_MS_INIT_H_ */

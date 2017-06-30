@@ -10,8 +10,13 @@ Pin#, PORT IO, Function, Directions
 7,PE2,GPIO_PE2, false, true,Output OD
 8,PE1,GPIO_PE1, false, true,Output OD
 9,PE0,GPIO_PE0, false, true,Output OD
-29,PF1,T0CCP1, , ,
-30,PF2,T1CCP0, , ,
-31,PF3,T1CCP1, , ,
-5,PF4,T2CCP0, , ,
+28,PF0,GPIO_PF0, false, true,Input
+5,PF4,GPIO_PF4, false, true,Input
+29,PF1,GPIO_PF1, true, false,Output
+31,PF3,GPIO_PF3, true, false,Output
+30,PF2,GPIO_PF2, true, false,Output
+4,PB7,T0CCP1, , ,
+58,PB4,T1CCP0, , ,
+57,PB5,T1CCP1, , ,
+45,PB0,T2CCP0, , ,
 46,PB1,T2CCP1, , ,

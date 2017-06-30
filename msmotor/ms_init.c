@@ -63,15 +63,20 @@ void rgb_enable(void){
     // Configure the GPIO Pin Mux for PF2
     // for T1CCP0
     //
+/*
     MAP_GPIOPinConfigure(GPIO_PF2_T1CCP0);
     MAP_GPIOPinTypeTimer(GPIO_PORTF_BASE, GPIO_PIN_2);//blue
+*/
 
     //
     // Configure the GPIO Pin Mux for PF3
     // for T1CCP1
     //
+/*
     MAP_GPIOPinConfigure(GPIO_PF3_T1CCP1);
     MAP_GPIOPinTypeTimer(GPIO_PORTF_BASE, GPIO_PIN_3);//green
+*/
+    GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, RED_GPIO_PIN|GREEN_GPIO_PIN|BLUE_GPIO_PIN);
 }
 
 void rgb_disable(void){
@@ -79,8 +84,7 @@ void rgb_disable(void){
     // Configure the GPIO pads as general purpose inputs.
     //
 //    ROM_GPIOPinTypeGPIOInput(RED_GPIO_BASE, RED_GPIO_PIN);
-    ROM_GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GREEN_GPIO_PIN);
-    ROM_GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, BLUE_GPIO_PIN);
+    ROM_GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, RED_GPIO_PIN|GREEN_GPIO_PIN|BLUE_GPIO_PIN);
 }
 
 
@@ -88,8 +92,41 @@ void Timer_X_isr(void){
     static uint32_t cnt_x;
     TimerIntClear(TIMER_BASE_X_AXIS,TIMER_CAPA_EVENT);//TIMER_TIMB_TIMEOUT CAEIM
     cnt_x++;
-
+    if(cnt_x & 1){
+        GPIOPinWrite(GPIO_PORTF_BASE, RED_GPIO_PIN, RED_GPIO_PIN);
+//        xTaskNotifyFromISR(orderlyHandling,0x01,eSetBits,NULL);
+    }else{
+        GPIOPinWrite(GPIO_PORTF_BASE, RED_GPIO_PIN, ~RED_GPIO_PIN);
+//        xTaskNotifyFromISR(orderlyHandling,0x02,eSetBits,NULL);
+    }
 }
+
+
+void Timer_Y_isr(void){
+    static uint32_t cnt_y;
+    cnt_y++;
+    TimerIntClear(TIMER_BASE_Y_AXIS, TIMER_CAPB_EVENT);
+    if(cnt_y & 1){
+        GPIOPinWrite(GPIO_PORTF_BASE, GREEN_GPIO_PIN, GREEN_GPIO_PIN);
+    }else{
+        GPIOPinWrite(GPIO_PORTF_BASE, GREEN_GPIO_PIN, 0);
+    }
+}
+
+void Timer_Z_isr(void){
+    static uint32_t cnt_z;
+    TimerIntClear(TIMER_BASE_Z_AXIS, TIMER_CAPA_EVENT);
+    cnt_z++;
+    if(cnt_z & 1){
+        GPIOPinWrite(GPIO_PORTF_BASE, BLUE_GPIO_PIN, BLUE_GPIO_PIN);
+    }else{
+        GPIOPinWrite(GPIO_PORTF_BASE, BLUE_GPIO_PIN, 0);
+    }
+}
+
+
+
+
 
 // ISR WTIMER5======================
 void Timer_callback(void){
@@ -227,67 +264,41 @@ void msInit(uint32_t ui32Enable){
 
 #ifdef USE_HW
     //
-    // Configure each timer for output mode
-    //0x4 For a 16/32-bit timer, this value selects the 16-bit timer configuration.
+    // Configure each timer for output mode T1A
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TAEN; //
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_CFG) = TIMER_CFG_16_BIT;
-//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAMR) = 0x0A|TIMER_TAMR_TAPWMIE;   //TIMER_TAMR_TAMR_PERIOD|TIMER_TAMR_TAAMS
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAMR) = TIMER_TAMR_TAMR_PERIOD|TIMER_TAMR_TAAMS|TIMER_TAMR_TAPWMIE;
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = 0x0FFF;    //
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAPWML|TIMER_CTL_TAEVENT_NEG; //  TABPWML inverted
     HWREG(TIMER_BASE_X_AXIS  + TIMER_O_TAMATCHR) = PORT_PULS_WIDTH;
-    HWREG(TIMER_BASE_X_AXIS + TIMER_O_IMR) = TIMER_IMR_CAEIM;
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_IMR) |= TIMER_IMR_CAEIM;
     IntEnable(INT_TIMER1A); // NVIC register setup.
 
-    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CFG) = 0x04;
-    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_TBMR) = 0x0A;   //
-    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_TBILR) = 0xFFFF;    //
-    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= 0x4000; //  TABPWML inverted
+    // timer axis Y = T1B
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TBEN; //
+    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CFG) = TIMER_CFG_16_BIT;
+    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_TBMR) = TIMER_TBMR_TBMR_PERIOD|TIMER_TBMR_TBAMS|TIMER_TBMR_TBPWMIE;//0x0A;   //
+    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_TBILR) = 0x0FFF;    //
+    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBPWML|TIMER_CTL_TBEVENT_NEG;//0x4000; //  TABPWML inverted
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_TBMATCHR) = PORT_PULS_WIDTH;
+    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_IMR) |= TIMER_IMR_CBEIM;
+    IntEnable(INT_TIMER1B); // NVIC register setup.
 
-    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CFG) = 0x04;
-    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_TAMR) = 0x0A;   //
-    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_TAILR) = 0xFFFF;    //
-    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= 0x0040; //  TABPWML inverted
+    // timer axis Z = T2A
+    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TAEN; //
+    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CFG) = TIMER_CFG_16_BIT;
+    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_TAMR) = TIMER_TAMR_TAMR_PERIOD|TIMER_TAMR_TAAMS|TIMER_TAMR_TAPWMIE;   //
+    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_TAILR) = 0x0FFF;    //
+    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAPWML|TIMER_CTL_TAEVENT_NEG; //  TABPWML inverted
     HWREG(TIMER_BASE_Z_AXIS + TIMER_O_TAMATCHR) = PORT_PULS_WIDTH;
+    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_IMR) |= TIMER_IMR_CAEIM;
+    IntEnable(INT_TIMER2A); // NVIC register setup.
 
     HWREG(TIMER_BASE_E_AXIS + TIMER_O_CFG) = 0x04;
     HWREG(TIMER_BASE_E_AXIS + TIMER_O_TBMR) = 0x0A;   //
     HWREG(TIMER_BASE_E_AXIS + TIMER_O_TBILR) = 0xFFFF;    //
     HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= 0x0040; //  TABPWML inverted
     HWREG(TIMER_BASE_E_AXIS + TIMER_O_TBMATCHR) = PORT_PULS_WIDTH;
-
-    /**
-     * 0x0A = 1010
-     *
-     *[3] Value Description
-     *[3] 0 Capture or compare mode is enabled.
-     *[3] 1 PWM mode is enabled.        ^
-     * [2] Value Description
-     * 0 Edge-Count mode                ^
-     * 1 Edge-Time mode
-     * [0:1]Value Description
-     * 0x0 Reserved
-     * 0x1 One-Shot Timer mode
-     * 0x2 Periodic Timer mode          ^
-     * 0x3 Capture mode
-     */
-
-
-    /**
-     * GPTM Timer B Interval Load (GPTMTBILR), offset 0x02C
-     */
-
-    //
-    // Invert the output signals.
-    //
-    /**
-     * TAPWML - [6]
-     * TBPWML - [14]
-     * Value Description
-     * 0 Output is unaffected.
-     * 1 Output is inverted.
-     */
 
 
     //

@@ -204,7 +204,8 @@ main(void)
 
 
     //
-    // Create the switch task.
+    // Create the switch task.  #define LEFT_BUTTON             GPIO_PIN_4
+    //        PFx               #define RIGHT_BUTTON            GPIO_PIN_0
     //
     if(SwitchTaskInit() != 0)
     {
