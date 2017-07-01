@@ -9,6 +9,13 @@
 
 //--------------
 #include <stdlib.h>
+#include <FreeRTOS.h>
+#ifdef INC_FREERTOS_H
+#define malloc(size) pvPortMalloc(size)
+#define free(ptr) pvPortFree(ptr)
+#endif
+
+
 #include "inc/sysDrivers.h"
 //#include <sysbiosHeader.h>
 
@@ -90,7 +97,8 @@ void testPrepare(void){
 #ifdef KTF7
     current_block = (block_state*)OS_malloc(sizeof(block_state));
 #else
-    current_block = (block_state*)malloc(sizeof(block_state));
+//    current_block = (block_state*)malloc(sizeof(block_state));
+    current_block = (block_state*)malloc(sizeof(block_state));// pvPortMalloc
 #endif
     if(current_block){
         memset(current_block,0,sizeof(block_state));
@@ -167,9 +175,9 @@ void testPrepare(void){
         ms_finBlock = ms_async_block;   // Асинхронный режим.
         break;
     }
-
 //    TimerEnable(TIMER0_BASE, TIMER_B);
-    TimerEnable(TIMER1_BASE, TIMER_BOTH);
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN; //
+//    TimerEnable(TIMER1_BASE, TIMER_A);
 
 //  START_Y;
 

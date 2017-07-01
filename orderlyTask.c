@@ -26,7 +26,7 @@
 #include <limits.h>
 //------------- DEFS
 
-#define ORDERLYTASKSTACKSIZE   192
+#define ORDERLYTASKSTACKSIZE   128 //192
 
 //---------  vars
 
@@ -88,6 +88,8 @@ static uint32_t cnt_delay;
 static uint32_t delay_max;
 void orderly_routine(void* pvParameters ){
     uint32_t ulNotifiedValue;
+
+    testPrepare();
 
     for( ;; ){
 

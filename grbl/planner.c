@@ -276,6 +276,7 @@ void setSpeedLevel(block_state* block, float v1){
 //	float rad_y_speed = v1*_2PI*psettings->steps_per_mm[Y_AXIS];
 	double_t rad_y_speed = v1*_2PI/SCRWE_PITCH*1000;	//  рад/сек
 
+#ifdef X_DBG
 
 	// ступень скорости
 	double_t dt = rad_y_speed;
@@ -302,7 +303,7 @@ void setSpeedLevel(block_state* block, float v1){
 	block->final_speedLevel = block->speedLevel;
 
 	block->initial_rate = psettings->initial_rate;
-
+#endif
 	block->final_rate = block->initial_rate;	// 20000 - default
 }
 

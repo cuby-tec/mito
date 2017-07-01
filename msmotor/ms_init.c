@@ -99,18 +99,6 @@ void rgb_disable(void){
 }
 
 
-void Timer_X_isr(void){
-    static uint32_t cnt_x;
-    TimerIntClear(TIMER_BASE_X_AXIS,TIMER_CAPA_EVENT);//TIMER_TIMB_TIMEOUT CAEIM
-    cnt_x++;
-    if(cnt_x & 1){
-        GPIOPinWrite(GPIO_PORTF_BASE, RED_GPIO_PIN, RED_GPIO_PIN);
-//        xTaskNotifyFromISR(orderlyHandling,0x01,eSetBits,NULL);
-    }else{
-        GPIOPinWrite(GPIO_PORTF_BASE, RED_GPIO_PIN, ~RED_GPIO_PIN);
-//        xTaskNotifyFromISR(orderlyHandling,0x02,eSetBits,NULL);
-    }
-}
 
 
 void Timer_Y_isr(void){
@@ -347,7 +335,7 @@ void msInit(uint32_t ui32Enable){
 //    ROM_TimerEnable(GREEN_TIMER_BASE, TIMER_BOTH);
 //    ROM_TimerEnable(BLUE_TIMER_BASE, TIMER_BOTH);
 
-    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN; //
+//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN; //
     HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN; // green
     HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN; // blue
     HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN; //

@@ -63,7 +63,6 @@ extern void rgb_disable(void);
 
 extern void Timer_callback(void);
 
-extern void Timer_X_isr(void);
 
 extern void Timer_Y_isr(void);
 
