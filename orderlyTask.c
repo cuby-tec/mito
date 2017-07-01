@@ -26,7 +26,7 @@
 #include <limits.h>
 //------------- DEFS
 
-#define ORDERLYTASKSTACKSIZE   128
+#define ORDERLYTASKSTACKSIZE   192
 
 //---------  vars
 
@@ -84,7 +84,8 @@ Void orderly_routine(UArg arg0, UArg arg1){
 }
 
 */
-
+static uint32_t cnt_delay;
+static uint32_t delay_max;
 void orderly_routine(void* pvParameters ){
     uint32_t ulNotifiedValue;
 
@@ -94,6 +95,10 @@ void orderly_routine(void* pvParameters ){
 
         if(ulNotifiedValue & 0x01){
 //            prvProcessBit0Event();
+            cnt_delay = TimerValueGet(WTIMER5_BASE, TIMER_B);
+            cnt_delay -= ms_delay.counter;
+            if(delay_max<cnt_delay)
+                delay_max = cnt_delay;
             rgb_enable();
             NoOperation;
         }

@@ -5,29 +5,29 @@
  *      Author: walery
  */
 
-#include <stdint.h>
-#include <stdbool.h>
-
-#include "inc/hw_gpio.h"
-#include "inc/hw_types.h"
-#include "driverlib/rom.h"
-#include "driverlib/rom_map.h"
-#include "driverlib/sysctl.h"
-#include "driverlib/pin_map.h"
-#include "driverlib/timer.h"
-#include "driverlib/gpio.h"
-#include "driverlib/interrupt.h"
-
-#include "inc/hw_types.h"
-#include "inc/hw_memmap.h"
-#include "inc/hw_timer.h"
-#include "inc/hw_ints.h"
-#include "driverlib/sysctl.h"
-#ifdef TARGET_IS_TM4C123_RA1
-#include "driverlib/rom.h"
-#include "driverlib/rom_map.h"
-#endif
-
+//#include <stdint.h>
+//#include <stdbool.h>
+//
+//#include "inc/hw_gpio.h"
+//#include "inc/hw_types.h"
+//#include "driverlib/rom.h"
+//#include "driverlib/rom_map.h"
+//#include "driverlib/sysctl.h"
+//#include "driverlib/pin_map.h"
+//#include "driverlib/timer.h"
+//#include "driverlib/gpio.h"
+//#include "driverlib/interrupt.h"
+//
+//#include "inc/hw_types.h"
+//#include "inc/hw_memmap.h"
+//#include "inc/hw_timer.h"
+//#include "inc/hw_ints.h"
+//#include "driverlib/sysctl.h"
+//#ifdef TARGET_IS_TM4C123_RA1
+//#include "driverlib/rom.h"
+//#include "driverlib/rom_map.h"
+//#endif
+//
 
 #include "drivers/pinout.h"
 
@@ -49,6 +49,8 @@
 //#define TIVA
 #define USE_HW
 
+
+struct Ms_delay ms_delay;
 
 //-------- vars
 uint32_t static pid;
@@ -81,6 +83,8 @@ void rgb_enable(void){
 */
     pid = 3;
     GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, RED_GPIO_PIN|GREEN_GPIO_PIN|BLUE_GPIO_PIN);
+    GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_0, GPIO_PIN_0);
+    return;
 }
 
 void rgb_disable(void){
@@ -90,6 +94,8 @@ void rgb_disable(void){
     pid = 38;
 //    ROM_GPIOPinTypeGPIOInput(RED_GPIO_BASE, RED_GPIO_PIN);
     GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, RED_GPIO_PIN|GREEN_GPIO_PIN|BLUE_GPIO_PIN);
+    GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_0, 0);
+    return;
 }
 
 
@@ -153,6 +159,11 @@ void Timer_E_isr(void){
 void Timer_callback(void){
     static uint32_t cnt_int = 0;
     TimerIntClear(WTIMER5_BASE,TIMER_TIMB_MATCH+TIMER_TIMB_TIMEOUT);//TIMER_TIMB_TIMEOUT
+    //------ task delay
+
+    ms_delay.cnt++;
+    ms_delay.counter = TimerValueGet(WTIMER5_BASE, TIMER_B);
+
     cnt_int++;
     if(( cnt_int & 1)){
 //        rgb_enable();
@@ -300,7 +311,7 @@ void msInit(uint32_t ui32Enable){
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TBEN; //
     HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CFG) = TIMER_CFG_16_BIT;
     HWREG(TIMER_BASE_Y_AXIS + TIMER_O_TBMR) = TIMER_TBMR_TBMR_PERIOD|TIMER_TBMR_TBAMS|TIMER_TBMR_TBPWMIE;//0x0A;
-    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_TBILR) = 0x0FFF;    //
+    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_TBILR) = 0x0FFE;    //
     HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBPWML|TIMER_CTL_TBEVENT_NEG;//0x4000; TABPWML inverted
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_TBMATCHR) = PORT_PULS_WIDTH;
     HWREG(TIMER_BASE_Y_AXIS + TIMER_O_IMR) |= TIMER_IMR_CBEIM;
@@ -311,7 +322,7 @@ void msInit(uint32_t ui32Enable){
     HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TAEN; //
     HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CFG) = TIMER_CFG_16_BIT;
     HWREG(TIMER_BASE_Z_AXIS + TIMER_O_TAMR) = TIMER_TAMR_TAMR_PERIOD|TIMER_TAMR_TAAMS|TIMER_TAMR_TAPWMIE;
-    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_TAILR) = 0x0FFF;    //
+    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_TAILR) = 0x0FFD;    //
     HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAPWML|TIMER_CTL_TAEVENT_NEG; // TABPWML inverted
     HWREG(TIMER_BASE_Z_AXIS + TIMER_O_TAMATCHR) = PORT_PULS_WIDTH;
     HWREG(TIMER_BASE_Z_AXIS + TIMER_O_IMR) |= TIMER_IMR_CAEIM;
@@ -322,7 +333,7 @@ void msInit(uint32_t ui32Enable){
     HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TBEN; //
     HWREG(TIMER_BASE_E_AXIS + TIMER_O_CFG) = TIMER_CFG_16_BIT;
     HWREG(TIMER_BASE_E_AXIS + TIMER_O_TBMR) = TIMER_TBMR_TBMR_PERIOD|TIMER_TBMR_TBAMS|TIMER_TBMR_TBPWMIE;//0x0A;
-    HWREG(TIMER_BASE_E_AXIS + TIMER_O_TBILR) = 0x1FFF;    //
+    HWREG(TIMER_BASE_E_AXIS + TIMER_O_TBILR) = 0x1FFC;    //
     HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBPWML|TIMER_CTL_TBEVENT_NEG; //  TABPWML inverted
     HWREG(TIMER_BASE_E_AXIS + TIMER_O_TBMATCHR) = PORT_PULS_WIDTH;
     HWREG(TIMER_BASE_Z_AXIS + TIMER_O_IMR) |= TIMER_IMR_CBEIM;
@@ -349,7 +360,7 @@ void msInit(uint32_t ui32Enable){
     TimerConfigure(WTIMER5_BASE, TIMER_CFG_B_PERIODIC | TIMER_CFG_SPLIT_PAIR);
     HWREG(WTIMER5_BASE + TIMER_O_TBMR) = 0x0012;
 //    ROM_TimerConfigure(WTIMER5_BASE, TIMER_CFG_B_PERIODIC);
-    TimerLoadSet64(WTIMER5_BASE, 0x00FFFFFFFFFFFFFF);
+    TimerLoadSet64(WTIMER5_BASE, 0x02FFFFFFFFFFFFFF);
     IntEnable(INT_WTIMER5B);
     TimerIntEnable(WTIMER5_BASE, TIMER_TIMB_TIMEOUT);
     TimerEnable(WTIMER5_BASE,TIMER_B);
