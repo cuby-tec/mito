@@ -26,7 +26,7 @@
 #include <limits.h>
 //------------- DEFS
 
-#define ORDERLYTASKSTACKSIZE   128 //192
+#define ORDERLYTASKSTACKSIZE   640//576 //128 //192 640 //
 
 //---------  vars
 

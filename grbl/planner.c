@@ -268,15 +268,16 @@ void plan_end(){
 
 }
 
-
 void setSpeedLevel(block_state* block, float v1){
+    uint32_t cnt;
+
     //Радиальная скорость  =E33*_2PI/(sy)*(1000/sec_min)
 //	float rad_y_speed = v1*_2PI*psettings->steps_per_mm[Y_AXIS]/sec_min;
 	block->nominal_speed = v1;
 //	float rad_y_speed = v1*_2PI*psettings->steps_per_mm[Y_AXIS];
 	double_t rad_y_speed = v1*_2PI/SCRWE_PITCH*1000;	//  рад/сек
+    double_t freq_priv = rad_y_speed;
 
-#ifdef X_DBG
 
 	// ступень скорости
 	double_t dt = rad_y_speed;
@@ -290,20 +291,20 @@ void setSpeedLevel(block_state* block, float v1){
 
 	// Частота привода Y
 //	double_t freq_priv = rad_y_speed/alfa;
-	double_t freq_priv = rad_y_speed;
+//	double_t freq_priv = rad_y_speed;
 	freq_priv /= alfa;
 
 
 	// Делитель для номинальной скорости
-	dword cnt = psettings->fcnt/freq_priv;
-	if(cnt < 0xffff)
+	cnt = psettings->fcnt/freq_priv;
+	if(cnt < 65535)
 		block->nominal_rate = cnt;
 	else
-		block->nominal_rate = 0xFFFF;
+		block->nominal_rate = 65535;
+
 	block->final_speedLevel = block->speedLevel;
 
 	block->initial_rate = psettings->initial_rate;
-#endif
 	block->final_rate = block->initial_rate;	// 20000 - default
 }
 

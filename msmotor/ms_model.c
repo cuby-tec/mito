@@ -10,6 +10,7 @@
 //--------------
 #include <stdlib.h>
 #include <FreeRTOS.h>
+#include <task.h>
 #ifdef INC_FREERTOS_H
 #define malloc(size) pvPortMalloc(size)
 #define free(ptr) pvPortFree(ptr)
@@ -176,52 +177,54 @@ void testPrepare(void){
         break;
     }
 //    TimerEnable(TIMER0_BASE, TIMER_B);
-    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN; //
-//    TimerEnable(TIMER1_BASE, TIMER_A);
+//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN; //
+//    TimerEnable(TIMER_BASE_X_AXIS, TIMER_A);
 
 //  START_Y;
 
 }// end void
 
 
-uint32_t cnt_int = 0;
 //------------- interrupt
 
 // Keep track of remainder from new_step-delay calculation to increase accuracy
-static unsigned int rest = 0;
 #define DEBUG_INT_no
 /**
  * Обработчик прерываний оси X
  */
 void axisX_intrrupt_handler(void){
-
+    static unsigned int rest = 0;
+    static uint32_t _cnt_int = 0;
+    UBaseType_t uxSavedInterruptStatus;
     TimerIntClear(TIMER_BASE_X_AXIS, TIMER_CAPA_EVENT);
 //    HWREG(TIMER_BASE_X_AXIS + TIMER_O_ICR) |= TIMER_ICR_CAECINT;
 
 #ifdef DEBUG_INT
 //    uint32_t val;
     cnt_int++;
-        System_printf("axisX_intrrupt_handler cnt-int:%lu\n",cnt_int);
-        System_flush();
+//        System_printf("axisX_intrrupt_handler cnt-int:%lu\n",cnt_int);
+//        System_flush();
 //        val = TimerValueGet(TIMER0_BASE, TIMER_B);
 //        System_printf("Timer value %lu \n",val);
 #else
-
+//    uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
 //    OS_EnterInterrupt();
 //    STEPPING_PORT |= (STEP_MASK);
 //    if(STEP_MASK&current_block->direction_bits){
+//    _cnt_int++;
         if(current_block->direction_bits & PE0){
             _posY++;
         }
         else{
             _posY--;
         }
-
         //      switch(current_block->schem[current_block->state]){
 //    }
 //    STEPPING_PORT &= ~STEP_MASK;
     sts.counter_y++;
+//    taskEXIT_CRITICAL_FROM_ISR( uxSavedInterruptStatus );
 
+#ifdef TMP_DBG
 //    TIMER_Y += sts.rate_y;
     if(sts.rate_y>0x4f){
         TimerLoadSet(TIMER0_BASE, TIMER_B, sts.rate_y);
@@ -229,7 +232,9 @@ void axisX_intrrupt_handler(void){
     }
     else{
 //        System_printf("Error:axisX_intrrupt_handler: sts.rate_y = %lu  \n",sts.rate_y);
-        while(1);
+        while(1){
+            NoOperation;
+        }
     }
 
 
@@ -387,6 +392,7 @@ void axisX_intrrupt_handler(void){
         default:
             break;
         }
+#endif
 #endif
     NoOperation;
 //    TimerIntClear(TIMER0_BASE, TIMER_CAPB_EVENT);

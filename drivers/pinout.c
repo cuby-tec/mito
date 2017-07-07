@@ -35,7 +35,7 @@
 //
 //*****************************************************************************
 
-// This file was automatically generated on 30.06.2017 at 9:57:52
+// This file was automatically generated on 06.07.2017 at 21:29:31
 // by TI PinMux version 4.0.1491 
 //
 //*****************************************************************************
@@ -76,6 +76,27 @@ PinoutSet(void)
 	MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
 	MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
 	MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+
+	//
+	// Unlock the Port Pin and Set the Commit Bit
+	//
+	HWREG(GPIO_PORTD_BASE+GPIO_O_LOCK) = GPIO_LOCK_KEY;
+	HWREG(GPIO_PORTD_BASE+GPIO_O_CR)   |= GPIO_PIN_7;
+	HWREG(GPIO_PORTD_BASE+GPIO_O_LOCK) = 0x0;
+	
+    //
+    // Configure the GPIO Pin Mux for PD7
+	// for WT5CCP1
+    //
+	MAP_GPIOPinConfigure(GPIO_PD7_WT5CCP1);
+	MAP_GPIOPinTypeTimer(GPIO_PORTD_BASE, GPIO_PIN_7);
+
+    //
+    // Configure the GPIO Pin Mux for PD6
+	// for WT5CCP0
+    //
+	MAP_GPIOPinConfigure(GPIO_PD6_WT5CCP0);
+	MAP_GPIOPinTypeTimer(GPIO_PORTD_BASE, GPIO_PIN_6);
 
     //
     // Configure the GPIO Pin Mux for PD0

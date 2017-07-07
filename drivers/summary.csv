@@ -1,4 +1,6 @@
 Pin#, PORT IO, Function, Directions
+10,PD7,WT5CCP1, , ,
+53,PD6,WT5CCP0, , ,
 61,PD0,GPIO_PD0, false, true,Input
 62,PD1,GPIO_PD1, false, true,Input
 63,PD2,GPIO_PD2, false, true,Input

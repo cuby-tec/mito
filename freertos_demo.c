@@ -165,7 +165,7 @@ main(void)
     //
     // Disable interrupts to the processor.
     //
-//    ROM_IntMasterDisable();
+    ROM_IntMasterDisable();
 
     //
     // Set the clocking to run at 50 MHz from the PLL.
