@@ -178,7 +178,7 @@ void testPrepare(void){
     }
 //    TimerEnable(TIMER0_BASE, TIMER_B);
 //    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN; //
-//    TimerEnable(TIMER_BASE_X_AXIS, TIMER_A);
+    TimerEnable(TIMER_BASE_X_AXIS, TIMER_A);
 
 //  START_Y;
 
@@ -224,18 +224,22 @@ void axisX_intrrupt_handler(void){
     sts.counter_y++;
 //    taskEXIT_CRITICAL_FROM_ISR( uxSavedInterruptStatus );
 
-#ifdef TMP_DBG
 //    TIMER_Y += sts.rate_y;
-    if(sts.rate_y>0x4f){
-        TimerLoadSet(TIMER0_BASE, TIMER_B, sts.rate_y);
+    if(sts.rate_y<0xFFFF){
+//        TimerLoadSet(TIMER_BASE_X_AXIS, TIMER_A, sts.rate_y);
+        HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = sts.rate_y;  //0x0FFF;
 //        System_printf("Load timer 0_B .\n");
     }
     else{
-//        System_printf("Error:axisX_intrrupt_handler: sts.rate_y = %lu  \n",sts.rate_y);
-        while(1){
-            NoOperation;
-        }
+        HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = 0xFFFF;  //0x0FFF;
     }
+
+    if(sts.rate_y < PORT_PULS_WIDTH*2){
+        HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = PORT_PULS_WIDTH*2;  //0x0FFF;
+    }
+
+
+#ifdef TMP_DBG
 
 
     if(sts.counter_y>=sts.point_y){

@@ -83,7 +83,7 @@ void rgb_enable(void){
 */
     pid = 3;
     GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, RED_GPIO_PIN|GREEN_GPIO_PIN|BLUE_GPIO_PIN);
-    GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_0, GPIO_PIN_0);//синхро-импульс состяния Задачи
+    GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_0, GPIO_PIN_0);//синхро-импульс состяния Задачи PE0
 //    HWREG(GPIO_PORTF_BASE + GPIO_O_DATA) = BLUE_GPIO_PIN;
     return;
 }
@@ -95,7 +95,7 @@ void rgb_disable(void){
     pid = 38;
 //    ROM_GPIOPinTypeGPIOInput(RED_GPIO_BASE, RED_GPIO_PIN);
     GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, RED_GPIO_PIN|GREEN_GPIO_PIN|BLUE_GPIO_PIN);
-    GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_0, 0);
+    GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_0, 0);   //         PE0
 //    HWREG(GPIO_PORTF_BASE + GPIO_O_DATA) &= ~BLUE_GPIO_PIN;
     return;
 }
@@ -122,7 +122,7 @@ void Timer_Z_isr(void){
     if(cnt_z & 1){
         GPIOPinWrite(GPIO_PORTF_BASE, BLUE_GPIO_PIN, BLUE_GPIO_PIN);
     }else{
-        GPIOPinWrite(GPIO_PORTF_BASE, BLUE_GPIO_PIN, 0);
+        GPIOPinWrite(GPIO_PORTF_BASE, BLUE_GPIO_PIN, ~BLUE_GPIO_PIN);
     }
 }
 
@@ -134,11 +134,12 @@ void Timer_E_isr(void){
     if(pid != 38){
         if(cnt_e &1){
             //        GPIOPinTypeGPIOInput(GPIO_PORTF_BASE,BLUE_GPIO_PIN);
-
-            HWREG(GPIO_PORTF_BASE + GPIO_O_DIR) &= ~BLUE_GPIO_PIN ;
+//            HWREG(GPIO_PORTF_BASE + GPIO_O_DIR) &= ~BLUE_GPIO_PIN ;
+            GPIOPinWrite(GPIO_PORTF_BASE, RED_GPIO_PIN, RED_GPIO_PIN);
         }else{
             //        GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, RED_GPIO_PIN|GREEN_GPIO_PIN|BLUE_GPIO_PIN);
-            HWREG(GPIO_PORTF_BASE + GPIO_O_DIR) |= BLUE_GPIO_PIN;
+//            HWREG(GPIO_PORTF_BASE + GPIO_O_DIR) |= BLUE_GPIO_PIN;
+            GPIOPinWrite(GPIO_PORTF_BASE, RED_GPIO_PIN, ~RED_GPIO_PIN);
         }
     }
 }
@@ -291,7 +292,7 @@ void msInit(uint32_t ui32Enable){
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_CFG) = TIMER_CFG_16_BIT;
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAMR) = TIMER_TAMR_TAMR_PERIOD|TIMER_TAMR_TAAMS|TIMER_TAMR_TAPWMIE;
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = 0x0FFF;    //
-    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAPWML|TIMER_CTL_TAEVENT_NEG; //  TABPWML inverted
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAPWML|TIMER_CTL_TAEVENT_NEG|TIMER_CTL_TASTALL; //  TABPWML inverted
     HWREG(TIMER_BASE_X_AXIS  + TIMER_O_TAMATCHR) = PORT_PULS_WIDTH;
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_IMR) |= TIMER_IMR_CAEIM;
     IntEnable(INT_TIMER1A); // NVIC register setup.
@@ -340,8 +341,8 @@ void msInit(uint32_t ui32Enable){
 
 //    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN; //
     HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN; // green
-//    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN; // blue
-//    HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN; //
+    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN; // blue
+    HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN; //
 
 
     //
