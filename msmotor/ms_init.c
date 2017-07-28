@@ -222,9 +222,9 @@ void msInit(uint32_t ui32Enable){
 
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER2);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER3);
 
-    while(!SysCtlPeripheralReady(SYSCTL_PERIPH_TIMER2))
+    while(!SysCtlPeripheralReady(SYSCTL_PERIPH_TIMER3))
     {
     }
 

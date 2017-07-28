@@ -41,6 +41,9 @@
 
 #include "orderlyTask.h"
 #include "msmotor/ms_init.h"
+#include "drivers/usbmodule.h"
+#include "inc/typedefs.h"
+
 //*****************************************************************************
 //
 //! \addtogroup example_list
@@ -162,6 +165,14 @@ int
 main(void)
 {
 
+
+    //
+    // Enable lazy stacking for interrupt handlers.  This allows floating-point
+    // instructions to be used within interrupt handlers, but at the expense of
+    // extra stack usage.
+    //
+    ROM_FPULazyStackingEnable();
+
     //
     // Disable interrupts to the processor.
     //
@@ -190,7 +201,15 @@ main(void)
 
 
     msInit(0);
+//    PinoutSet();
 
+    if (usb_init() ){
+        while(1)
+        {
+            NoOperation;
+        }
+    }
+//    while(1){}
     //
     // Create the LED task.
     //
@@ -199,6 +218,7 @@ main(void)
 
         while(1)
         {
+            NoOperation;
         }
     }
 

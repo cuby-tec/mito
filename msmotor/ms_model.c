@@ -194,8 +194,10 @@ void testPrepare(void){
  */
 void axisX_intrrupt_handler(void){
     static unsigned int rest = 0;
+#ifdef DEBUG_INT
     static uint32_t _cnt_int = 0;
     UBaseType_t uxSavedInterruptStatus;
+#endif
     TimerIntClear(TIMER_BASE_X_AXIS, TIMER_CAPA_EVENT);
 //    HWREG(TIMER_BASE_X_AXIS + TIMER_O_ICR) |= TIMER_ICR_CAECINT;
 
@@ -237,10 +239,6 @@ void axisX_intrrupt_handler(void){
     if(sts.rate_y < PORT_PULS_WIDTH*2){
         HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = PORT_PULS_WIDTH*2;  //0x0FFF;
     }
-
-
-#ifdef TMP_DBG
-
 
     if(sts.counter_y>=sts.point_y){
         (*ms_finBlock)();
@@ -396,7 +394,6 @@ void axisX_intrrupt_handler(void){
         default:
             break;
         }
-#endif
 #endif
     NoOperation;
 //    TimerIntClear(TIMER0_BASE, TIMER_CAPB_EVENT);

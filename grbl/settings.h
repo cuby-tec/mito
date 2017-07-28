@@ -40,7 +40,7 @@
 
 #ifdef TM4  // 175
 
-#define OS_FSYS     80000000
+#define OS_FSYS     8000000
 #define timer_devider   2 //8//2 //4
 
 //  Режим работы шагового двигателя: полный, полушаг, 1 4, 1    16 и т.д.
