@@ -24,7 +24,17 @@ union{
 };
 
 
+struct Stepper_state_t sts;
+//static struct Stepper_state_t* psts = &sts;
 
+static  struct sControl block;
+struct sControl* pblock = &block;
+
+uint16_t axis_flags; //X_FLAG, Y_FLAG, Z_FLAG, E_FLAG
+
+block_state* current_block = &block;
+
+stepper_state sts;
 
 //-------------- Function
 

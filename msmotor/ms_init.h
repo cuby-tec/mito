@@ -55,7 +55,13 @@ extern struct Ms_delay ms_delay;
 
 //--------  function
 // extern void RGBInit(uint32_t ui32Enable);
-extern void msInit(uint32_t ui32Enable);
+extern void msInit(void);
+
+extern void initStepper(void);
+
+extern void initBlock(void);
+
+
 
 extern void rgb_enable(void);
 

@@ -200,9 +200,8 @@ main(void)
     g_pUARTSemaphore = xSemaphoreCreateMutex();
 
 
-    msInit(0);
+    msInit();
 //    PinoutSet();
-
     if (usb_init() ){
         while(1)
         {

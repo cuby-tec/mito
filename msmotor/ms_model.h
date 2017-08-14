@@ -21,6 +21,10 @@
 #define MS_COMMAND_SEMA_SET     NoOperation
 
 //--------- vars
+
+extern void (*ms_finBlock)(void);
+
+
 extern stepper_state sts;
 
 //extern uint32_t cnt_int;    // debug counter;
@@ -30,6 +34,17 @@ extern stepper_state sts;
 extern void axisX_intrrupt_handler(void);
 //extern Void axisX_intrrupt_handler(UArg arg);
 
-extern void testPrepare(void);
+
+extern void continueBlock();
+
+extern void exitBlock(void);
+
+extern void start_t1(uint8_t pusc);
+
+extern void axisX_rateHandler();
+
+extern void ms_nextBlock();
+
+//extern void testPrepare(void);
 
 #endif /* MSMOTOR_MS_MODEL_H_ */

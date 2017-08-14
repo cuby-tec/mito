@@ -34,6 +34,7 @@
 #include "ms_init.h"
 #include "ms_model.h"
 #include "msport.h"
+#include "mempool.h"
 //#include "packages/ti/sysbios/hal/Hwi.h"
 //#include "xdc/runtime/Error.h"
 //#include "xdc/runtime/System.h"
@@ -147,7 +148,8 @@ void Timer_E_isr(void){
 
 
 // ISR WTIMER5======================
-void Timer_callback(void){
+void Timer_callback(void)
+{
     static uint32_t cnt_int = 0;
     TimerIntClear(WTIMER5_BASE,TIMER_TIMB_MATCH+TIMER_TIMB_TIMEOUT+TIMER_CAPB_EVENT);//TIMER_TIMB_TIMEOUT
     //------ task delay
@@ -166,50 +168,62 @@ void Timer_callback(void){
     }
 }
 
-//*****************************************************************************
-//
-//! Initializes the Timer and GPIO functionality associated with the RGB LED
-//!
-//! \param ui32Enable enables RGB immediately if set.
-//!
-//! This function must be called during application initialization to
-//! configure the GPIO pins to which the LEDs are attached.  It enables
-//! the port used by the LEDs and configures each color's Timer. It optionally
-//! enables the RGB LED by configuring the GPIO pins and starting the timers.
-//!
-//! \return None.
-//
-//*****************************************************************************
-void msInit(uint32_t ui32Enable){
-#ifdef HWI
-    Hwi_Handle myHwi;
-    Error_Block eb;
-
-    Error_init(&eb);
-
-    myHwi = Hwi_create(5, axisX_intrrupt_handler,NULL,&eb);
-    if (myHwi == NULL) {
-    System_abort("Hwi create failed");
-    }
-
-
-    Timer_Params timerParams;
-    Timer_Handle myTimer;
-    Error_Block eb1;
-
-    Error_init(&eb1);
-
-    Timer_Params_init(&timerParams);
-    timerParams.period = 10;
-    timerParams.periodType = Timer_PeriodType_MICROSECS;
-    timerParams.arg = 1;
-    myTimer = Timer_create(2,&axisX_intrrupt_handler,&timerParams,&eb1);
-    if (myTimer == NULL) {
-        System_abort("Timer create failed");
-    }
-    Timer_start(myTimer);
+//-------------------- initBlock
+void initBlock(void)
+{
+    pblock->axis = 0;
+    pblock->linenumber = 1;
+    pblock->steps   = 10;
+    pblock->microsteps = 2;
+    pblock->accelerate_until = 3;
+#ifdef DOUBLE
+    pblock->decelerate_after = 38;
+#else
+    pblock->decelerate_after = 7;
 #endif
-    //---------------
+#ifdef DOUBLE
+    pblock->initial_rate = 50132.6;
+#else
+    pblock->initial_rate = 50132;
+#endif
+    pblock->initial_speedLevel = 0;
+#ifdef DOUBLE
+    pblock->nominal_rate = 5370.2;
+#else
+    pblock->nominal_rate = 5370;
+#endif
+    pblock->speedLevel = 3;
+#ifdef DOUBLE
+    pblock->final_rate = 50132.6;//5676;
+#else
+    pblock->final_rate = 50132;//5676;
+#endif
+    pblock->final_speedLevel = 0;
+    pblock->schem[0] = 1;
+    pblock->schem[1] = 2;
+    pblock->schem[2] = 3;
+    pblock->direction = forward;
+}
+
+//--------------------- initStepper
+void initStepper(void)
+{
+    sts.counter_y = 0;
+    sts.point_y = pblock->steps;
+    sts.rate_y = pblock->initial_rate;
+    sts.state = 0;      //  pblock->schem[0];
+    sts.speedLevel = pblock->initial_speedLevel;
+}
+
+
+//*****************************************************************************
+//
+// Initializes the Timer and GPIO functionality
+//
+//
+//*****************************************************************************
+void msInit(void){
+
     PinoutSet();
 
     //
@@ -228,61 +242,6 @@ void msInit(uint32_t ui32Enable){
     {
     }
 
-#ifdef TIVA
-//    TimerConfigure(TIMER0_BASE, TIMER_CFG_SPLIT_PAIR + TIMER_CFG_B_PWM );
-//    TimerConfigure(TIMER1_BASE, TIMER_CFG_SPLIT_PAIR);
-
-
-//    TimerConfigure(TIMER0_BASE, TIMER_CFG_B_PWM);
-    TimerConfigure(TIMER1_BASE, TIMER_CFG_SPLIT_PAIR + TIMER_CFG_A_PWM);
-    TimerConfigure(TIMER1_BASE, TIMER_CFG_SPLIT_PAIR + TIMER_CFG_B_PWM);
-
-//    TimerMatchSet(TIMER0_BASE, TIMER_B, 0x002F);
-    TimerMatchSet(TIMER1_BASE, TIMER_BOTH, 0x002F);
-
-//    TimerLoadSet(TIMER0_BASE, TIMER_B, 0xFFFF);
-    TimerLoadSet(TIMER1_BASE, TIMER_BOTH, 0xFFFF);
-
-// time_ 1 B
-    TimerControlLevel(TIMER1_BASE, TIMER_BOTH, true);  // inverse mode
-    TimerControlStall(TIMER1_BASE, TIMER_BOTH, true);  // Stop in debug mode.
-
-//    TimerIntRegister(TIMER1_BASE, TIMER_B , &axisX_intrrupt_handler);
-
-//    TimerIntEnable(TIMER1_BASE, TIMER_CAPB_EVENT);
-
-//    TimerPrescaleSet(TIMER0_BASE, TIMER_B, 0xFF);
-//    TimerPrescaleMatchSet(TIMER0_BASE, TIMER_B, 0xFF);
-//------ end timer_0 B
-
-//    TimerControlLevel(TIMER1_BASE, TIMER_BOTH, true);
-//    TimerControlStall(TIMER1_BASE, TIMER_BOTH, true);  // Stop in debug mode.
-
-//    GPIOPinConfigure(GPIO_PF1_T0CCP1);
-    GPIOPinConfigure(GPIO_PF2_T1CCP0);
-    GPIOPinConfigure(GPIO_PF3_T1CCP1);
-    // GPIO_PF3_T1CCP1 green
-//    GPIOPinTypeTimer(GPIO_PORTF_BASE,  RED_LED|BLUE_LED|GREEN_LED);
-
-//    TimerEnable(TIMER0_BASE, TIMER_B);    // in testPrepare
-    TimerEnable(TIMER1_BASE, TIMER_BOTH);
-
-//    testPrepare();  // Test and debug interrupt
-
-    //
-    // Setup the blink functionality
-    //
-    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER5);
-    ROM_TimerConfigure(WTIMER5_BASE, TIMER_CFG_B_PERIODIC | TIMER_CFG_SPLIT_PAIR);
-//    ROM_TimerConfigure(WTIMER5_BASE, TIMER_CFG_B_PERIODIC);
-    ROM_TimerLoadSet64(WTIMER5_BASE, 0xFFFFFFFFFFFFFFFF);
-    ROM_IntEnable(INT_WTIMER5B);
-//    ROM_TimerIntEnable(WTIMER5_BASE, TIMER_TIMB_TIMEOUT);
-    TimerIntRegister(WTIMER5_BASE, TIMER_B , &axisX_intrrupt_handler);
-    ROM_TimerEnable(WTIMER5_BASE,TIMER_B);
-
-
-#endif
 
 
 #ifdef USE_HW
@@ -291,15 +250,26 @@ void msInit(uint32_t ui32Enable){
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TAEN; //
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_CFG) = TIMER_CFG_16_BIT;
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAMR) = TIMER_TAMR_TAMR_PERIOD|TIMER_TAMR_TAAMS|TIMER_TAMR_TAPWMIE;
-    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = 0x0FFF;    //
-    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAPWML|TIMER_CTL_TAEVENT_NEG|TIMER_CTL_TASTALL; //  TABPWML inverted
+//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAMR) |= TIMER_TAMR_TAMIE;
+//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAMR) |= TIMER_TAMR_TAPLO;
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAMR) |= TIMER_TAMR_TAILD;
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAMR) |= TIMER_TAMR_TAMRSU;
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_IMR) =  TIMER_IMR_CAEIM;// TIMER_IMR_TAMIM; // | TIMER_IMR_TATOIM;
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = 0xFFFF;    //
+    HWREG(TIMER_BASE_X_AXIS  + TIMER_O_TAPR) = 0;
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TASTALL;
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEVENT_NEG;     //TIMER_CTL_TAEVENT_POS ;
+//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEVENT_POS;
+//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAPWML; //  TABPWML inverted
     HWREG(TIMER_BASE_X_AXIS  + TIMER_O_TAMATCHR) = PORT_PULS_WIDTH;
-    HWREG(TIMER_BASE_X_AXIS + TIMER_O_IMR) |= TIMER_IMR_CAEIM;
-    IntEnable(INT_TIMER1A); // NVIC register setup.
+    HWREG(TIMER_BASE_X_AXIS  + TIMER_O_TAPMR) = 0;
+
     TimerIntClear(TIMER_BASE_X_AXIS, TIMER_CAPA_EVENT);
+    IntEnable(INT_TIMER1A); // NVIC register setup.
+
 
     // timer axis Y = T1B
-    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TBEN; //
+    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TBEN; //
 
     HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CFG) = TIMER_CFG_16_BIT;
     HWREG(TIMER_BASE_Y_AXIS + TIMER_O_TBMR) = TIMER_TBMR_TBMR_PERIOD|TIMER_TBMR_TBAMS|TIMER_TBMR_TBPWMIE;//0x0A;
@@ -340,15 +310,15 @@ void msInit(uint32_t ui32Enable){
 //    ROM_TimerEnable(BLUE_TIMER_BASE, TIMER_BOTH);
 
 //    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN; //
-    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN; // green
-    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN; // blue
-    HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN; //
+//    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN; // green
+//    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN; // blue
+//    HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN; //
 
 
     //
     // Setup the blink functionality
     //
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER5);
+//    SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER5);
 /*    TimerEnable(WTIMER5_BASE, ~TIMER_B);
     TimerConfigure(WTIMER5_BASE, TIMER_CFG_B_PERIODIC | TIMER_CFG_SPLIT_PAIR);
 //    HWREG(WTIMER5_BASE + TIMER_O_TBMR) = 0x0012;
@@ -360,6 +330,7 @@ void msInit(uint32_t ui32Enable){
     TimerEnable(WTIMER5_BASE,TIMER_B);
 */
 
+/*
     HWREG(WTIMER5_BASE + TIMER_O_CTL) &= ~TIMER_CTL_TBEN; //
     HWREG(WTIMER5_BASE + TIMER_O_CFG) = TIMER_CFG_16_BIT; // 32 bit
     HWREG(WTIMER5_BASE + TIMER_O_TBMR) = TIMER_TBMR_TBMR_PERIOD|TIMER_TBMR_TBAMS|TIMER_TBMR_TBPWMIE;//0x0A;
@@ -371,6 +342,7 @@ void msInit(uint32_t ui32Enable){
     IntEnable(INT_WTIMER5B); // NVIC register setup.
     TimerEnable(WTIMER5_BASE,TIMER_B);
     NoOperation;
+*/
 
 //    GPIOPinConfigure(GPIO_PF1_T0CCP1);
 //    GPIOPinConfigure(GPIO_PF2_T1CCP0);

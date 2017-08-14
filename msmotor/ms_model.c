@@ -11,26 +11,38 @@
 #include <stdlib.h>
 #include <FreeRTOS.h>
 #include <task.h>
+#include "inc/sysDrivers.h"
+
+
+
 #ifdef INC_FREERTOS_H
 #define malloc(size) pvPortMalloc(size)
 #define free(ptr) pvPortFree(ptr)
 #endif
 
 
-#include "inc/sysDrivers.h"
 //#include <sysbiosHeader.h>
+#include "drivers/pinout.h"
 
 #include "inc/typedefs.h"
+
 #include <grbl/settings.h>
+//#include "grbl/planner.h"
 
 #include "msmotor/block_state.h"
-#include "ms_model.h"
-#include "msport.h"
+#include "msmotor/mem_flash.h"
 
+#include "msmotor/ms_model.h"
+#include "msmotor/msport.h"
+#include "msmotor/mempool.h"
+#include "msmotor/ms_init.h"
+
+
+#include "orderlyTask.h"
 
 #include "Ktf_model.h"
-#include "msmotor/mem_flash.h"
-#include "grbl/planner.h"
+
+
 
 //------------- defs
 
@@ -41,6 +53,9 @@
 #define PE4     GPIO_PIN_4
 
 
+#define LED_PIN2_no
+#define LED_PIN3_no
+#define LED_PIN1
 
 #define Y_STEP_BIT          7  // Port 5 pin 7
 #define Y_DIRECTION_BIT     6  // Port 5 Pin 6
@@ -48,28 +63,140 @@
 #define DIRECTION_MASK      (1<<Y_DIRECTION_BIT) // All direction bits
 #define STEPPING_MASK (STEP_MASK | DIRECTION_MASK) // All stepping-related bits (step/direction)
 
+// #define CE HWREGBITW((GPIO_PORTA_BASE +(GPIO_O_DATA+(GPIO_PIN_0))),0)   //PA0
+//Block end
+#define  BE  HWREGBITW((GPIO_PORTF_BASE +(GPIO_O_DATA)),1)
+
 
 
 //-------------- vars
-block_state* current_block;
-
-stepper_state sts;
 
 //static float start_speed = 0.0066;
 byte direction = false;
 
-static void (*ms_finBlock)(void);
+//static void (*ms_finBlock)(void);
+
+static uint32_t multy = 1;
+
+static uint8_t rest = 0;
+
+static uint32_t speedRate;
+
+static uint32_t be_portf1;
 
 
+uint32_t g_ui32Flags;
+
+void (*ms_finBlock)(void);
 
 //-------------- function
+
+
+/**
+ * Обновление значений счётчика оси X
+ */
+void axisX_rateHandler()
+{
+    // Обработка следующегошага.
+        axis_flags &= ~Y_FLAG;
+#ifdef LED_PIN3
+        HWREGBITW(&g_ui32Flags,3) ^= 1;
+        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, g_ui32Flags);
+//            0x400253fc
+#endif
+        if(sts.counter_y > sts.point_y){
+             (*ms_finBlock)();
+#ifdef LED_PIN2
+             GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, ~GPIO_PIN_2);
+#endif
+//               return;
+        }//else
+
+        switch(pblock->schem[sts.state]){
+        case 1:
+            //      RISE_SPEED_FIRST;
+            //      TIMER_Y += sts.rate_y;
+            rest = 0;
+            if(current_block->accelerate_until<=sts.counter_y){
+                sts.state++;
+                speedRate = sts.rate_y;
+                sts.rate_y = current_block->nominal_rate;
+                sts.speedLevel = current_block->speedLevel;
+            }else{
+                if(sts.speedLevel < current_block->speedLevel){
+                    sts.speedLevel++;
+                    if(sts.speedLevel == 1){
+                        sts.rate_y *= 0.4056;
+                    }
+                    else{
+#ifdef DOUBLE
+                        sts.rate_y = current_block->initial_rate*(sqrtf(sts.speedLevel+1)-sqrtf(sts.speedLevel));
+#else
+                        sts.rate_y = sts.rate_y - (((2 * (long)sts.rate_y) + rest)/(4 * sts.speedLevel + 1));
+#endif
+//                    rest = ((2 * (long)sts.rate_y)+rest)%(4 * sts.speedLevel + 1);
+                    //              sts.rate_y = (word)CO*(sqrtf(sts.speedLevel+1)-sqrtf(sts.speedLevel));
+                    }
+                }
+            }
+            break;
+
+
+        case 2: case 5:// flast motion
+            //      FLAT_MOTION;
+            //      TIMER_Y += sts.rate_y;
+            if(sts.counter_y>=current_block->decelerate_after){
+                sts.state++;
+//                if(sts.rate_y>psettings->initial_rate)
+//                    sts.rate_y = psettings->initial_rate;
+//                sts.rate_y = current_block->final_rate;
+                sts.rate_y = speedRate;
+#ifdef DOUBLE
+                sts.speedLevel--;
+#else
+                sts.speedLevel--;
+#endif
+                //          max_rate = sts.rate_y;
+            }
+            break;
+
+        case 3:// decelerate
+            //      DOWN_SPEED_LAST;
+            rest = 2;
+            sts.speedLevel--;
+            if(sts.speedLevel>current_block->final_speedLevel){
+#ifdef DOUBLE
+                sts.rate_y = current_block->initial_rate*(sqrtf(sts.speedLevel+1)-sqrtf(sts.speedLevel));
+#else
+//                sts.rate_y = sts.rate_y + (((2 * (long)sts.rate_y) + rest)/(4 * sts.speedLevel + 1));
+                sts.rate_y = sts.rate_y + (((2 * (long)sts.rate_y))/(4 * sts.speedLevel + 1 + rest));
+//                rest = ((2 * (long)sts.rate_y)+rest)%(4 * sts.speedLevel + 1);
+#endif
+            }else{
+                sts.rate_y = current_block->final_rate;
+            }
+            break;
+        }
+
+
+//           printReport();
+#ifdef LED_PIN2
+    GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, ~GPIO_PIN_2);
+#endif
+   // end handler Y axis.
+
+}
+
 
 
 /**
  *  button control
  *  Синхронная работа считывателя блоков.
 */
-static void ms_nextBlock(){
+void ms_nextBlock()
+{
+//    uint32_t be = GPIO_PORTF_BASE +  0x3fc;
+//    uint32_t* abe = GPIO_PORTF_BASE +  0x3fc;
 //  MS_ENABLE_OUT = MS_STOP; // Pause
 //    if(ktf_model.block_counter == block_target){
 //        NoOperation;
@@ -77,6 +204,13 @@ static void ms_nextBlock(){
 
 //    MS_COMMAND_SEMA_IE; // Ожидает достижения координаты X
 //    STOP_Y;
+#ifdef LED_PIN1
+    HWREGBITB(&be_portf1,1) = ~HWREGBITB(&be_portf1,1);
+    GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, be_portf1);
+#endif
+//    be = *abe;
+//    be = BE;
+//    BE = ~be;
     NoOperation;
 }
 
@@ -91,98 +225,183 @@ static void ms_async_block(){
 
 
 
-static word path_length = 2000;
 
-void testPrepare(void){
-    //  current_block setup
-#ifdef KTF7
-    current_block = (block_state*)OS_malloc(sizeof(block_state));
-#else
-//    current_block = (block_state*)malloc(sizeof(block_state));
-    current_block = (block_state*)malloc(sizeof(block_state));// pvPortMalloc
+#define V3
+//Запуск таймера оси.
+void start_t1(uint8_t pusc)
+{
+    uint32_t timerValue,timerValueMatch;
+
+//    flag = 0;
+
+    //
+    // Configure the GPIO Pin Mux for PB4
+    // for T1CCP0
+    //
+//    MAP_GPIOPinConfigure(GPIO_PB4_T1CCP0);
+//    MAP_GPIOPinTypeTimer(GPIO_PORTB_BASE, GPIO_PIN_4);
+
+//    TimerLoadSet(TIMER_BASE_X_AXIS,TIMER_A,0x0FFF);
+//    TimerMatchSet(TIMER_BASE_X_AXIS, TIMER_A, TimerLoadGet(TIMER_BASE_X_AXIS, TIMER_A)/3);
+
+#ifdef V3_
+
+    TimerLoadSet(TIMER_BASE_X_AXIS,TIMER_A,timerLoad);
+    TimerMatchSet(TIMER_BASE_X_AXIS, TIMER_A, timermatch);
+    TimerPrescaleSet(TIMER_BASE_X_AXIS, TIMER_A, 0);
+    TimerPrescaleMatchSet(TIMER_BASE_X_AXIS, TIMER_A, 0);
 #endif
-    if(current_block){
-        memset(current_block,0,sizeof(block_state));
-//      current_block->initial_rate = start_c;
-        current_block->steps_y = path_length;
-        current_block->step_event_count = current_block->steps_y;
-#ifdef KTF7
-        current_block->direction_bits |= STEP_MASK|DIRECTION_MASK;
-#else
-        current_block->direction_bits |= PE0|PE1|PE2|PE3|PE4; //DIRECTION_MASK;
-#endif
-//      current_block->nominal_rate = 4000;
-//      current_block->final_rate = 40000;
-//      current_block->nominal_speed = 6.6;
-        current_block->schem[0] = 10;
-        current_block->schem[1] = 11;
-        current_block->schem[2] = 12;
-        current_block->state = 0;
-//      current_block->tan_theta = current_block->steps_y/current_block->steps_x;
-        // #define INITIAL_RATE             DEFAULT_COUNTERR_FREWUENCY*kalf*sqrt(2*alfa/psettings->rad_acceleration)//20000 //  Определяет ускорение разгона.
-        double_t dt = INITIAL_RATE;
-//      double_t dq = alfa;
-//      dq *= 2;
-//      dq /= psettings->rad_acceleration;
-//      dq = sqrt(dq);
-//      dt *= kalf;
-//      dt *= dq;
-        if(dt>0xffff)
-//          psettings->initial_rate = 0xFFFF;
-            ktf_model.initial_rate = 0xFFFF;
-        else
-//          psettings->initial_rate = dt;
-            ktf_model.initial_rate = dt;
-
-        setSpeedLevel(current_block,psettings->seekSpeed);
-//      current_block->accelerate_until = speed_rate;
-        current_block->accelerate_until = current_block->speedLevel;
-        current_block->decelerate_after = current_block->step_event_count - current_block->accelerate_until;
-        //  sts setup --------------------------------------
-        sts.counter_y = 0; //1;
-        sts.counter_x = 0;
-        sts.speedLevel = 0;
-        //          sts.rate_delta_y = current_block->rate_delta;
-        sts.rate_y = current_block->initial_rate;
-
-        sts.point_y = current_block->steps_y;
-
-//      if(current_block->direction_bits&DIRECTION_MASK)
-//          STEPPING_PORT |= DIRECTION_MASK;
-//      else
-//          STEPPING_PORT &=~DIRECTION_MASK;
-#if !defined TM4
-        if(direction){
-            STEPPING_PORT |= DIRECTION_MASK;
-            current_block->direction_bits |=DIRECTION_MASK;
-        }else{
-            STEPPING_PORT &=~DIRECTION_MASK;
-            current_block->direction_bits &=~DIRECTION_MASK;
-        }
-        direction = ~direction;
-#endif
-    }else{
-        NoOperation;
-    }
 
 
 
-    // Задание режима обработки блоков движения.
-    switch(ktf_model.sync){
-    case eSyncMode_ms:
-        ms_finBlock = ms_nextBlock;     //Синхронный режим
-        break;
-    case eAsyncMode_ms:
-        ms_finBlock = ms_async_block;   // Асинхронный режим.
-        break;
-    }
-//    TimerEnable(TIMER0_BASE, TIMER_B);
+//           TimerLoadSet(TIMER_BASE_X_AXIS,TIMER_A,sts.rate_y);
+//           HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = sts.rate_y*multy;
+
+
 //    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN; //
+
+//    GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_4, GPIO_PIN_4);
+//    for(timerValue=0;timerValue<50;timerValue++);
+//    GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_4, ~GPIO_PIN_4);
+#ifndef V3
+    timerValue = sts.rate_y*multy;
+    timerValueMatch = timerValue/3;
+
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = (uint16_t)(timerValue&0x0000FFFF);
+    timerValue >>=16;
+    TimerPrescaleSet(TIMER_BASE_X_AXIS, TIMER_A, (uint16_t)(timerValue&0x000000FF));
+
+    TimerMatchSet(TIMER_BASE_X_AXIS, TIMER_A, (timerValueMatch&0x0000FFFF));
+    timerValueMatch >>=16;
+    TimerPrescaleMatchSet(TIMER_BASE_X_AXIS, TIMER_A, (uint16_t)(timerValueMatch&0x000000FF));
+
+    dump[0] = TimerLoadGet(TIMER_BASE_X_AXIS, TIMER_A);
+#endif
+
+    initStepper();  // next block
+    if(pusc == 0)
+//        Timer1IntHandler();
+        axisX_intrrupt_handler();
+//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAMR) &= ~TIMER_TAMR_TAPWMIE;
+//    IntEnable(INT_TIMER1A);
+//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_IMR) = TIMER_IMR_CAEIM;
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAMR) |= TIMER_TAMR_TAPWMIE;
+
     TimerEnable(TIMER_BASE_X_AXIS, TIMER_A);
+#ifdef BLOCK_OUT
+    MAP_GPIOPinConfigure(GPIO_PB4_T1CCP0);
+    MAP_GPIOPinTypeTimer(GPIO_PORTB_BASE, GPIO_PIN_4);
+#endif
 
-//  START_Y;
+#ifdef V3
+//    if(pusc)
+//        HWREG(TIMER_BASE_X_AXIS + TIMER_O_RIS) |= TIMER_RIS_CAERIS;
+#endif
 
-}// end void
+#ifdef LED_PIN1
+    HWREGBITB(&be_portf1,1) = ~HWREGBITB(&be_portf1,1);
+    GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, be_portf1);
+#endif
+}
+
+
+
+#define CONTINUE_
+/**
+ * Получение нового блока.
+ * Отработка ломаной линии.
+ */
+void continueBlock()
+{
+    uint32_t timerValue;
+
+//TODO Получить новый блок
+    initStepper();
+
+    sts.counter_y++;
+    timerValue = sts.rate_y*multy;
+    TimerLoadSet(TIMER_BASE_X_AXIS,TIMER_A,timerValue);
+    timerValue >>=16;
+    TimerPrescaleSet(TIMER_BASE_X_AXIS, TIMER_A, (timerValue&0x000000FF));
+    xTaskNotifyFromISR(orderlyHandling,X_axis_int,eSetBits,NULL);
+
+}
+/*
+
+eTaskState getSate()
+{
+    eTaskState result;
+    result = eTaskGetState(orderlyHandling);
+    return result;
+}
+
+void stub(uint32_t tmp)
+{
+    uint32_t s = tmp;
+}
+*/
+
+void exitBlock(void)
+{
+    eTaskState et;
+    uint32_t cnt;
+//     printf("\n======== Exit block. =========\n\n");
+//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_IMR) &= ~TIMER_TAMR_TAPWMIE; //TIMER_TAMR_TAPWMIE
+//    IntEnable(INT_TIMER1A);
+//    IntDisable(INT_TIMER1A);
+//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_IMR) &= ~TIMER_IMR_CAEIM;
+//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAMR) &= ~TIMER_TAMR_TAPWMIE;
+//    TimerIntDisable(TIMER_BASE_X_AXIS, TIMER_CAPA_EVENT);   // work
+#ifndef CONTINUE
+    TimerDisable(TIMER_BASE_X_AXIS, TIMER_A);
+
+    xTaskNotifyFromISR(orderlyHandling,X_axis_int_fin,eSetBits,NULL);
+/*
+    et = getSate();
+    if(et == eReady)
+        cnt = 1;
+    else if(et == eBlocked)
+        cnt = 2;
+    else if(et == eSuspended)
+        cnt =3;
+    else if(et == eDeleted)
+        cnt = 4;
+    else if(cnt == eRunning)
+        cnt = 5;
+//    stub(cnt);
+    HWREGBITB(&g_ui32Flags,cnt) = 1;
+*/
+//    flag = 1; X_axis_int_fin
+
+#else
+    uint32_t timerValue;
+
+    initStepper();
+
+    sts.counter_y++;
+    timerValue = sts.rate_y*multy;
+    TimerLoadSet(TIMER_BASE_X_AXIS,TIMER_A,timerValue);
+    timerValue >>=16;
+    TimerPrescaleSet(TIMER_BASE_X_AXIS, TIMER_A, (timerValue&0x000000FF));
+
+
+#endif
+/*
+ *     //
+    // Configure the GPIO Pin Mux for PB4
+    // for T1CCP0
+    //
+    MAP_GPIOPinConfigure(GPIO_PB4_T1CCP0);
+    MAP_GPIOPinTypeTimer(GPIO_PORTB_BASE, GPIO_PIN_4);
+ */
+//    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, GPIO_PIN_4);
+//    MAP_GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_4, 0x0);
+
+//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TAEN; //
+//    TimerDisable(TIMER_BASE_X_AXIS, TIMER_A);
+}
+
+
 
 
 //------------- interrupt
@@ -192,212 +411,58 @@ void testPrepare(void){
 /**
  * Обработчик прерываний оси X
  */
-void axisX_intrrupt_handler(void){
-    static unsigned int rest = 0;
-#ifdef DEBUG_INT
-    static uint32_t _cnt_int = 0;
-    UBaseType_t uxSavedInterruptStatus;
-#endif
+void axisX_intrrupt_handler(void){//    uint32_t cOne = 1, cTwo;
+
+    static uint32_t timerValue_Y;
+//    uint32_t timerValueMatch;
+
     TimerIntClear(TIMER_BASE_X_AXIS, TIMER_CAPA_EVENT);
-//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_ICR) |= TIMER_ICR_CAECINT;
+//    GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_4, GPIO_PIN_4);
 
-#ifdef DEBUG_INT
-//    uint32_t val;
-    cnt_int++;
-//        System_printf("axisX_intrrupt_handler cnt-int:%lu\n",cnt_int);
-//        System_flush();
-//        val = TimerValueGet(TIMER0_BASE, TIMER_B);
-//        System_printf("Timer value %lu \n",val);
-#else
-//    uxSavedInterruptStatus = taskENTER_CRITICAL_FROM_ISR();
-//    OS_EnterInterrupt();
-//    STEPPING_PORT |= (STEP_MASK);
-//    if(STEP_MASK&current_block->direction_bits){
-//    _cnt_int++;
-        if(current_block->direction_bits & PE0){
-            _posY++;
-        }
-        else{
-            _posY--;
-        }
-        //      switch(current_block->schem[current_block->state]){
-//    }
-//    STEPPING_PORT &= ~STEP_MASK;
-    sts.counter_y++;
-//    taskEXIT_CRITICAL_FROM_ISR( uxSavedInterruptStatus );
-
-//    TIMER_Y += sts.rate_y;
-    if(sts.rate_y<0xFFFF){
-//        TimerLoadSet(TIMER_BASE_X_AXIS, TIMER_A, sts.rate_y);
-        HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = sts.rate_y;  //0x0FFF;
-//        System_printf("Load timer 0_B .\n");
-    }
-    else{
-        HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = 0xFFFF;  //0x0FFF;
-    }
-
-    if(sts.rate_y < PORT_PULS_WIDTH*2){
-        HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = PORT_PULS_WIDTH*2;  //0x0FFF;
-    }
-
-    if(sts.counter_y>=sts.point_y){
-        (*ms_finBlock)();
-    }else
-
-
-    //      switch(sts.state){
-        switch(current_block->schem[current_block->state]){
-        case 1:
-            //      RISE_SPEED_FIRST;
-            //      TIMER_Y += sts.rate_y;
-            if(current_block->accelerate_until<=sts.counter_y){
-                current_block->state++;
-                sts.rate_y = current_block->nominal_rate;
-                sts.speedLevel = current_block->speedLevel;
-            }else{
-                if(sts.speedLevel < current_block->speedLevel){
-                    sts.speedLevel++;
-                    sts.rate_y = sts.rate_y - (((2 * (long)sts.rate_y) + rest)/(4 * sts.speedLevel + 1));
-                    rest = ((2 * (long)sts.rate_y)+rest)%(4 * sts.speedLevel + 1);
-                    //              sts.rate_y = (word)CO*(sqrtf(sts.speedLevel+1)-sqrtf(sts.speedLevel));
-                }
-            }
-            break;
-
-
-        case 2: case 5:// flast motion
-            //      FLAT_MOTION;
-            //      TIMER_Y += sts.rate_y;
-            if(sts.counter_y>=current_block->decelerate_after){
-                current_block->state++;
-                if(sts.rate_y>psettings->initial_rate)
-                    sts.rate_y = psettings->initial_rate;
-
-                //          max_rate = sts.rate_y;
-            }
-            break;
-
-        case 3:// decelerate
-            //      DOWN_SPEED_LAST;
-            if(sts.speedLevel>current_block->final_speedLevel)
-                sts.speedLevel--;
-            if(sts.speedLevel>current_block->final_speedLevel){
-                sts.rate_y = sts.rate_y + (((2 * (long)sts.rate_y) + rest)/(4 * sts.speedLevel + 1));
-                rest = ((2 * (long)sts.rate_y)+rest)%(4 * sts.speedLevel + 1);
-            }else{
-                sts.rate_y = current_block->final_rate;
-            }
-            break;
-
-        case 4:
-            //          DOWN_SPEED_FIRST;
-            //          TIMER_Y += sts.rate_y;
-            if(current_block->accelerate_until<=sts.counter_y){
-                current_block->state++;
-                sts.rate_y = current_block->nominal_rate;
-                sts.speedLevel = current_block->speedLevel;
-            }else{
-                if(sts.speedLevel)
-                    sts.speedLevel--;
-                if(sts.speedLevel){
-                    sts.rate_y = sts.rate_y + (((2 * (long)sts.rate_y) + rest)/(4 * sts.speedLevel + 1));
-                    rest = ((2 * (long)sts.rate_y)+rest)%(4 * sts.speedLevel + 1);
-                    if(sts.rate_y<current_block->initial_rate)
-                        sts.rate_y = current_block->initial_rate;
-                }
-                else{
-                    sts.rate_y = current_block->initial_rate;
-                }
-            }
-            break;
-        case 6:
-            //          RISE_SPEED_LAST;
-            if(sts.speedLevel < current_block->final_speedLevel)
-                sts.speedLevel++;
-            if(sts.speedLevel < current_block->final_speedLevel){
-                sts.rate_y = sts.rate_y - (((2 * (long)sts.rate_y) + rest)/(4 * sts.speedLevel + 1));
-                rest = ((2 * (long)sts.rate_y)+rest)%(4 * sts.speedLevel + 1);
-            }
-            break;
-
-        case 10:
-            //          RISE_SPEED_FIRST;
-            //          TIMER_Y += sts.rate_y;
-            if(current_block->accelerate_until<=sts.counter_y){
-                current_block->state++;
-                sts.rate_y = current_block->nominal_rate;
-            }
-            if(sts.speedLevel < current_block->speedLevel)
-                sts.speedLevel++;
-            if(sts.speedLevel < current_block->speedLevel){
-                sts.rate_y = sts.rate_y - (((2 * (long)sts.rate_y) + rest)/(4 * sts.speedLevel + 1));
-                rest = ((2 * (long)sts.rate_y)+rest)%(4 * sts.speedLevel + 1);
-                //              sts.rate_y = psettings->initial_rate*(sqrtf(sts.speedLevel+1) - sqrtf(sts.speedLevel));
-            }
-
-            break;
-        case 11:
-            //  FLAT_MOTION;
-            //          TIMER_Y += sts.rate_y;
-            if(sts.counter_y>=current_block->decelerate_after){
-                current_block->state++;
-                //              sts.speedLevel--;
-            }
-            break;
-
-        case 12:
-            //  DOWN_SPEED_LAST;
-            if(sts.speedLevel)
-                sts.speedLevel--;
-            if(sts.speedLevel){
-                sts.rate_y = sts.rate_y + (((2 * (long)sts.rate_y) + rest)/(4 * sts.speedLevel + 1));
-                rest = ((2 * (long)sts.rate_y)+rest)%(4 * sts.speedLevel + 1);
-            }
-            break;
-
-
-
-        case 24: // modal move, home
-            //          RISE_SPEED_FIRST;
-            //          TIMER_Y += sts.rate_y;
-            if(sts.counter_y >= current_block->accelerate_until){
-                current_block->state++;
-                sts.rate_y = current_block->nominal_rate;
-            }
-            if(sts.speedLevel < current_block->speedLevel)
-                sts.speedLevel++;
-            if(sts.speedLevel < current_block->speedLevel){
-                sts.rate_y = sts.rate_y - (((2 * (long)sts.rate_y) + rest)/(4 * sts.speedLevel + 1));
-                rest = ((2 * (long)sts.rate_y)+rest)%(4 * sts.speedLevel + 1);
-            }
-
-            break;
-
-        case 25:
-            //          FLAT_MOTION;
-            //          TIMER_Y += sts.rate_y;
-            if(sts.counter_y>=current_block->decelerate_after){
-                current_block->state++;
-            }
-            break;
-
-        case 26:
-            //          DOWN_SPEED_LAST;
-            if(sts.speedLevel)
-                sts.speedLevel--;
-            if(sts.speedLevel){
-                sts.rate_y = sts.rate_y + (((2 * (long)sts.rate_y) + rest)/(4 * sts.speedLevel + 1));
-                rest = ((2 * (long)sts.rate_y)+rest)%(4 * sts.speedLevel + 1);
-            }
-            break;
-
-        default:
-            break;
-        }
+    // Toggle the flag for the second timer.
+//    HWREGBITW(&g_ui32Flags, 1) ^= 1;
+#ifdef LED_PIN2
+    // Use the flags to Toggle the LED for this timer
+    GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, GPIO_PIN_2);
 #endif
-    NoOperation;
-//    TimerIntClear(TIMER0_BASE, TIMER_CAPB_EVENT);
-//    OS_LeaveInterrupt();
+//if(sts.counter_y == 0)
+//    sts.counter_y = 0;
+//else if(sts.counter_y == 1)
+//    sts.counter_y = 1;
+//else if(sts.counter_y == 2)
+//    sts.counter_y = 2;
+//else if(sts.counter_y == 3)
+//    sts.counter_y = 3;
+//else if(sts.counter_y == 4)
+//    sts.counter_y = 4;
+//else if(sts.counter_y == 5)
+//    sts.counter_y = 5;
+
+    sts.counter_y++;
+
+           timerValue_Y = sts.rate_y*multy;
+//           timerValueMatch = timerValue - 128;// timerValue/8;
+//           dump[ sts.counter_y%60] = sts.rate_y;
+
+           TimerLoadSet(TIMER_BASE_X_AXIS,TIMER_A,timerValue_Y);
+//           HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = sts.rate_y*multy;
+//           HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = (uint16_t)(timerValue&0x0000FFFF);
+           timerValue_Y >>=16;
+           TimerPrescaleSet(TIMER_BASE_X_AXIS, TIMER_A, (uint16_t)(timerValue_Y&0x000000FF));
+//           HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAPR) = (uint16_t)(uint16_t)(timerValue&0x000000FF);
+
+/*
+//           TimerMatchSet(TIMER_BASE_X_AXIS, TIMER_A, (timerValueMatch&0x0000FFFF));
+           HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAMATCHR) = (uint16_t)(timerValueMatch&0x0000FFFF);
+           timerValueMatch >>=16;
+//           TimerPrescaleMatchSet(TIMER_BASE_X_AXIS, TIMER_A, (uint16_t)(timerValueMatch&0x000000FF));
+           HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAPMR) = (uint16_t)(timerValueMatch&0x000000FF);
+*/
+
+//           axis_flags |= Y_FLAG;
+           axisX_rateHandler();
+//           GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, ~GPIO_PIN_2);
+           return;
 }
 
 

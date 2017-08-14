@@ -149,7 +149,7 @@ SwitchTask(void *pvParameters)
 uint32_t
 SwitchTaskInit(void)
 {
-    //
+    /*//
     // Unlock the GPIO LOCK register for Right button to work.
     //
     HWREG(GPIO_PORTF_BASE + GPIO_O_LOCK) = GPIO_LOCK_KEY;
@@ -159,7 +159,7 @@ SwitchTaskInit(void)
     // Initialize the buttons
     //
     ButtonsInit();
-
+*/
     //
     // Create the switch task.
     //

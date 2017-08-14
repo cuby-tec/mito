@@ -27,7 +27,23 @@
 #define GREEN_GPIO_PIN          GPIO_PIN_3
 
 
+#define X_axis_int      (1) // from axisX_intrrupt_handler to orderlyTask
+#define X_axis_int_fin  (2) // from axisX_intrrupt_handler to orderlyTask
 
-#define PORT_PULS_WIDTH     0x2F
+
+#define PORT_PULS_WIDTH     0x04FF
+
+
+#define N_AXIS  4 // Number of axes
+
+#define X_AXIS  0 // Axis indexing value
+#define Y_AXIS  1
+#define Z_AXIS  2
+#define E_AXIS  3
+
+#define X_FLAG  (1<<X_AXIS)
+#define Y_FLAG  (1<<Y_AXIS)
+#define Z_FLAG  (1<<Z_AXIS)
+#define E_FLAG  (1<<E_AXIS)
 
 #endif /* MSMOTOR_MSPORT_H_ */

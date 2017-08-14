@@ -5,7 +5,6 @@
  *      Author: walery
  */
 
-#include "orderlyTask.h"
 //#include <xdc/runtime/Timestamp.h>
 
 //#include <rgb.h>
@@ -17,16 +16,23 @@
 //#include "driverlib/gpio.h"
 #include "inc/hw_memmap.h"
 
-
+#include "orderlyTask.h"
+#include "msmotor/mempool.h"
+#include "msmotor/msport.h"
 #include "msmotor/ms_init.h"
 #include "msmotor/ms_model.h"
 
 
 #include "priorities.h"
 #include <limits.h>
+
+
+
+
+
 //------------- DEFS
 
-#define ORDERLYTASKSTACKSIZE   640//576 //128 //192 640 //
+#define ORDERLYTASKSTACKSIZE   128//640//576 //128 //192 640 //
 
 //---------  vars
 
@@ -39,75 +45,46 @@
 
 TaskHandle_t orderlyHandling;
 
+uint32_t taskcounter = 0;
+
 
 //--------- function
 
 
-/*
-Void orderly_routine(UArg arg0, UArg arg1){
 
-
-
-  //
-    // Enable and wait for the port to be ready for access
-    //
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
-    while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOF))
-    {
-    }
-
-//    msInit(0);
-
-
-
-    for (;;) {
-        //
-        // Turn on the LED
-        //
-//        GPIOPinWrite(GPIO_PORTF_BASE, RED_LED|BLUE_LED|GREEN_LED, RED_LED);
-        time1 = Clock_getTicks();
-        System_printf("Tick in system. cnt_int: %lu\n",cnt_int);
-        System_flush();
-        Task_sleep(1000);
-
-        //
-        // Turn on the LED
-        //
-//        GPIOPinWrite(GPIO_PORTF_BASE, RED_LED|BLUE_LED|GREEN_LED, BLUE_LED);
-        Task_sleep(1000);
-        time2 = Clock_getTicks();
-        time3++;
-        System_printf("Delta time is :%lu ; now: %lu \n",(ULong)(time2 - time1),time3);
-
-
-    } // end of for(;;);
-}
-
-*/
 static uint32_t cnt_delay;
 static uint32_t delay_max;
 void orderly_routine(void* pvParameters ){
     uint32_t ulNotifiedValue;
 
-    testPrepare();
+//    testPrepare();
+    initBlock();
+
+    initStepper();
+    ms_finBlock = exitBlock;
+    start_t1(0);
 
     for( ;; ){
-
+//portMAX_DELAY
         xTaskNotifyWait(0x00, ULONG_MAX, &ulNotifiedValue, portMAX_DELAY);
 
-        if(ulNotifiedValue & 0x01){
-//            prvProcessBit0Event();
-            cnt_delay = TimerValueGet(WTIMER5_BASE, TIMER_B);
-            cnt_delay -= ms_delay.counter;
-            if(delay_max<cnt_delay)
-                delay_max = cnt_delay;
-            rgb_enable();
-            NoOperation;
+        taskcounter++;
+
+        if(ulNotifiedValue & X_axis_int){
+//            axisX_rateHandler();
+            ms_nextBlock();
         }
-        if(ulNotifiedValue & 0x02){
-            rgb_disable();
-            NoOperation;
+
+        if(ulNotifiedValue & X_axis_int_fin)
+        {
+//            ms_finBlock = continueBlock;
+            start_t1(0);
         }
+
+//        if(ulNotifiedValue & 0x02){
+//            rgb_disable();
+//            NoOperation;
+//        }
 
     } // end for(;;);
 

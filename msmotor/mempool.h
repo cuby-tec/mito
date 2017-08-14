@@ -15,6 +15,8 @@
 #endif
 #include <msmotor/block_state.h>
 
+#include "mscontrol.h"
+#include "stepper_state.h"
 ///------------- Defs
 
 
@@ -25,6 +27,19 @@
 
 
 //----------- Vars
+
+extern struct sControl* pblock;
+
+//extern struct Stepper_state_t sts;
+
+extern uint16_t axis_flags;
+
+extern block_state* current_block;
+
+extern stepper_state sts;
+
+
+
 #ifdef KTF7
 extern OS_MEMF cmdPool;
 #else
