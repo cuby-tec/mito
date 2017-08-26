@@ -206,13 +206,67 @@ void initBlock(void)
 }
 
 //--------------------- initStepper
-void initStepper(void)
+void initStepper(uint8_t axis)
 {
-    sts.counter_y = 0;
-    sts.point_y = pblock->steps;
-    sts.rate_y = pblock->initial_rate;
-    sts.state = 0;      //  pblock->schem[0];
-    sts.speedLevel = pblock->initial_speedLevel;
+    switch(axis){
+    case N_AXIS:
+        sts.counter = 0;
+        sts.point = pblock->steps;
+        sts.rate = pblock->initial_rate;
+        sts.state = 0;      //  pblock->schem[0];
+        sts.speedLevel = pblock->initial_speedLevel;
+
+        sts_y.counter   = 0;
+        sts_y.point   = pblock_y->steps;
+        sts_y.rate    = pblock_y->initial_rate;
+        sts_y.state     = 0;
+        sts_y.speedLevel = pblock_y->initial_speedLevel;
+
+        sts_z.counter   = 0;
+        sts_z.point   = pblock_z->steps;
+        sts_z.rate    = pblock_z->initial_rate;
+        sts_z.state     = 0;
+        sts_z.speedLevel = pblock_z->initial_speedLevel;
+
+        sts_e.counter   = 0;
+        sts_e.point   = pblock_e->steps;
+        sts_e.rate    = pblock_e->initial_rate;
+        sts_e.state     = 0;
+        sts_e.speedLevel = pblock_e->initial_speedLevel;
+
+        break;
+    case X_AXIS:
+        sts.counter = 0;
+        sts.point = pblock->steps;
+        sts.rate = pblock->initial_rate;
+        sts.state = 0;      //  pblock->schem[0];
+        sts.speedLevel = pblock->initial_speedLevel;
+        break;
+
+    case Y_AXIS:
+        sts_y.counter   = 0;
+        sts_y.point   = pblock_y->steps;
+        sts_y.rate    = pblock_y->initial_rate;
+        sts_y.state     = 0;
+        sts_y.speedLevel = pblock_y->initial_speedLevel;
+        break;
+
+    case Z_AXIS:
+        sts_z.counter   = 0;
+        sts_z.point   = pblock_z->steps;
+        sts_z.rate    = pblock_z->initial_rate;
+        sts_z.state     = 0;
+        sts_z.speedLevel = pblock_z->initial_speedLevel;
+        break;
+
+    case E_AXIS:
+        sts_e.counter   = 0;
+        sts_e.point   = pblock_e->steps;
+        sts_e.rate    = pblock_e->initial_rate;
+        sts_e.state     = 0;
+        sts_e.speedLevel = pblock_e->initial_speedLevel;
+        break;
+    }
 }
 
 
@@ -223,30 +277,15 @@ void initStepper(void)
 //
 //*****************************************************************************
 void msInit(void){
-
     PinoutSet();
 
-    //
-    // Enable and wait for the port to be ready for access
-    //
-//    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
-//    while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOF))
-//    {
-//    }
+//    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+    SysCtlPeripheralEnable(TIMER_X_AXIS_PERIPH);
+    SysCtlPeripheralEnable(TIMER_Y_AXIS_PERIPH);
+    SysCtlPeripheralEnable(TIMER_Z_AXIS_PERIPH);
+    SysCtlPeripheralEnable(TIMER_E_AXIS_PERIPH);
 
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER3);
-
-    while(!SysCtlPeripheralReady(SYSCTL_PERIPH_TIMER3))
-    {
-    }
-
-
-
-#ifdef USE_HW
-    //
-    // Configure each timer for output mode T1A
+//  Timer X initializing. ======================
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TAEN; //
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_CFG) = TIMER_CFG_16_BIT;
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAMR) = TIMER_TAMR_TAMR_PERIOD|TIMER_TAMR_TAAMS|TIMER_TAMR_TAPWMIE;
@@ -263,110 +302,92 @@ void msInit(void){
 //    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAPWML; //  TABPWML inverted
     HWREG(TIMER_BASE_X_AXIS  + TIMER_O_TAMATCHR) = PORT_PULS_WIDTH;
     HWREG(TIMER_BASE_X_AXIS  + TIMER_O_TAPMR) = 0;
-
+    //
+    // Set the Timer1A match value to load value / 3.
+    //
+//    TimerMatchSet(TIMER_BASE_X_AXIS, TIMER_A,
+//                  TimerLoadGet(TIMER_BASE_X_AXIS, TIMER_A) / 3);
+//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_IMR) |= TIMER_IMR_CAEIM;
     TimerIntClear(TIMER_BASE_X_AXIS, TIMER_CAPA_EVENT);
     IntEnable(INT_TIMER1A); // NVIC register setup.
+    IntPrioritySet(INT_TIMER_X, INT_TIMER1_X_PRIORITY);
 
-
-    // timer axis Y = T1B
+//  Timer Y initializing.    ===================
     HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TBEN; //
-
     HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CFG) = TIMER_CFG_16_BIT;
-    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_TBMR) = TIMER_TBMR_TBMR_PERIOD|TIMER_TBMR_TBAMS|TIMER_TBMR_TBPWMIE;//0x0A;
-    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_TBILR) = 0x0FFE;    //
-    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBPWML|TIMER_CTL_TBEVENT_NEG;//0x4000; TABPWML inverted
-    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TBMATCHR) = PORT_PULS_WIDTH;
-    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_IMR) |= TIMER_IMR_CBEIM;
-    IntEnable(INT_TIMER1B); // NVIC register setup.
-    TimerIntClear(TIMER_BASE_Y_AXIS, TIMER_CAPB_EVENT);
+    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_TBMR) = TIMER_TBMR_TBMR_PERIOD|TIMER_TBMR_TBAMS|TIMER_TBMR_TBPWMIE;
+//    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_TAMR) |= TIMER_TBMR_TAMIE;
+//    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_TAMR) |= TIMER_TBMR_TAPLO;
+    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_TBMR) |= TIMER_TBMR_TBILD;
+    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_TBMR) |= TIMER_TBMR_TBMRSU;
+    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_IMR)  |=  TIMER_IMR_CBEIM;// TIMER_IMR_TAMIM; // | TIMER_IMR_TATOIM;
+    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_TBILR) = 0xFFFF;    //
+    HWREG(TIMER_BASE_Y_AXIS  + TIMER_O_TAPR) = 0;
+    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBSTALL;
+    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEVENT_NEG;     //TIMER_CTL_TAEVENT_POS ;
+//    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEVENT_POS;
+//    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBPWML; //  TABPWML inverted
+    HWREG(TIMER_BASE_Y_AXIS  + TIMER_O_TBMATCHR) = PORT_PULS_WIDTH;
+    HWREG(TIMER_BASE_Y_AXIS  + TIMER_O_TBPMR) = 0;
 
-    // timer axis Z = T2A
+    TimerIntClear(TIMER_BASE_Y_AXIS, TIMER_CAPB_EVENT);
+    IntEnable(INT_TIMER1B); // NVIC register setup.
+    IntPrioritySet(INT_TIMER_Y, INT_TIMER_Y_PRIORITY);
+
+// Timer Z initializing. ============================
     HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TAEN; //
     HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CFG) = TIMER_CFG_16_BIT;
     HWREG(TIMER_BASE_Z_AXIS + TIMER_O_TAMR) = TIMER_TAMR_TAMR_PERIOD|TIMER_TAMR_TAAMS|TIMER_TAMR_TAPWMIE;
-    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_TAILR) = 0x0FFD;    //
-    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAPWML|TIMER_CTL_TAEVENT_NEG; // TABPWML inverted
-    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_TAMATCHR) = PORT_PULS_WIDTH;
-    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_IMR) |= TIMER_IMR_CAEIM;
-    IntEnable(INT_TIMER2A); // NVIC register setup.
+//    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_TAMR) |= TIMER_TAMR_TAMIE;
+//    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_TAMR) |= TIMER_TAMR_TAPLO;
+    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_TAMR) |= TIMER_TAMR_TAILD;
+    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_TAMR) |= TIMER_TAMR_TAMRSU;
+    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_IMR) =  TIMER_IMR_CAEIM;// TIMER_IMR_TAMIM; // | TIMER_IMR_TATOIM;
+    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_TAILR) = 0xFFFF;    //
+    HWREG(TIMER_BASE_Z_AXIS  + TIMER_O_TAPR) = 0;
+    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TASTALL;
+    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEVENT_NEG;     //TIMER_CTL_TAEVENT_POS ;
+//    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEVENT_POS;
+//    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAPWML; //  TABPWML inverted
+    HWREG(TIMER_BASE_Z_AXIS  + TIMER_O_TAMATCHR) = PORT_PULS_WIDTH;
+    HWREG(TIMER_BASE_Z_AXIS  + TIMER_O_TAPMR) = 0;
+    //
+    // Set the Timer3A match value to load value / 3.
+    //
+//    TimerMatchSet(TIMER_BASE_Z_AXIS, TIMER_A,
+//                  TimerLoadGet(TIMER_BASE_Z_AXIS, TIMER_A) / 3);
+//    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_IMR) |= TIMER_IMR_CAEIM;
     TimerIntClear(TIMER_BASE_Z_AXIS, TIMER_CAPA_EVENT);
+    IntEnable(INT_TIMER_Z); // NVIC register setup.
+    IntPrioritySet(INT_TIMER_Z, INT_TIMER1_Z_PRIORITY);
 
-    // timer axis E = T2B
+// Timer E initializing ==========================
+
     HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TBEN; //
     HWREG(TIMER_BASE_E_AXIS + TIMER_O_CFG) = TIMER_CFG_16_BIT;
-    HWREG(TIMER_BASE_E_AXIS + TIMER_O_TBMR) = TIMER_TBMR_TBMR_PERIOD|TIMER_TBMR_TBAMS|TIMER_TBMR_TBPWMIE;//0x0A;
-    HWREG(TIMER_BASE_E_AXIS + TIMER_O_TBILR) = 0x1FFC;    //
-    HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBPWML|TIMER_CTL_TBEVENT_NEG; //  TABPWML inverted
-    HWREG(TIMER_BASE_E_AXIS + TIMER_O_TBMATCHR) = PORT_PULS_WIDTH;
-    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_IMR) |= TIMER_IMR_CBEIM;
-//    IntEnable(INT_TIMER2B); // NVIC register setup.
+    HWREG(TIMER_BASE_E_AXIS + TIMER_O_TBMR) = TIMER_TBMR_TBMR_PERIOD|TIMER_TBMR_TBAMS|TIMER_TBMR_TBPWMIE;
+//    HWREG(TIMER_BASE_E_AXIS + TIMER_O_TAMR) |= TIMER_TBMR_TAMIE;
+//    HWREG(TIMER_BASE_E_AXIS + TIMER_O_TAMR) |= TIMER_TBMR_TAPLO;
+    HWREG(TIMER_BASE_E_AXIS + TIMER_O_TBMR) |= TIMER_TBMR_TBILD;
+    HWREG(TIMER_BASE_E_AXIS + TIMER_O_TBMR) |= TIMER_TBMR_TBMRSU;
+    HWREG(TIMER_BASE_E_AXIS + TIMER_O_IMR)  |=  TIMER_IMR_CBEIM;// TIMER_IMR_TAMIM; // | TIMER_IMR_TATOIM;
+    HWREG(TIMER_BASE_E_AXIS + TIMER_O_TBILR) = 0xFFFF;    //
+    HWREG(TIMER_BASE_E_AXIS  + TIMER_O_TAPR) = 0;
+    HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBSTALL;
+    HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEVENT_NEG;     //TIMER_CTL_TAEVENT_POS ;
+//    HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEVENT_POS;
+//    HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBPWML; //  TABPWML inverted
+    HWREG(TIMER_BASE_E_AXIS  + TIMER_O_TBMATCHR) = PORT_PULS_WIDTH;
+    HWREG(TIMER_BASE_E_AXIS  + TIMER_O_TBPMR) = 0;
+
     TimerIntClear(TIMER_BASE_E_AXIS, TIMER_CAPB_EVENT);
-
-    //
-    // Enable timers to begin counting
-    //
-//    ROM_TimerEnable(RED_TIMER_BASE, TIMER_BOTH);
-//    ROM_TimerEnable(GREEN_TIMER_BASE, TIMER_BOTH);
-//    ROM_TimerEnable(BLUE_TIMER_BASE, TIMER_BOTH);
-
-//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN; //
-//    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN; // green
-//    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN; // blue
-//    HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN; //
+    IntEnable(INT_TIMER_E); // NVIC register setup.
+    IntPrioritySet(INT_TIMER_E, INT_TIMER_E_PRIORITY);
 
 
-    //
-    // Setup the blink functionality
-    //
-//    SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER5);
-/*    TimerEnable(WTIMER5_BASE, ~TIMER_B);
-    TimerConfigure(WTIMER5_BASE, TIMER_CFG_B_PERIODIC | TIMER_CFG_SPLIT_PAIR);
-//    HWREG(WTIMER5_BASE + TIMER_O_TBMR) = 0x0012;
-    HWREG(WTIMER5_BASE + TIMER_O_TBMR) = 0x0002;
-    TimerLoadSet64(WTIMER5_BASE, 0x002FFFFFFFFFFFFF);
-    TimerIntClear(WTIMER5_BASE,TIMER_TIMB_TIMEOUT);//TIMER_TIMB_TIMEOUT
-    IntEnable(INT_WTIMER5B);
-    TimerIntEnable(WTIMER5_BASE, TIMER_TIMB_TIMEOUT);
-    TimerEnable(WTIMER5_BASE,TIMER_B);
-*/
-
-/*
-    HWREG(WTIMER5_BASE + TIMER_O_CTL) &= ~TIMER_CTL_TBEN; //
-    HWREG(WTIMER5_BASE + TIMER_O_CFG) = TIMER_CFG_16_BIT; // 32 bit
-    HWREG(WTIMER5_BASE + TIMER_O_TBMR) = TIMER_TBMR_TBMR_PERIOD|TIMER_TBMR_TBAMS|TIMER_TBMR_TBPWMIE;//0x0A;
-    HWREG(WTIMER5_BASE + TIMER_O_TBILR) = 0x003FFFFF;    //
-    HWREG(WTIMER5_BASE + TIMER_O_CTL) |= TIMER_CTL_TBPWML|TIMER_CTL_TBEVENT_NEG; //  TABPWML inverted
-    HWREG(WTIMER5_BASE + TIMER_O_TBMATCHR) = PORT_PULS_WIDTH*100;
-    HWREG(WTIMER5_BASE + TIMER_O_IMR) |= TIMER_IMR_CBEIM;
-    TimerIntClear(WTIMER5_BASE, TIMER_CAPB_EVENT);
-    IntEnable(INT_WTIMER5B); // NVIC register setup.
-    TimerEnable(WTIMER5_BASE,TIMER_B);
-    NoOperation;
-*/
-
-//    GPIOPinConfigure(GPIO_PF1_T0CCP1);
-//    GPIOPinConfigure(GPIO_PF2_T1CCP0);
-//    GPIOPinConfigure(GPIO_PF3_T1CCP1);
-    // GPIO_PF3_T1CCP1 green
-//    GPIOPinTypeTimer(GPIO_PORTF_BASE,  RED_LED|BLUE_LED|GREEN_LED);
-
-
-    //
-    // Configure the GPIO port for the LED operation.
-    //
-//    GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, RED_LED|BLUE_LED|GREEN_LED);
-
-
-    //
-    // Setup the blink functionality
-    //
-//    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER5);
-
-#endif
-
-
-
-
+//=====================
+    sync[0] = 0;
+    sync[1] = 0;
 }
 
 

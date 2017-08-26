@@ -29,7 +29,10 @@
 #include "msmotor/ms_init.h"
 #include "msmotor/ms_model.h"
 
-#include "msmotor/isrTimer_X.h"
+//#include "msmotor/isrTimer_X.h"
+
+//#include "msmotor/svi_port.h"
+#include <msmotor/isrTimer.h>
 
 //*****************************************************************************
 //
@@ -66,6 +69,12 @@ extern void xPortPendSVHandler(void);
 extern void vPortSVCHandler(void);
 extern void xPortSysTickHandler(void);
 
+extern void soft_interrupt_handler(void);
+extern void Timer1IntHandler(void);
+extern void TimerYIntHandler(void);
+extern void TimerZIntHandler(void);
+extern void TimerEIntHandler(void);
+
 //*****************************************************************************
 //
 // The vector table.  Note that the proper constructs must be placed on this to
@@ -93,7 +102,7 @@ void (* const g_pfnVectors[])(void) =
     0,                                      // Reserved
     xPortPendSVHandler,                     // The PendSV handler
     xPortSysTickHandler,                    // The SysTick handler
-    IntDefaultHandler,                      // GPIO Port A
+    soft_interrupt_handler,                      // GPIO Port A
     IntDefaultHandler,                      // GPIO Port B
     IntDefaultHandler,                      // GPIO Port C
     IntDefaultHandler,                      // GPIO Port D
@@ -114,10 +123,10 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Watchdog timer
     IntDefaultHandler,                      // Timer 0 subtimer A
     IntDefaultHandler,                      // Timer 0 subtimer B
-    axisX_intrrupt_handler,                      // Timer 1 subtimer A
-    Timer_Y_isr,                      // Timer 1 subtimer B
-    IntDefaultHandler,                      // Timer 2 subtimer A
-    IntDefaultHandler,                      // Timer 2 subtimer B
+    Timer1IntHandler,                      // Timer 1 subtimer A
+    TimerYIntHandler,                      // Timer 1 subtimer B
+    TimerZIntHandler,                      // Timer 2 subtimer A
+    TimerEIntHandler,                      // Timer 2 subtimer B
     IntDefaultHandler,                      // Analog Comparator 0
     IntDefaultHandler,                      // Analog Comparator 1
     IntDefaultHandler,                      // Analog Comparator 2

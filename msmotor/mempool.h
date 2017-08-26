@@ -13,10 +13,11 @@
 #ifdef KTF7
 #include <rtos.h>
 #endif
-#include <msmotor/block_state.h>
+//#include <msmotor/block_state.h>
 
-#include "mscontrol.h"
+#include "sSegment.h"
 #include "stepper_state.h"
+#include "msport.h"
 ///------------- Defs
 
 
@@ -34,10 +35,34 @@ extern struct sControl* pblock;
 
 extern uint16_t axis_flags;
 
-extern block_state* current_block;
+extern uint32_t g_ui32Flags;
 
-extern stepper_state sts;
+//extern block_state* current_block;
 
+extern uint32_t sync[2];
+
+//extern stepper_state sts;
+extern struct Stepper_state_t sts;
+extern struct Stepper_state_t sts_y;
+extern struct Stepper_state_t sts_z;
+extern struct Stepper_state_t sts_e;
+
+struct sSegment sector[SECTOR_SIZE];
+extern struct sSegment* segment;    // укзатель на текущий сегмент в sSector
+extern struct sControl block;
+
+extern struct sControl* pblock;
+extern struct sControl* current_block;
+
+extern struct sControl* pblock_y;
+extern struct sControl* pblock_z;
+extern struct sControl* pblock_e;
+
+extern uint32_t speedRate[N_AXIS];
+
+extern const struct sControl default_block;
+
+extern const struct sHead default_segment_head;
 
 
 #ifdef KTF7

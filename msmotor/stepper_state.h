@@ -16,21 +16,32 @@
 #include "inc/typedefs.h"
 #include <math.h>
 
+
+struct Stepper_state_t{
+    uint32_t counter;     //  Текущая координата по оси Y.
+    uint32_t point;       //  Расчётная точка по оси Y для следующего шага.
+    uint32_t rate;        //  Темп движения по оси Y.
+    uint8_t state;          //  состояние формирования скоростного режима.
+    uint32_t speedLevel;    // Уровень скорости для разгона и торможения.
+};
+
+#ifdef kTF7
 typedef struct Stepper_state_t {
 	word counter_x;		//  Текущая координата по оси X.
-	word counter_y;		//  Текущая координата по оси Y.
-	word point_y;		//  Расчётная тока по оси Y для следующего щага.
+	word counter;		//  Текущая координата по оси Y.
+	word point;		//  Расчётная тока по оси Y для следующего щага.
 	                    //  Эту функцию выполняет current_block->steps_x
 //	word point_x;		//  Конечное значение участка по X
 //	word timer_counter;
 	word rate_x;		//  Темп по оси X.
 	word rate_delta_y;	//  Изменение Темпа по оси Y.
-	word rate_y;		//  Темп движения по оси Y.
+	word rate;		//  Темп движения по оси Y.
 	byte state;			//  состояние формирования скоростного режима.
 	word startX	;	    //  Начало рабочей области обработки
 	word finishX;	    //  Конец рабочей области обработки
 	word speedLevel;	// Уровень скорости для разгона и торможения.
 	double_t	speedX;	//  текущее среднее значение скорости по оси X.
 }stepper_state;
+#endif
 
 #endif  //_STEPPER_STATE_H

@@ -60,10 +60,9 @@ void orderly_routine(void* pvParameters ){
 //    testPrepare();
     initBlock();
 
-    initStepper();
+    initStepper(N_AXIS);
     ms_finBlock = exitBlock;
     start_t1(0);
-
     for( ;; ){
 //portMAX_DELAY
         xTaskNotifyWait(0x00, ULONG_MAX, &ulNotifiedValue, portMAX_DELAY);

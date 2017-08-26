@@ -39,10 +39,13 @@
 #include "queue.h"
 #include "semphr.h"
 
-#include "orderlyTask.h"
+#include "inc/typedefs.h"
+
 #include "msmotor/ms_init.h"
 #include "drivers/usbmodule.h"
-#include "inc/typedefs.h"
+#include "msmotor/svi_port.h"
+
+#include "orderlyTask.h"
 
 //*****************************************************************************
 //
@@ -80,6 +83,9 @@
 //! http://www.freertos.org/
 //
 //*****************************************************************************
+
+#define _USB
+
 
 
 //*****************************************************************************
@@ -199,15 +205,20 @@ main(void)
     //
     g_pUARTSemaphore = xSemaphoreCreateMutex();
 
-
+// HW init ------------
     msInit();
+
+    svi_port_init();    // PA0 is used as software interrupt.
+
 //    PinoutSet();
+#ifdef _USB
     if (usb_init() ){
         while(1)
         {
             NoOperation;
         }
     }
+#endif
 //    while(1){}
     //
     // Create the LED task.

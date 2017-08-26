@@ -77,7 +77,7 @@ typedef struct {
 #ifdef TFATFS_H_
 	char 			file[KTF_FILENAME_LENGTH+1];
 #endif
-	enum SyncMode	sync;		// Способ обработки блоков движения: 0 - сихронный, 1 - асинхронный.
+	enum SyncMode	syncmode;		// Способ обработки блоков движения: 0 - сихронный, 1 - асинхронный.
 	word 			block_counter;	// Счётчик загруженных блоков - признак завершения выполнения программы.
 	word 			blockNumber;	// Номер текущего(исполняемого) блока.
 	enum kt_eStates state;  // Состояние: 0 - свободное движение, 1 - сканирование границ изделия,2 - работа,

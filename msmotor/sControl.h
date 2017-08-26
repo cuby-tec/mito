@@ -5,8 +5,8 @@
  *      Author: walery
  */
 
-#ifndef MSMOTOR_MSCONTROL_H_
-#define MSMOTOR_MSCONTROL_H_
+#ifndef MSMOTOR_SCONTROL_H_
+#define MSMOTOR_SCONTROL_H_
 
 
 #define DOUBLE_n
@@ -57,4 +57,4 @@ struct Stepper_state_t{
 
 
 
-#endif /* MSMOTOR_MSCONTROL_H_ */
+#endif /* MSMOTOR_SCONTROL_H_ */

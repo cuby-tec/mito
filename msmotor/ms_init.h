@@ -57,7 +57,7 @@ extern struct Ms_delay ms_delay;
 // extern void RGBInit(uint32_t ui32Enable);
 extern void msInit(void);
 
-extern void initStepper(void);
+void initStepper(uint8_t axis);
 
 extern void initBlock(void);
 

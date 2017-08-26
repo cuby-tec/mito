@@ -23,18 +23,47 @@ union{
 
 };
 
+uint32_t sync[2];
+
 
 struct Stepper_state_t sts;
+struct Stepper_state_t sts_y;
+struct Stepper_state_t sts_z;
+struct Stepper_state_t sts_e;
+
+struct sSegment sector[SECTOR_SIZE];
+
 //static struct Stepper_state_t* psts = &sts;
 
-static  struct sControl block;
+struct sControl block;
+struct sControl block_y;
+struct sControl block_z;
+struct sControl block_e;
+
+
 struct sControl* pblock = &block;
+struct sControl* pblock_y = &block_y;
+struct sControl* pblock_z = &block_z;
+struct sControl* pblock_e = &block_e;
+
+struct sSegment* segment = &sector[0];
+
+
+uint32_t speedRate[N_AXIS];
+
+const struct sControl default_block = {
+   X_AXIS, 10, 2, 3, 7, 50132, 0, 5370, 3, 50132, 0, 1, 2, 3, forward
+};
+
+const struct sHead default_segment_head = {
+   1,N_AXIS, (X_FLAG|Y_FLAG|Z_FLAG|E_FLAG)
+};
 
 uint16_t axis_flags; //X_FLAG, Y_FLAG, Z_FLAG, E_FLAG
 
-block_state* current_block = &block;
+//block_state* current_block = &block;
 
-stepper_state sts;
+//stepper_state sts;
 
 //-------------- Function
 

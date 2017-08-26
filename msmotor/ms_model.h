@@ -25,24 +25,24 @@
 extern void (*ms_finBlock)(void);
 
 
-extern stepper_state sts;
+//extern stepper_state sts;
 
 //extern uint32_t cnt_int;    // debug counter;
 
 //-------- function
 
-extern void axisX_intrrupt_handler(void);
+//extern void axisX_intrrupt_handler(void);
 //extern Void axisX_intrrupt_handler(UArg arg);
 
 
-extern void continueBlock();
+//extern void continueBlock();
 
 extern void exitBlock(void);
 
 extern void start_t1(uint8_t pusc);
-
+#ifdef commit_13
 extern void axisX_rateHandler();
-
+#endif
 extern void ms_nextBlock();
 
 //extern void testPrepare(void);

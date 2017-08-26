@@ -80,7 +80,7 @@ static uint32_t multy = 1;
 
 static uint8_t rest = 0;
 
-static uint32_t speedRate;
+//static uint32_t speedRate;
 
 static uint32_t be_portf1;
 
@@ -91,7 +91,7 @@ void (*ms_finBlock)(void);
 
 //-------------- function
 
-
+#ifdef commit_13
 /**
  * Обновление значений счётчика оси X
  */
@@ -104,7 +104,7 @@ void axisX_rateHandler()
         GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, g_ui32Flags);
 //            0x400253fc
 #endif
-        if(sts.counter_y > sts.point_y){
+        if(sts.counter > sts.point){
              (*ms_finBlock)();
 #ifdef LED_PIN2
              GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, ~GPIO_PIN_2);
@@ -117,22 +117,22 @@ void axisX_rateHandler()
             //      RISE_SPEED_FIRST;
             //      TIMER_Y += sts.rate_y;
             rest = 0;
-            if(current_block->accelerate_until<=sts.counter_y){
+            if(current_block->accelerate_until<=sts.counter){
                 sts.state++;
-                speedRate = sts.rate_y;
-                sts.rate_y = current_block->nominal_rate;
+                speedRate = sts.rate;
+                sts.rate = current_block->nominal_rate;
                 sts.speedLevel = current_block->speedLevel;
             }else{
                 if(sts.speedLevel < current_block->speedLevel){
                     sts.speedLevel++;
                     if(sts.speedLevel == 1){
-                        sts.rate_y *= 0.4056;
+                        sts.rate *= 0.4056;
                     }
                     else{
 #ifdef DOUBLE
-                        sts.rate_y = current_block->initial_rate*(sqrtf(sts.speedLevel+1)-sqrtf(sts.speedLevel));
+                        sts.rate = current_block->initial_rate*(sqrtf(sts.speedLevel+1)-sqrtf(sts.speedLevel));
 #else
-                        sts.rate_y = sts.rate_y - (((2 * (long)sts.rate_y) + rest)/(4 * sts.speedLevel + 1));
+                        sts.rate = sts.rate - (((2 * (long)sts.rate) + rest)/(4 * sts.speedLevel + 1));
 #endif
 //                    rest = ((2 * (long)sts.rate_y)+rest)%(4 * sts.speedLevel + 1);
                     //              sts.rate_y = (word)CO*(sqrtf(sts.speedLevel+1)-sqrtf(sts.speedLevel));
@@ -145,12 +145,12 @@ void axisX_rateHandler()
         case 2: case 5:// flast motion
             //      FLAT_MOTION;
             //      TIMER_Y += sts.rate_y;
-            if(sts.counter_y>=current_block->decelerate_after){
+            if(sts.counter>=current_block->decelerate_after){
                 sts.state++;
 //                if(sts.rate_y>psettings->initial_rate)
 //                    sts.rate_y = psettings->initial_rate;
 //                sts.rate_y = current_block->final_rate;
-                sts.rate_y = speedRate;
+                sts.rate = speedRate;
 #ifdef DOUBLE
                 sts.speedLevel--;
 #else
@@ -166,14 +166,14 @@ void axisX_rateHandler()
             sts.speedLevel--;
             if(sts.speedLevel>current_block->final_speedLevel){
 #ifdef DOUBLE
-                sts.rate_y = current_block->initial_rate*(sqrtf(sts.speedLevel+1)-sqrtf(sts.speedLevel));
+                sts.rate = current_block->initial_rate*(sqrtf(sts.speedLevel+1)-sqrtf(sts.speedLevel));
 #else
 //                sts.rate_y = sts.rate_y + (((2 * (long)sts.rate_y) + rest)/(4 * sts.speedLevel + 1));
-                sts.rate_y = sts.rate_y + (((2 * (long)sts.rate_y))/(4 * sts.speedLevel + 1 + rest));
+                sts.rate = sts.rate + (((2 * (long)sts.rate))/(4 * sts.speedLevel + 1 + rest));
 //                rest = ((2 * (long)sts.rate_y)+rest)%(4 * sts.speedLevel + 1);
 #endif
             }else{
-                sts.rate_y = current_block->final_rate;
+                sts.rate = current_block->final_rate;
             }
             break;
         }
@@ -186,7 +186,7 @@ void axisX_rateHandler()
    // end handler Y axis.
 
 }
-
+#endif //commit#13
 
 
 /**
@@ -230,19 +230,11 @@ static void ms_async_block(){
 //Запуск таймера оси.
 void start_t1(uint8_t pusc)
 {
+#ifndef V3
     uint32_t timerValue,timerValueMatch;
+    flag = 0;
+#endif
 
-//    flag = 0;
-
-    //
-    // Configure the GPIO Pin Mux for PB4
-    // for T1CCP0
-    //
-//    MAP_GPIOPinConfigure(GPIO_PB4_T1CCP0);
-//    MAP_GPIOPinTypeTimer(GPIO_PORTB_BASE, GPIO_PIN_4);
-
-//    TimerLoadSet(TIMER_BASE_X_AXIS,TIMER_A,0x0FFF);
-//    TimerMatchSet(TIMER_BASE_X_AXIS, TIMER_A, TimerLoadGet(TIMER_BASE_X_AXIS, TIMER_A)/3);
 
 #ifdef V3_
 
@@ -252,19 +244,8 @@ void start_t1(uint8_t pusc)
     TimerPrescaleMatchSet(TIMER_BASE_X_AXIS, TIMER_A, 0);
 #endif
 
-
-
-//           TimerLoadSet(TIMER_BASE_X_AXIS,TIMER_A,sts.rate_y);
-//           HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = sts.rate_y*multy;
-
-
-//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN; //
-
-//    GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_4, GPIO_PIN_4);
-//    for(timerValue=0;timerValue<50;timerValue++);
-//    GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_4, ~GPIO_PIN_4);
 #ifndef V3
-    timerValue = sts.rate_y*multy;
+    timerValue = sts.rate*multy;
     timerValueMatch = timerValue/3;
 
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = (uint16_t)(timerValue&0x0000FFFF);
@@ -278,30 +259,45 @@ void start_t1(uint8_t pusc)
     dump[0] = TimerLoadGet(TIMER_BASE_X_AXIS, TIMER_A);
 #endif
 
-    initStepper();  // next block
-    if(pusc == 0)
-//        Timer1IntHandler();
-        axisX_intrrupt_handler();
-//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAMR) &= ~TIMER_TAMR_TAPWMIE;
-//    IntEnable(INT_TIMER1A);
-//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_IMR) = TIMER_IMR_CAEIM;
-    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAMR) |= TIMER_TAMR_TAPWMIE;
+    initStepper(N_AXIS);  // next block
+    if(pusc == 0){
+        Timer1IntHandler();
+        TimerYIntHandler();
+        TimerZIntHandler();
+        TimerEIntHandler();
+    }
 
-    TimerEnable(TIMER_BASE_X_AXIS, TIMER_A);
-#ifdef BLOCK_OUT
-    MAP_GPIOPinConfigure(GPIO_PB4_T1CCP0);
-    MAP_GPIOPinTypeTimer(GPIO_PORTB_BASE, GPIO_PIN_4);
-#endif
+
+//    if(sync[0] & X_FLAG){
+//        TimerEnable(TIMER_BASE_X_AXIS, TIMER_X);
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
+//    }
+
+//    if(sync[0] & Y_FLAG){
+//        TimerEnable(TIMER_BASE_Y_AXIS, TIMER_Y);
+    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
+//    }
+
+//    if(sync[0] & Z_FLAG){
+//        TimerEnable(TIMER_BASE_Z_AXIS, TIMER_Z);
+    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
+//    }
+
+//    if(sync[0] & E_FLAG){
+//        TimerEnable(TIMER_BASE_E_AXIS, TIMER_E);
+    HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
+//    }
+        sync[1] |= X_FLAG;
+        sync[1] |= Y_FLAG;
+        sync[1] |= Z_FLAG;
+        sync[1] |= E_FLAG;
+
 
 #ifdef V3
 //    if(pusc)
 //        HWREG(TIMER_BASE_X_AXIS + TIMER_O_RIS) |= TIMER_RIS_CAERIS;
 #endif
 
-#ifdef LED_PIN1
-    HWREGBITB(&be_portf1,1) = ~HWREGBITB(&be_portf1,1);
-    GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, be_portf1);
-#endif
 }
 
 
@@ -311,21 +307,23 @@ void start_t1(uint8_t pusc)
  * Получение нового блока.
  * Отработка ломаной линии.
  */
+/*
 void continueBlock()
 {
     uint32_t timerValue;
 
 //TODO Получить новый блок
-    initStepper();
+    initStepper(X_AXIS);
 
-    sts.counter_y++;
-    timerValue = sts.rate_y*multy;
+    sts.counter++;
+    timerValue = sts.rate*multy;
     TimerLoadSet(TIMER_BASE_X_AXIS,TIMER_A,timerValue);
     timerValue >>=16;
     TimerPrescaleSet(TIMER_BASE_X_AXIS, TIMER_A, (timerValue&0x000000FF));
     xTaskNotifyFromISR(orderlyHandling,X_axis_int,eSetBits,NULL);
 
 }
+*/
 /*
 
 eTaskState getSate()
@@ -378,8 +376,8 @@ void exitBlock(void)
 
     initStepper();
 
-    sts.counter_y++;
-    timerValue = sts.rate_y*multy;
+    sts.counter++;
+    timerValue = sts.rate*multy;
     TimerLoadSet(TIMER_BASE_X_AXIS,TIMER_A,timerValue);
     timerValue >>=16;
     TimerPrescaleSet(TIMER_BASE_X_AXIS, TIMER_A, (timerValue&0x000000FF));
@@ -408,6 +406,7 @@ void exitBlock(void)
 
 // Keep track of remainder from new_step-delay calculation to increase accuracy
 #define DEBUG_INT_no
+#ifdef commit_13
 /**
  * Обработчик прерываний оси X
  */
@@ -438,9 +437,9 @@ void axisX_intrrupt_handler(void){//    uint32_t cOne = 1, cTwo;
 //else if(sts.counter_y == 5)
 //    sts.counter_y = 5;
 
-    sts.counter_y++;
+    sts.counter++;
 
-           timerValue_Y = sts.rate_y*multy;
+           timerValue_Y = sts.rate*multy;
 //           timerValueMatch = timerValue - 128;// timerValue/8;
 //           dump[ sts.counter_y%60] = sts.rate_y;
 
@@ -464,5 +463,5 @@ void axisX_intrrupt_handler(void){//    uint32_t cOne = 1, cTwo;
 //           GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, ~GPIO_PIN_2);
            return;
 }
-
+#endif
 
