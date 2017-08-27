@@ -36,7 +36,7 @@
 #include "msmotor/msport.h"
 #include "msmotor/mempool.h"
 #include "msmotor/ms_init.h"
-
+#include "isrTimer.h"
 
 #include "orderlyTask.h"
 
@@ -82,7 +82,6 @@ static uint8_t rest = 0;
 
 //static uint32_t speedRate;
 
-static uint32_t be_portf1;
 
 
 uint32_t g_ui32Flags;
@@ -91,110 +90,14 @@ void (*ms_finBlock)(void);
 
 //-------------- function
 
-#ifdef commit_13
-/**
- * Обновление значений счётчика оси X
- */
-void axisX_rateHandler()
-{
-    // Обработка следующегошага.
-        axis_flags &= ~Y_FLAG;
-#ifdef LED_PIN3
-        HWREGBITW(&g_ui32Flags,3) ^= 1;
-        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, g_ui32Flags);
-//            0x400253fc
-#endif
-        if(sts.counter > sts.point){
-             (*ms_finBlock)();
-#ifdef LED_PIN2
-             GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, ~GPIO_PIN_2);
-#endif
-//               return;
-        }//else
-
-        switch(pblock->schem[sts.state]){
-        case 1:
-            //      RISE_SPEED_FIRST;
-            //      TIMER_Y += sts.rate_y;
-            rest = 0;
-            if(current_block->accelerate_until<=sts.counter){
-                sts.state++;
-                speedRate = sts.rate;
-                sts.rate = current_block->nominal_rate;
-                sts.speedLevel = current_block->speedLevel;
-            }else{
-                if(sts.speedLevel < current_block->speedLevel){
-                    sts.speedLevel++;
-                    if(sts.speedLevel == 1){
-                        sts.rate *= 0.4056;
-                    }
-                    else{
-#ifdef DOUBLE
-                        sts.rate = current_block->initial_rate*(sqrtf(sts.speedLevel+1)-sqrtf(sts.speedLevel));
-#else
-                        sts.rate = sts.rate - (((2 * (long)sts.rate) + rest)/(4 * sts.speedLevel + 1));
-#endif
-//                    rest = ((2 * (long)sts.rate_y)+rest)%(4 * sts.speedLevel + 1);
-                    //              sts.rate_y = (word)CO*(sqrtf(sts.speedLevel+1)-sqrtf(sts.speedLevel));
-                    }
-                }
-            }
-            break;
-
-
-        case 2: case 5:// flast motion
-            //      FLAT_MOTION;
-            //      TIMER_Y += sts.rate_y;
-            if(sts.counter>=current_block->decelerate_after){
-                sts.state++;
-//                if(sts.rate_y>psettings->initial_rate)
-//                    sts.rate_y = psettings->initial_rate;
-//                sts.rate_y = current_block->final_rate;
-                sts.rate = speedRate;
-#ifdef DOUBLE
-                sts.speedLevel--;
-#else
-                sts.speedLevel--;
-#endif
-                //          max_rate = sts.rate_y;
-            }
-            break;
-
-        case 3:// decelerate
-            //      DOWN_SPEED_LAST;
-            rest = 2;
-            sts.speedLevel--;
-            if(sts.speedLevel>current_block->final_speedLevel){
-#ifdef DOUBLE
-                sts.rate = current_block->initial_rate*(sqrtf(sts.speedLevel+1)-sqrtf(sts.speedLevel));
-#else
-//                sts.rate_y = sts.rate_y + (((2 * (long)sts.rate_y) + rest)/(4 * sts.speedLevel + 1));
-                sts.rate = sts.rate + (((2 * (long)sts.rate))/(4 * sts.speedLevel + 1 + rest));
-//                rest = ((2 * (long)sts.rate_y)+rest)%(4 * sts.speedLevel + 1);
-#endif
-            }else{
-                sts.rate = current_block->final_rate;
-            }
-            break;
-        }
-
-
-//           printReport();
-#ifdef LED_PIN2
-    GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, ~GPIO_PIN_2);
-#endif
-   // end handler Y axis.
-
-}
-#endif //commit#13
-
 
 /**
  *  button control
- *  Синхронная работа считывателя блоков.
+ *  Получение нового сектора.
 */
-void ms_nextBlock()
+void ms_nextSector()
 {
+static uint32_t be_portf1;
 //    uint32_t be = GPIO_PORTF_BASE +  0x3fc;
 //    uint32_t* abe = GPIO_PORTF_BASE +  0x3fc;
 //  MS_ENABLE_OUT = MS_STOP; // Pause
@@ -267,6 +170,14 @@ void start_t1(uint8_t pusc)
         TimerEIntHandler();
     }
 
+/*
+        sync[1] |= X_FLAG;
+        sync[1] |= Y_FLAG;
+        sync[1] |= Z_FLAG;
+        sync[1] |= E_FLAG;
+*/
+    sync[0] |= X_FLAG|Y_FLAG|Z_FLAG|E_FLAG;
+    sync[1] |= X_FLAG|Y_FLAG|Z_FLAG|E_FLAG;
 
 //    if(sync[0] & X_FLAG){
 //        TimerEnable(TIMER_BASE_X_AXIS, TIMER_X);
@@ -287,11 +198,6 @@ void start_t1(uint8_t pusc)
 //        TimerEnable(TIMER_BASE_E_AXIS, TIMER_E);
     HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
 //    }
-        sync[1] |= X_FLAG;
-        sync[1] |= Y_FLAG;
-        sync[1] |= Z_FLAG;
-        sync[1] |= E_FLAG;
-
 
 #ifdef V3
 //    if(pusc)
@@ -307,23 +213,95 @@ void start_t1(uint8_t pusc)
  * Получение нового блока.
  * Отработка ломаной линии.
  */
-/*
-void continueBlock()
+
+void continueBlock(void)
 {
     uint32_t timerValue;
 
-//TODO Получить новый блок
-    initStepper(X_AXIS);
+//TODO Получить новый segment
 
-    sts.counter++;
-    timerValue = sts.rate*multy;
-    TimerLoadSet(TIMER_BASE_X_AXIS,TIMER_A,timerValue);
-    timerValue >>=16;
-    TimerPrescaleSet(TIMER_BASE_X_AXIS, TIMER_A, (timerValue&0x000000FF));
+    if(axis_flags&X_FLAG){
+        initStepper(X_AXIS);    // sts.counter = 0;
+        sync[1] &= ~X_FLAG;
+
+        sts.counter++;
+        timerValue = sts.rate*multy;
+        TimerLoadSet(TIMER_BASE_X_AXIS,TIMER_A,timerValue);
+        timerValue >>=16;
+        TimerPrescaleSet(TIMER_BASE_X_AXIS, TIMER_X, (timerValue&0x000000FF));
+    }
+    if(axis_flags&Y_FLAG){
+        initStepper(Y_AXIS);
+        sync[1] &= ~Y_FLAG;
+
+        sts_y.counter++;
+        timerValue = sts_y.rate*multy;
+        TimerLoadSet(TIMER_BASE_Y_AXIS,TIMER_B,timerValue);
+        timerValue >>=16;
+        TimerPrescaleSet(TIMER_BASE_Y_AXIS, TIMER_Y, (timerValue&0x000000FF));
+    }
+
+    if(axis_flags&Z_FLAG){
+        initStepper(Z_AXIS);
+        sync[1] &= ~Z_FLAG;
+
+        sts_z.counter++;
+        timerValue = sts_z.rate*multy;
+        TimerLoadSet(TIMER_BASE_Z_AXIS,TIMER_A,timerValue);
+        timerValue >>=16;
+        TimerPrescaleSet(TIMER_BASE_Z_AXIS, TIMER_Z, (timerValue&0x000000FF));
+    }
+
+    if(axis_flags&E_FLAG){
+        initStepper(E_AXIS);
+        sync[1] &= ~E_FLAG;
+
+        sts_e.counter++;
+        timerValue = sts_e.rate*multy;
+        TimerLoadSet(TIMER_BASE_E_AXIS,TIMER_E,timerValue);
+        timerValue >>=16;
+        TimerPrescaleSet(TIMER_BASE_E_AXIS, TIMER_E, (timerValue&0x000000FF));
+
+    }
+
+
+    if(!(sync[1] & X_FLAG)
+            && !(sync[1] & Y_FLAG)
+            && !(sync[1] & Z_FLAG)
+            && !(sync[1] & E_FLAG) )
+    {
+//        HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAV) = 0;
+//        HWREG(TIMER_BASE_Y_AXIS + TIMER_O_TAV) = 0;
+//        HWREG(TIMER_BASE_Z_AXIS + TIMER_O_TAV) = 0;
+//        HWREG(TIMER_BASE_E_AXIS + TIMER_O_TAV) = 0;
+
+        if(sync[0] & X_FLAG){
+//            TimerEnable(TIMER_BASE_X_AXIS, TIMER_X);
+            HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
+            sync[1] |= X_FLAG;
+        }
+        if(sync[0] && Y_FLAG){
+//            TimerEnable(TIMER_BASE_Y_AXIS, TIMER_Y);
+            HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
+            sync[1] |= Y_FLAG;
+        }
+        if(sync[0] & Z_FLAG){
+//            TimerEnable(TIMER_BASE_Z_AXIS, TIMER_Z);
+            HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
+            sync[1] |= Z_FLAG;
+        }
+        if(sync[0] & E_FLAG){
+//            TimerEnable(TIMER_BASE_E_AXIS, TIMER_E);
+            HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
+            sync[1] |= E_FLAG;
+        }
+    }
+
+
     xTaskNotifyFromISR(orderlyHandling,X_axis_int,eSetBits,NULL);
 
 }
-*/
+
 /*
 
 eTaskState getSate()
@@ -341,62 +319,36 @@ void stub(uint32_t tmp)
 
 void exitBlock(void)
 {
-    eTaskState et;
-    uint32_t cnt;
-//     printf("\n======== Exit block. =========\n\n");
-//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_IMR) &= ~TIMER_TAMR_TAPWMIE; //TIMER_TAMR_TAPWMIE
-//    IntEnable(INT_TIMER1A);
-//    IntDisable(INT_TIMER1A);
-//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_IMR) &= ~TIMER_IMR_CAEIM;
-//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAMR) &= ~TIMER_TAMR_TAPWMIE;
-//    TimerIntDisable(TIMER_BASE_X_AXIS, TIMER_CAPA_EVENT);   // work
-#ifndef CONTINUE
-    TimerDisable(TIMER_BASE_X_AXIS, TIMER_A);
 
+    if(sync[0] & X_FLAG & sync[1]){
+        sync[1] &= ~X_FLAG;
+        TimerDisable(TIMER_BASE_X_AXIS, TIMER_X);
+    }
+
+    if(sync[0] & Y_FLAG & sync[1]){
+        sync[1] &=~ Y_FLAG;
+        TimerDisable(TIMER_BASE_Y_AXIS, TIMER_Y);
+    }
+
+    if(sync[0] & Z_FLAG & sync[1]){
+        sync[1] &=~ Z_FLAG;
+        TimerDisable(TIMER_BASE_Z_AXIS, TIMER_Z);
+    }
+
+    if(sync[0] & E_FLAG & sync[1]){
+        sync[1] &=~ E_FLAG;
+        TimerDisable(TIMER_BASE_E_AXIS, TIMER_E);
+    }
+
+
+    if(!(sync[1] & X_FLAG)
+            && !(sync[1] & Y_FLAG)
+            && !(sync[1] & Z_FLAG)
+            && !(sync[1] & E_FLAG))
+    {
+//        flag = 1;
     xTaskNotifyFromISR(orderlyHandling,X_axis_int_fin,eSetBits,NULL);
-/*
-    et = getSate();
-    if(et == eReady)
-        cnt = 1;
-    else if(et == eBlocked)
-        cnt = 2;
-    else if(et == eSuspended)
-        cnt =3;
-    else if(et == eDeleted)
-        cnt = 4;
-    else if(cnt == eRunning)
-        cnt = 5;
-//    stub(cnt);
-    HWREGBITB(&g_ui32Flags,cnt) = 1;
-*/
-//    flag = 1; X_axis_int_fin
-
-#else
-    uint32_t timerValue;
-
-    initStepper();
-
-    sts.counter++;
-    timerValue = sts.rate*multy;
-    TimerLoadSet(TIMER_BASE_X_AXIS,TIMER_A,timerValue);
-    timerValue >>=16;
-    TimerPrescaleSet(TIMER_BASE_X_AXIS, TIMER_A, (timerValue&0x000000FF));
-
-
-#endif
-/*
- *     //
-    // Configure the GPIO Pin Mux for PB4
-    // for T1CCP0
-    //
-    MAP_GPIOPinConfigure(GPIO_PB4_T1CCP0);
-    MAP_GPIOPinTypeTimer(GPIO_PORTB_BASE, GPIO_PIN_4);
- */
-//    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTB_BASE, GPIO_PIN_4);
-//    MAP_GPIOPinWrite(GPIO_PORTB_BASE, GPIO_PIN_4, 0x0);
-
-//    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TAEN; //
-//    TimerDisable(TIMER_BASE_X_AXIS, TIMER_A);
+    }
 }
 
 

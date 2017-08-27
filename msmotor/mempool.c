@@ -35,16 +35,17 @@ struct sSegment sector[SECTOR_SIZE];
 
 //static struct Stepper_state_t* psts = &sts;
 
-struct sControl block;
-struct sControl block_y;
-struct sControl block_z;
-struct sControl block_e;
+//struct sControl block;
+//struct sControl block_y;
+//struct sControl block_z;
+//struct sControl block_e;
 
+uint32 current_segment;
 
-struct sControl* pblock = &block;
-struct sControl* pblock_y = &block_y;
-struct sControl* pblock_z = &block_z;
-struct sControl* pblock_e = &block_e;
+struct sControl* pblock;
+struct sControl* pblock_y;
+struct sControl* pblock_z;
+struct sControl* pblock_e;
 
 struct sSegment* segment = &sector[0];
 

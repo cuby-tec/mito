@@ -67,16 +67,16 @@ void orderly_routine(void* pvParameters ){
 //portMAX_DELAY
         xTaskNotifyWait(0x00, ULONG_MAX, &ulNotifiedValue, portMAX_DELAY);
 
-        taskcounter++;
 
         if(ulNotifiedValue & X_axis_int){
 //            axisX_rateHandler();
-            ms_nextBlock();
+            taskcounter++;
+            ms_nextSector();
         }
 
         if(ulNotifiedValue & X_axis_int_fin)
         {
-//            ms_finBlock = continueBlock;
+            ms_finBlock = continueBlock;
             start_t1(0);
         }
 

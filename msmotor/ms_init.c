@@ -43,7 +43,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "orderlyTask.h"
-
+#include "cnc_sector.h"
 
 //------------- defs
 
@@ -103,50 +103,6 @@ void rgb_disable(void){
 
 
 
-
-void Timer_Y_isr(void){
-    static uint32_t cnt_y;
-    cnt_y++;
-    TimerIntClear(TIMER_BASE_Y_AXIS, TIMER_CAPB_EVENT);
-    if(cnt_y & 1){
-        GPIOPinWrite(GPIO_PORTF_BASE, GREEN_GPIO_PIN, GREEN_GPIO_PIN);
-    }else{
-        GPIOPinWrite(GPIO_PORTF_BASE, GREEN_GPIO_PIN, ~GREEN_GPIO_PIN);
-    }
-}
-
-// Z axis
-void Timer_Z_isr(void){
-    static uint32_t cnt_z;
-    TimerIntClear(TIMER_BASE_Z_AXIS, TIMER_CAPA_EVENT);
-    cnt_z++;
-    if(cnt_z & 1){
-        GPIOPinWrite(GPIO_PORTF_BASE, BLUE_GPIO_PIN, BLUE_GPIO_PIN);
-    }else{
-        GPIOPinWrite(GPIO_PORTF_BASE, BLUE_GPIO_PIN, ~BLUE_GPIO_PIN);
-    }
-}
-
-// E axis
-void Timer_E_isr(void){
-    static uint32_t cnt_e;
-    TimerIntClear(TIMER_BASE_E_AXIS, TIMER_CAPB_EVENT);
-    cnt_e++;
-    if(pid != 38){
-        if(cnt_e &1){
-            //        GPIOPinTypeGPIOInput(GPIO_PORTF_BASE,BLUE_GPIO_PIN);
-//            HWREG(GPIO_PORTF_BASE + GPIO_O_DIR) &= ~BLUE_GPIO_PIN ;
-            GPIOPinWrite(GPIO_PORTF_BASE, RED_GPIO_PIN, RED_GPIO_PIN);
-        }else{
-            //        GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, RED_GPIO_PIN|GREEN_GPIO_PIN|BLUE_GPIO_PIN);
-//            HWREG(GPIO_PORTF_BASE + GPIO_O_DIR) |= BLUE_GPIO_PIN;
-            GPIOPinWrite(GPIO_PORTF_BASE, RED_GPIO_PIN, ~RED_GPIO_PIN);
-        }
-    }
-}
-
-
-
 // ISR WTIMER5======================
 void Timer_callback(void)
 {
@@ -171,6 +127,20 @@ void Timer_callback(void)
 //-------------------- initBlock
 void initBlock(void)
 {
+    struct sSegment* segment;
+
+    init_cncsector();
+
+    current_segment = 0;
+
+    segment = &sector[current_segment];
+
+    pblock = &segment->axis[X_AXIS];
+    pblock_y = &segment->axis[Y_AXIS];
+    pblock_z = &segment->axis[Z_AXIS];
+    pblock_e = &segment->axis[E_AXIS];
+
+/*
     pblock->axis = 0;
     pblock->linenumber = 1;
     pblock->steps   = 10;
@@ -202,7 +172,7 @@ void initBlock(void)
     pblock->schem[0] = 1;
     pblock->schem[1] = 2;
     pblock->schem[2] = 3;
-    pblock->direction = forward;
+    pblock->direction = forward;*/
 }
 
 //--------------------- initStepper

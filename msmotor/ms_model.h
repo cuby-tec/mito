@@ -35,7 +35,7 @@ extern void (*ms_finBlock)(void);
 //extern Void axisX_intrrupt_handler(UArg arg);
 
 
-//extern void continueBlock();
+extern void continueBlock(void);
 
 extern void exitBlock(void);
 
@@ -43,7 +43,7 @@ extern void start_t1(uint8_t pusc);
 #ifdef commit_13
 extern void axisX_rateHandler();
 #endif
-extern void ms_nextBlock();
+extern void ms_nextSector();
 
 //extern void testPrepare(void);
 

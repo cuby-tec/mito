@@ -18,7 +18,7 @@ enum eDirections{
 
 struct sControl{
     uint8_t     axis;
-    uint32_t    linenumber;
+//    uint32_t    linenumber;
     uint32_t    steps;
     uint8_t     microsteps;
     uint32_t    accelerate_until;

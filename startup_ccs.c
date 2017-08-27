@@ -25,13 +25,8 @@
 #include <stdint.h>
 #include "inc/hw_nvic.h"
 #include "inc/hw_types.h"
-//#include "drivers/rgb.h"
+
 #include "msmotor/ms_init.h"
-#include "msmotor/ms_model.h"
-
-//#include "msmotor/isrTimer_X.h"
-
-//#include "msmotor/svi_port.h"
 #include <msmotor/isrTimer.h>
 
 //*****************************************************************************
@@ -74,7 +69,7 @@ extern void Timer1IntHandler(void);
 extern void TimerYIntHandler(void);
 extern void TimerZIntHandler(void);
 extern void TimerEIntHandler(void);
-
+extern void Timer_callback(void);
 //*****************************************************************************
 //
 // The vector table.  Note that the proper constructs must be placed on this to
@@ -137,8 +132,8 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // GPIO Port H
     IntDefaultHandler,                      // UART2 Rx and Tx
     IntDefaultHandler,                      // SSI1 Rx and Tx
-    Timer_Z_isr,                      // Timer 3 subtimer A
-    Timer_E_isr,                      // Timer 3 subtimer B
+    IntDefaultHandler,                      // Timer 3 subtimer A
+    IntDefaultHandler,                      // Timer 3 subtimer B
     IntDefaultHandler,                      // I2C1 Master and Slave
     IntDefaultHandler,                      // Quadrature Encoder 1
     IntDefaultHandler,                      // CAN0
