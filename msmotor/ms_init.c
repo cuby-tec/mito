@@ -54,7 +54,7 @@
 struct Ms_delay ms_delay;
 
 //-------- vars
-uint32_t static pid;
+//uint32_t static pid;
 //-------------- function
 
 void rgb_enable(void){
@@ -82,7 +82,7 @@ void rgb_enable(void){
     MAP_GPIOPinConfigure(GPIO_PF3_T1CCP1);
     MAP_GPIOPinTypeTimer(GPIO_PORTF_BASE, GPIO_PIN_3);//green
 */
-    pid = 3;
+//    pid = 3;
     GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, RED_GPIO_PIN|GREEN_GPIO_PIN|BLUE_GPIO_PIN);
     GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_0, GPIO_PIN_0);//синхро-импульс состяния Задачи PE0
 //    HWREG(GPIO_PORTF_BASE + GPIO_O_DATA) = BLUE_GPIO_PIN;
@@ -93,7 +93,7 @@ void rgb_disable(void){
     //
     // Configure the GPIO pads as general purpose inputs.
     //
-    pid = 38;
+//    pid = 38;
 //    ROM_GPIOPinTypeGPIOInput(RED_GPIO_BASE, RED_GPIO_PIN);
     GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, RED_GPIO_PIN|GREEN_GPIO_PIN|BLUE_GPIO_PIN);
     GPIOPinWrite(GPIO_PORTE_BASE, GPIO_PIN_0, 0);   //         PE0

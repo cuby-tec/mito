@@ -46,6 +46,7 @@
 #include "msmotor/svi_port.h"
 
 #include "orderlyTask.h"
+#include "msmotor/tSectorHandler.h"
 
 //*****************************************************************************
 //
@@ -225,13 +226,20 @@ main(void)
     //
     if(LEDTaskInit() != 0)
     {
-
         while(1)
         {
             NoOperation;
         }
     }
 
+    // задача обработки исчерпания сектора.
+    if(createTaskSectorHandler() != 0)
+    {
+        while(1)
+        {
+            NoOperation;
+        }
+    }
 
     //
     // Create the switch task.  #define LEFT_BUTTON             GPIO_PIN_4

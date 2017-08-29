@@ -61,7 +61,7 @@
 #define INT_TIMER_E_PRIORITY    2
 
 
-#define N_AXIS  4 // Number of axes
+#define N_AXIS  4 // Number of axes nuts_bolts
 
 #define X_AXIS  0 // Axis indexing value
 #define Y_AXIS  1

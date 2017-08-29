@@ -41,6 +41,9 @@
 #include "queue.h"
 #include "semphr.h"
 
+#include "msmotor/msport.h"
+#include "orderlyTask.h"
+
 //*****************************************************************************
 //
 // The stack size for the LED toggle task.
@@ -78,6 +81,21 @@ static uint8_t g_ui8ColorsIndx;
 
 extern xSemaphoreHandle g_pUARTSemaphore;
 
+
+void vAFunction(void)
+{
+    TaskHandle_t xHandle;
+    TaskStatus_t xTaskDetails;
+//    xHandle = xTaskGetHandle("Orderly");
+
+    configASSERT(xHandle);
+
+//    vTaskGetTaskInfo();
+
+
+}
+
+
 //*****************************************************************************
 //
 // This task toggles the user selected LED at a user selected frequency. User
@@ -90,6 +108,7 @@ LEDTask(void *pvParameters)
     portTickType ui32WakeTime;
     uint32_t ui32LEDToggleDelay;
     uint8_t i8Message;
+    volatile eTaskState state;
 
     //
     // Initialize the LED Toggle Delay to default value.
@@ -175,11 +194,24 @@ LEDTask(void *pvParameters)
         //
 #ifdef RGB
         RGBEnable();
+//#else
+//        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, GPIO_PIN_0);
 #endif
         //
         // Wait for the required amount of time.
         //
         vTaskDelayUntil(&ui32WakeTime, ui32LEDToggleDelay / portTICK_RATE_MS);
+
+        state = eTaskGetState(orderlyHandling);
+        if(state == eSuspended){
+//            vTaskResume(orderlyHandling);
+            state = eTaskGetState(orderlyHandling);
+        }
+        state = eTaskGetState(orderlyHandling);
+//        vAFunction();
+#ifndef DEBUG_NOTIFY
+        xTaskNotify(orderlyHandling,X_axis_int,eSetBits);
+#endif
 
         //
         // Turn off the LED.
@@ -190,6 +222,7 @@ LEDTask(void *pvParameters)
         //
         // Wait for the required amount of time.
         //
+//        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, ~GPIO_PIN_0);
         vTaskDelayUntil(&ui32WakeTime, ui32LEDToggleDelay / portTICK_RATE_MS);
     }
 }

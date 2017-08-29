@@ -42,7 +42,7 @@
 
 #include "Ktf_model.h"
 
-
+#include "tSectorHandler.h"
 
 //------------- defs
 
@@ -120,11 +120,13 @@ static uint32_t be_portf1;
 /**
  * Асинхронная работа считывателя блоков.
  */
+/*
 static void ms_async_block(){
 //    MS_ENABLE_OUT = MS_STOP; // Pause
 //    MS_COMMAND_SEMA_SET;
     NoOperation;
 }
+*/
 
 
 
@@ -217,7 +219,7 @@ void start_t1(uint8_t pusc)
 void continueBlock(void)
 {
     uint32_t timerValue;
-
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 //TODO Получить новый segment
 
     if(axis_flags&X_FLAG){
@@ -295,11 +297,13 @@ void continueBlock(void)
             HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
             sync[1] |= E_FLAG;
         }
+
+#ifndef DEBUG_NOTIFY
+        //    xTaskNotifyFromISR(orderlyHandling,X_axis_int,eSetBits,&xHigherPriorityTaskWoken);
+        vTaskNotifyGiveFromISR(sectorHandling, &xHigherPriorityTaskWoken);
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+#endif
     }
-
-
-    xTaskNotifyFromISR(orderlyHandling,X_axis_int,eSetBits,NULL);
-
 }
 
 /*

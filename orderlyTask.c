@@ -32,7 +32,7 @@
 
 //------------- DEFS
 
-#define ORDERLYTASKSTACKSIZE   128//640//576 //128 //192 640 //
+#define ORDERLYTASKSTACKSIZE   64//128//640//576 //128 //192 640 //
 
 //---------  vars
 
@@ -52,10 +52,11 @@ uint32_t taskcounter = 0;
 
 
 
-static uint32_t cnt_delay;
-static uint32_t delay_max;
+//static uint32_t cnt_delay;
+//static uint32_t delay_max;
 void orderly_routine(void* pvParameters ){
     uint32_t ulNotifiedValue;
+    volatile eTaskState state;
 
 //    testPrepare();
     initBlock();
@@ -66,12 +67,12 @@ void orderly_routine(void* pvParameters ){
     for( ;; ){
 //portMAX_DELAY
         xTaskNotifyWait(0x00, ULONG_MAX, &ulNotifiedValue, portMAX_DELAY);
-
+        state = eTaskGetState(orderlyHandling);
 
         if(ulNotifiedValue & X_axis_int){
 //            axisX_rateHandler();
             taskcounter++;
-            ms_nextSector();
+//            ms_nextSector();
         }
 
         if(ulNotifiedValue & X_axis_int_fin)
