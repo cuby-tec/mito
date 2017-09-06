@@ -8,6 +8,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "driverlib/sysctl.h"
 
@@ -20,6 +21,8 @@
 
 
 #include "usbmodule.h"
+
+#include "exchange/status.h";
 
 //------------- defs
 
@@ -67,6 +70,9 @@ EchoNewDataToHost(tUSBDBulkDevice *psDevice, uint8_t *pui8Data,
     uint32_t ui32WriteIndex;
     tUSBRingBufObject sTxRing;
 
+//    struct Status_t* tx_status;
+    uint8_t* tx_status;
+
     //
     // Get the current buffer information to allow us to write directly to
     // the transmit buffer (we already have enough information from the
@@ -78,6 +84,22 @@ EchoNewDataToHost(tUSBDBulkDevice *psDevice, uint8_t *pui8Data,
     // How much space is there in the transmit buffer?
     //
     ui32Space = USBBufferSpaceAvailable(&g_sTxBuffer);
+
+    ui32WriteIndex = sTxRing.ui32WriteIndex;
+#ifdef STATUS_T
+    ui32Count = sizeof(struct Status_t) ;
+//    ui32Count = 44;
+
+    if(ui32Space>= ui32Count)
+    {
+        tx_status = (uint8_t*)getStatus();
+
+        memcpy(&g_pui8USBTxBuffer[ui32WriteIndex], tx_status, ui32Count);
+    }
+    else
+#endif
+
+#ifdef CHAR_SEND
 
     //
     // How many characters can we process this time round?
@@ -93,13 +115,12 @@ EchoNewDataToHost(tUSBDBulkDevice *psDevice, uint8_t *pui8Data,
     //
     // Dump a debug message.
     //
-//    DEBUG_PRINT("Received %d bytes\n", ui32NumBytes);
+    //    DEBUG_PRINT("Received %d bytes\n", ui32NumBytes);
 
     //
     // Set up to process the characters by directly accessing the USB buffers.
     //
     ui32ReadIndex = (uint32_t)(pui8Data - g_pui8USBRxBuffer);
-    ui32WriteIndex = sTxRing.ui32WriteIndex;
 
     while(ui32Loop)
     {
@@ -112,13 +133,13 @@ EchoNewDataToHost(tUSBDBulkDevice *psDevice, uint8_t *pui8Data,
         // Is this a lower case character?
         //
         if((g_pui8USBRxBuffer[ui32ReadIndex] >= 'a') &&
-           (g_pui8USBRxBuffer[ui32ReadIndex] <= 'z'))
+                (g_pui8USBRxBuffer[ui32ReadIndex] <= 'z'))
         {
             //
             // Convert to upper case and write to the transmit buffer.
             //
             g_pui8USBTxBuffer[ui32WriteIndex] =
-                (g_pui8USBRxBuffer[ui32ReadIndex] - 'a') + 'A';
+                    (g_pui8USBRxBuffer[ui32ReadIndex] - 'a') + 'A';
         }
         else
         {
@@ -126,13 +147,13 @@ EchoNewDataToHost(tUSBDBulkDevice *psDevice, uint8_t *pui8Data,
             // Is this an upper case character?
             //
             if((g_pui8USBRxBuffer[ui32ReadIndex] >= 'A') &&
-               (g_pui8USBRxBuffer[ui32ReadIndex] <= 'Z'))
+                    (g_pui8USBRxBuffer[ui32ReadIndex] <= 'Z'))
             {
                 //
                 // Convert to lower case and write to the transmit buffer.
                 //
                 g_pui8USBTxBuffer[ui32WriteIndex] =
-                    (g_pui8USBRxBuffer[ui32ReadIndex] - 'Z') + 'z';
+                        (g_pui8USBRxBuffer[ui32ReadIndex] - 'Z') + 'z';
             }
             else
             {
@@ -150,14 +171,138 @@ EchoNewDataToHost(tUSBDBulkDevice *psDevice, uint8_t *pui8Data,
         //
         ui32WriteIndex++;
         ui32WriteIndex = (ui32WriteIndex == BULK_BUFFER_SIZE) ?
-                         0 : ui32WriteIndex;
+                0 : ui32WriteIndex;
 
         ui32ReadIndex++;
         ui32ReadIndex = (ui32ReadIndex == BULK_BUFFER_SIZE) ?
-                        0 : ui32ReadIndex;
+                0 : ui32ReadIndex;
 
         ui32Loop--;
     }
+#else
+    uint8_t tmpb[5] = {0, 0, 0, 232};
+    uint32_t tmpr,i;
+    union{
+        uint8_t* bstatus;
+        uint32_t* mstatus;  //[8]
+        struct Status_t* cstatus;
+    }stunion;
+
+    stunion.cstatus = getStatus();
+
+    uint16_t x = 1; /* 0x0001 */
+#define big_endian  2
+#define  little_endian  4
+#define Revers  __asm (" REV R0,R0\n")
+
+    uint8_t endian = *((unsigned char *) &x) == 0 ? big_endian : little_endian;
+
+    if(endian == little_endian){
+        for(i=0;i<8;i++){
+            tmpr = stunion.mstatus[0];
+//            Revers;
+__asm(
+       " REV  R0, R0\n str r0, [sp, #0x30] \n"
+       );
+            stunion.mstatus[0] = tmpr;
+        }
+//        tmpr = stunion.cstatus->modelState;
+//         Revers;
+
+//        tmpb[0] = 232;
+//        tmpb[3] = 0;
+    }
+
+
+//    uint8_t i = 0;
+    i = 0;
+
+    //
+    // How many characters can we process this time round?
+    //
+//    ui32Loop = (ui32Space < ui32NumBytes) ? ui32Space : ui32NumBytes;
+//    ui32Count = ui32Loop;
+    ui32Loop = sizeof(struct Status_t);
+    ui32Count = ui32Loop;
+
+    //
+    // Update our receive counter.
+    //
+    g_ui32RxCount += ui32NumBytes;
+
+    //
+    // Dump a debug message.
+    //
+    //    DEBUG_PRINT("Received %d bytes\n", ui32NumBytes);
+
+    //
+    // Set up to process the characters by directly accessing the USB buffers.
+    //
+    ui32ReadIndex = (uint32_t)(pui8Data - g_pui8USBRxBuffer);
+
+    while(ui32Loop)
+    {
+        //
+        // Copy from the receive buffer to the transmit buffer converting
+        // character case on the way.
+        //
+
+        //
+        // Is this a lower case character?
+        //
+        if((g_pui8USBRxBuffer[ui32ReadIndex] >= 'a') &&
+                (g_pui8USBRxBuffer[ui32ReadIndex] <= 'z'))
+        {
+            //
+            // Convert to upper case and write to the transmit buffer.
+            //
+            g_pui8USBTxBuffer[ui32WriteIndex] =
+                    (g_pui8USBRxBuffer[ui32ReadIndex] - 'a') + 'A';
+        }
+        else
+        {
+            //
+            // Is this an upper case character?
+            //
+            if((g_pui8USBRxBuffer[ui32ReadIndex] >= 'A') &&
+                    (g_pui8USBRxBuffer[ui32ReadIndex] <= 'Z'))
+            {
+                //
+                // Convert to lower case and write to the transmit buffer.
+                //
+                g_pui8USBTxBuffer[ui32WriteIndex] =
+                        (g_pui8USBRxBuffer[ui32ReadIndex] - 'Z') + 'z';
+            }
+            else
+            {
+                //
+                // Copy the received character to the transmit buffer.
+                //
+                g_pui8USBTxBuffer[ui32WriteIndex] =
+                        g_pui8USBRxBuffer[ui32ReadIndex];
+            }
+        }
+
+        g_pui8USBTxBuffer[ui32WriteIndex] = stunion.bstatus[i];
+        i++;
+
+
+        //
+        // Move to the next character taking care to adjust the pointer for
+        // the buffer wrap if necessary.
+        //
+        ui32WriteIndex++;
+        ui32WriteIndex = (ui32WriteIndex == BULK_BUFFER_SIZE) ?
+                0 : ui32WriteIndex;
+
+        ui32ReadIndex++;
+        ui32ReadIndex = (ui32ReadIndex == BULK_BUFFER_SIZE) ?
+                0 : ui32ReadIndex;
+
+        ui32Loop--;
+    }
+
+#endif
 
     //
     // We've processed the data in place so now send the processed data

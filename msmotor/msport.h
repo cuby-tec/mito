@@ -43,6 +43,7 @@
 
 #define X_axis_int      (1) // from axisX_intrrupt_handler to orderlyTask
 #define X_axis_int_fin  (2) // from axisX_intrrupt_handler to orderlyTask
+#define orderly_command (4) // Получена команда по каналу USB.
 
 #define DIRECTION_PORT      GPIO_PORTE_BASE
 #define DIRECTION_X         GPIO_PIN_4

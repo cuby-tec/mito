@@ -49,9 +49,9 @@ extern struct Stepper_state_t sts_e;
 
 extern uint32 current_segment;
 
-struct sSegment sector[SECTOR_SIZE];
+extern struct sSegment sector[SECTOR_SIZE];
 extern struct sSegment* segment;    // укзатель на текущий сегмент в sSector
-extern struct sControl block;
+//extern struct sControl block;
 
 extern struct sControl* pblock;
 extern struct sControl* current_block;

@@ -6,14 +6,13 @@
  */
 
 //#include "rtos.h"
-
+#include <stdint.h>
 #include <stdbool.h>
 
 #define FALSE	0
 #define TRUE	1
 
 typedef signed char   int8;
-
 //#ifndef uint16_t
 //typedef unsigned short uint16_t;
 //#endif

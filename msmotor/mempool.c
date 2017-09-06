@@ -41,13 +41,13 @@ struct sSegment sector[SECTOR_SIZE];
 //struct sControl block_e;
 
 uint32 current_segment;
+struct sSegment* segment = &sector[0];
 
 struct sControl* pblock;
 struct sControl* pblock_y;
 struct sControl* pblock_z;
 struct sControl* pblock_e;
 
-struct sSegment* segment = &sector[0];
 
 
 uint32_t speedRate[N_AXIS];
