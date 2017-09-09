@@ -19,11 +19,12 @@
 #include "usb_bulk_structs.h"
 //--------------
 
-
+#include "inc/typedefs.h"
 #include "usbmodule.h"
 
 #include "exchange/status.h";
-
+#include "msmotor/sSegment.h"
+#include "msmotor/msport.h"
 //------------- defs
 
 //-------------- vars
@@ -34,6 +35,9 @@
 //*****************************************************************************
 volatile uint32_t g_ui32TxCount = 0;
 volatile uint32_t g_ui32RxCount = 0;
+volatile uint32_t packet_counter = 0;
+
+volatile uint32_t size_list[3];
 
 //*****************************************************************************
 //
@@ -43,7 +47,7 @@ volatile uint32_t g_ui32RxCount = 0;
 static volatile bool g_bUSBConfigured = false;
 
 //-------------- function
-
+#define CHAR_SEND
 //*****************************************************************************
 //
 // Receive new data and echo it back to the host.
@@ -73,6 +77,19 @@ EchoNewDataToHost(tUSBDBulkDevice *psDevice, uint8_t *pui8Data,
 //    struct Status_t* tx_status;
     uint8_t* tx_status;
 
+    size_list[packet_counter] = ui32NumBytes;
+    g_ui32RxCount += ui32NumBytes;
+
+    packet_counter++;
+//
+//    if(packet_counter%3 != 0){
+//        return g_ui32RxCount;
+//    }
+    if(g_ui32RxCount < 152){
+        return g_ui32RxCount;
+    }
+    packet_counter = 0;
+    g_ui32RxCount = 0;
     //
     // Get the current buffer information to allow us to write directly to
     // the transmit buffer (we already have enough information from the
@@ -99,7 +116,7 @@ EchoNewDataToHost(tUSBDBulkDevice *psDevice, uint8_t *pui8Data,
     else
 #endif
 
-#ifdef CHAR_SEND
+#ifdef CHAR_SEND__
 
     //
     // How many characters can we process this time round?
@@ -196,7 +213,7 @@ EchoNewDataToHost(tUSBDBulkDevice *psDevice, uint8_t *pui8Data,
 #define Revers  __asm (" REV R0,R0\n")
 
     uint8_t endian = *((unsigned char *) &x) == 0 ? big_endian : little_endian;
-
+/*
     if(endian == little_endian){
         for(i=0;i<8;i++){
             tmpr = stunion.mstatus[0];
@@ -212,7 +229,7 @@ __asm(
 //        tmpb[0] = 232;
 //        tmpb[3] = 0;
     }
-
+*/
 
 //    uint8_t i = 0;
     i = 0;
@@ -228,7 +245,7 @@ __asm(
     //
     // Update our receive counter.
     //
-    g_ui32RxCount += ui32NumBytes;
+//    g_ui32RxCount += ui32NumBytes;
 
     //
     // Dump a debug message.
@@ -242,62 +259,17 @@ __asm(
 
     while(ui32Loop)
     {
-        //
-        // Copy from the receive buffer to the transmit buffer converting
-        // character case on the way.
-        //
-
-        //
-        // Is this a lower case character?
-        //
-        if((g_pui8USBRxBuffer[ui32ReadIndex] >= 'a') &&
-                (g_pui8USBRxBuffer[ui32ReadIndex] <= 'z'))
-        {
-            //
-            // Convert to upper case and write to the transmit buffer.
-            //
-            g_pui8USBTxBuffer[ui32WriteIndex] =
-                    (g_pui8USBRxBuffer[ui32ReadIndex] - 'a') + 'A';
-        }
-        else
-        {
-            //
-            // Is this an upper case character?
-            //
-            if((g_pui8USBRxBuffer[ui32ReadIndex] >= 'A') &&
-                    (g_pui8USBRxBuffer[ui32ReadIndex] <= 'Z'))
-            {
-                //
-                // Convert to lower case and write to the transmit buffer.
-                //
-                g_pui8USBTxBuffer[ui32WriteIndex] =
-                        (g_pui8USBRxBuffer[ui32ReadIndex] - 'Z') + 'z';
-            }
-            else
-            {
-                //
-                // Copy the received character to the transmit buffer.
-                //
-                g_pui8USBTxBuffer[ui32WriteIndex] =
-                        g_pui8USBRxBuffer[ui32ReadIndex];
-            }
-        }
 
         g_pui8USBTxBuffer[ui32WriteIndex] = stunion.bstatus[i];
         i++;
 
-
-        //
-        // Move to the next character taking care to adjust the pointer for
-        // the buffer wrap if necessary.
-        //
         ui32WriteIndex++;
         ui32WriteIndex = (ui32WriteIndex == BULK_BUFFER_SIZE) ?
                 0 : ui32WriteIndex;
 
-        ui32ReadIndex++;
-        ui32ReadIndex = (ui32ReadIndex == BULK_BUFFER_SIZE) ?
-                0 : ui32ReadIndex;
+//        ui32ReadIndex++;
+//        ui32ReadIndex = (ui32ReadIndex == BULK_BUFFER_SIZE) ?
+//                0 : ui32ReadIndex;
 
         ui32Loop--;
     }
@@ -319,6 +291,54 @@ __asm(
     //
     return(ui32Count);
 }
+
+void parcerSegment(uint8_t* pmsg ,uint32_t size)
+{
+    struct sSegment* segment = (struct sSegment*)pmsg;
+    //Size of sSegment :152 (head:8 and axis:36)
+    uint32_t rowcount = sizeof(segment)/sizeof(uint32_t);
+    uint32_t row,i, ui32Loop;
+    uint32_t ui32ReadIndex;
+    uint32_t* prow = (uint32_t*)pmsg;
+
+    ui32Loop = size;
+
+    ui32ReadIndex = (uint32_t)(pmsg - g_pui8USBRxBuffer);
+
+    while(ui32Loop){
+
+/*
+//    for(i=0;i<rowcount;i++){
+        row = prow[ui32ReadIndex];
+
+        __asm(
+               " REV  R0, R0\n str r0, [sp, #0x10] \n"
+               );
+        prow[ui32ReadIndex] = row;
+//    }
+
+*/
+
+
+        //
+        // Move to the next character taking care to adjust the pointer for
+        // the buffer wrap if necessary.
+        //
+//        ui32WriteIndex++;
+//        ui32WriteIndex = (ui32WriteIndex == BULK_BUFFER_SIZE) ?
+//                0 : ui32WriteIndex;
+
+        ui32ReadIndex++;
+        ui32ReadIndex = (ui32ReadIndex == BULK_BUFFER_SIZE) ?
+                0 : ui32ReadIndex;
+
+        ui32Loop--;
+
+    }
+
+    NoOperation;
+}
+
 
 //*****************************************************************************
 //
@@ -385,7 +405,7 @@ RxHandler(void *pvCBData, uint32_t ui32Event,
             // parameter.
             //
             psDevice = (tUSBDBulkDevice *)pvCBData;
-
+            parcerSegment(pvMsgData, ui32MsgValue);
             //
             // Read the new packet and echo it back to the host.
             //

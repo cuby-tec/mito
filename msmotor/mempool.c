@@ -53,11 +53,11 @@ struct sControl* pblock_e;
 uint32_t speedRate[N_AXIS];
 
 const struct sControl default_block = {
-   X_AXIS, 10, 2, 3, 7, 50132, 0, 5370, 3, 50132, 0, 1, 2, 3, forward
+   X_AXIS, 2, 0, 3, 10, 3, 7,  50132, 5370, 50132, 0, 1, 2, 3, forward, 0, 0
 };
 
 const struct sHead default_segment_head = {
-   1,N_AXIS, (X_FLAG|Y_FLAG|Z_FLAG|E_FLAG)
+   N_AXIS, (X_FLAG|Y_FLAG|Z_FLAG|E_FLAG), 0xFFFF, 1
 };
 
 uint16_t axis_flags; //X_FLAG, Y_FLAG, Z_FLAG, E_FLAG

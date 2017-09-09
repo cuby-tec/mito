@@ -15,14 +15,15 @@
  * Заголовочная часть сегмента.
  */
 struct sHead{
-    uint32_t    linenumber;
     uint8_t     axis_number;
-    uint32_t    axis_mask;
+    uint8_t     axis_mask;
+    uint16_t    reserved;
+    uint32_t    linenumber;
 };
 
 /**
  * Единица обмена данными.
- * Описатель отрезка траектроии.
+ * Описатель отрезка траектории.
  */
 struct sSegment
 {

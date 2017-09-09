@@ -10,39 +10,41 @@
 
 
 #define DOUBLE_n
-
+#define CHAR_BIT    8
 
 enum eDirections{
     forward = 1, backward,
 };
 
 struct sControl{
-    uint8_t     axis;
+    uint8_t     axis;               // X_AXIS
 //    uint32_t    linenumber;
-    uint32_t    steps;
-    uint8_t     microsteps;
-    uint32_t    accelerate_until;
-    uint32_t    decelerate_after;
+    uint8_t     microsteps;         // 2
+    uint8_t     initial_speedLevel; // 0
+    uint8_t     speedLevel;         // 3
+    uint32_t    steps;              //10
+    uint32_t    accelerate_until;   // 3
+    uint32_t    decelerate_after;   // 7
 #ifdef DOUBLE
     float_t initial_rate;
 #else
-    uint32_t    initial_rate;
+    uint32_t    initial_rate;       // 50132
 #endif
-    uint8_t     initial_speedLevel;
 #ifdef DOUBLE
     float_t nominal_rate;
 #else
-    uint32_t    nominal_rate;
+    uint32_t    nominal_rate;       // 5370
 #endif
-    uint8_t     speedLevel;
 #ifdef DOUBLE
     float_t final_rate;
 #else
-    uint32_t    final_rate;
+    uint32_t    final_rate;         // 50132
 #endif
-    uint8_t     final_speedLevel;
-    uint8_t     schem[3];
-    enum eDirections        direction; // uint8_t
+    uint8_t     final_speedLevel;   // 0
+    uint8_t     schem[3];           // 1, 2, 3
+    enum eDirections        direction:CHAR_BIT; // uint8_t forward
+    uint8_t     reseved1;
+    uint16_t    reseved2;
 };
 
 /*
