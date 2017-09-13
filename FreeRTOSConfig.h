@@ -103,6 +103,7 @@ to exclude the API function. */
 #define INCLUDE_eTaskGetState               1
 #define INCLUDE_xTaskGetHandle              1
 #define configUSE_TASK_NOTIFICATIONS        1
+#define configUSE_COUNTING_SEMAPHORES       1
 /* Be ENORMOUSLY careful if you want to modify these two values and make sure
  * you read http://www.freertos.org/a00110.html#kernel_priority first!
  */

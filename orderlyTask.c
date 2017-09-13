@@ -19,9 +19,10 @@
 #include "orderlyTask.h"
 #include "msmotor/mempool.h"
 #include "msmotor/msport.h"
-#include "msmotor/ms_init.h"
+//#include "msmotor/ms_init.h"
+#include "memf/mSegmentQuee.h"
 #include "msmotor/ms_model.h"
-
+#include "exchange/ComDataReq_t.h"
 
 #include "priorities.h"
 #include <limits.h>
@@ -48,6 +49,8 @@ TaskHandle_t orderlyHandling;
 uint32_t taskcounter = 0;
 
 
+static struct ComDataReq_t* msegment;
+
 //--------- function
 
 
@@ -59,7 +62,7 @@ void orderly_routine(void* pvParameters ){
     volatile eTaskState state;
 
 //    testPrepare();
-    initBlock();
+//    initBlock();
 
     initStepper(N_AXIS);
     ms_finBlock = exitBlock;
@@ -67,7 +70,13 @@ void orderly_routine(void* pvParameters ){
     for( ;; ){
 //portMAX_DELAY
         xTaskNotifyWait(0x00, ULONG_MAX, &ulNotifiedValue, portMAX_DELAY);
-        state = eTaskGetState(orderlyHandling);
+//        state = eTaskGetState(orderlyHandling);
+
+
+        if(ulNotifiedValue & SignalUSBbufferReady){
+            msegment = (struct ComDataReq_t *)cmdBuffer_usb;
+            NoOperation;
+        }
 
         if(ulNotifiedValue & X_axis_int){
 //            axisX_rateHandler();

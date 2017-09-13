@@ -10,7 +10,11 @@
 #ifndef MSMOTOR_MSPORT_H_
 #define MSMOTOR_MSPORT_H_
 
-#define SECTOR_SIZE     10 //2 10
+#define SEGMENT_QUEE_SIZE     10 //2 10
+
+// Время ожидания получения места для нового Сегмента
+// По истечении времени поисходит отправка состояния без загрузки сегмента в Очередь Сегментов.
+#define SEGMENT_DELAY       10
 
 #define TIMER_X     TIMER_A
 #define TIMER_Y     TIMER_B
@@ -43,7 +47,7 @@
 
 #define X_axis_int      (1) // from axisX_intrrupt_handler to orderlyTask
 #define X_axis_int_fin  (2) // from axisX_intrrupt_handler to orderlyTask
-#define orderly_command (4) // Получена команда по каналу USB.
+#define SignalUSBbufferReady (4) // Получена команда по каналу USB.
 
 #define DIRECTION_PORT      GPIO_PORTE_BASE
 #define DIRECTION_X         GPIO_PIN_4

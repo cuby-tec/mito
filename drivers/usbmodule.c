@@ -9,6 +9,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include <FreeRTOS.h>
+#include <task.h>
 
 #include "driverlib/sysctl.h"
 
@@ -22,9 +24,11 @@
 #include "inc/typedefs.h"
 #include "usbmodule.h"
 
-#include "exchange/status.h";
+#include "exchange/status.h"
 #include "msmotor/sSegment.h"
 #include "msmotor/msport.h"
+#include "msmotor/mempool.h"
+#include "orderlyTask.h"
 //------------- defs
 
 //-------------- vars
@@ -77,17 +81,21 @@ EchoNewDataToHost(tUSBDBulkDevice *psDevice, uint8_t *pui8Data,
 //    struct Status_t* tx_status;
     uint8_t* tx_status;
 
-    size_list[packet_counter] = ui32NumBytes;
-    g_ui32RxCount += ui32NumBytes;
+//    size_list[packet_counter] = ui32NumBytes;
 
+    // Копирование полученных данных в накопительный буфер.uint8_t cmdBuffer_usb
+    size_list[packet_counter] = USBBufferRead(&g_sRxBuffer, &cmdBuffer_usb[g_ui32RxCount], ui32NumBytes);
+
+    g_ui32RxCount += ui32NumBytes;
     packet_counter++;
 //
 //    if(packet_counter%3 != 0){
 //        return g_ui32RxCount;
 //    }
-    if(g_ui32RxCount < 152){
+    if(g_ui32RxCount < sizeof(struct ComDataReq_t)){
         return g_ui32RxCount;
     }
+    xTaskNotifyFromISR(orderlyHandling,SignalUSBbufferReady,eSetBits,NULL);
     packet_counter = 0;
     g_ui32RxCount = 0;
     //

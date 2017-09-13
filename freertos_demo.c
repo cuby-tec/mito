@@ -46,7 +46,7 @@
 #include "msmotor/svi_port.h"
 
 #include "orderlyTask.h"
-#include "msmotor/tSectorHandler.h"
+#include "memf/tSectorHandler.h"
 
 //*****************************************************************************
 //

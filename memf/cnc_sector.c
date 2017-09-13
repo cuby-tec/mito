@@ -7,7 +7,7 @@
 
 //--------------
 
-#include "mempool.h"
+#include "msmotor/mempool.h"
 
 #include "cnc_sector.h"
 
@@ -43,7 +43,7 @@ void init_cncsector(void)
     struct sSegment* psc;
     struct sControl* pctl;
 
-    for(i=0;i<SECTOR_SIZE;i++)
+    for(i=0;i<SEGMENT_QUEE_SIZE;i++)
     {
 //        sector[i].head.axis_number ;
         psc = &sector[i];

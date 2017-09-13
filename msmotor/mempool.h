@@ -9,12 +9,14 @@
 #define MEMPOOL_H_
 
 
+
 #include <grbl/Block_command.h>
 #ifdef KTF7
 #include <rtos.h>
 #endif
 //#include <msmotor/block_state.h>
-
+//#include <exchange/ComData_t.h>/
+#include "exchange/ComDataReq_t.h"
 #include "sSegment.h"
 #include "stepper_state.h"
 #include "msport.h"
@@ -22,7 +24,7 @@
 
 
 // The number of linear motions that can be in the plan at any give time
-#ifndef BLOCK_BUFFER_SIZE
+#ifndef SEGMENT_QUEE_SIZE
   #define BLOCK_BUFFER_SIZE 18
 #endif
 
@@ -49,7 +51,7 @@ extern struct Stepper_state_t sts_e;
 
 extern uint32 current_segment;
 
-extern struct sSegment sector[SECTOR_SIZE];
+extern struct sSegment sector[SEGMENT_QUEE_SIZE];
 extern struct sSegment* segment;    // укзатель на текущий сегмент в sSector
 //extern struct sControl block;
 
@@ -77,14 +79,16 @@ uint16_t cmdPool[10];
 //extern block_t block_buffer[BLOCK_BUFFER_SIZE];
 //
 //extern char ff_filebuffer[14][9];
-extern union{
+//extern union{
+//
+//  char ff_filebuffer[14][12];
+//  block_state block_buffer[BLOCK_BUFFER_SIZE];
+//
+//};
 
-  char ff_filebuffer[14][12];
-  block_state block_buffer[BLOCK_BUFFER_SIZE];
 
-};
-
-
+// буфер накопления команды Хоста.
+extern uint8_t cmdBuffer_usb[sizeof(struct ComDataReq_t)];
 
 
 //-------- Functions

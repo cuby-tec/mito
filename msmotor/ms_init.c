@@ -43,7 +43,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "orderlyTask.h"
-#include "cnc_sector.h"
+#include "memf/cnc_sector.h"
 
 //------------- defs
 
@@ -140,39 +140,6 @@ void initBlock(void)
     pblock_z = &segment->axis[Z_AXIS];
     pblock_e = &segment->axis[E_AXIS];
 
-/*
-    pblock->axis = 0;
-    pblock->linenumber = 1;
-    pblock->steps   = 10;
-    pblock->microsteps = 2;
-    pblock->accelerate_until = 3;
-#ifdef DOUBLE
-    pblock->decelerate_after = 38;
-#else
-    pblock->decelerate_after = 7;
-#endif
-#ifdef DOUBLE
-    pblock->initial_rate = 50132.6;
-#else
-    pblock->initial_rate = 50132;
-#endif
-    pblock->initial_speedLevel = 0;
-#ifdef DOUBLE
-    pblock->nominal_rate = 5370.2;
-#else
-    pblock->nominal_rate = 5370;
-#endif
-    pblock->speedLevel = 3;
-#ifdef DOUBLE
-    pblock->final_rate = 50132.6;//5676;
-#else
-    pblock->final_rate = 50132;//5676;
-#endif
-    pblock->final_speedLevel = 0;
-    pblock->schem[0] = 1;
-    pblock->schem[1] = 2;
-    pblock->schem[2] = 3;
-    pblock->direction = forward;*/
 }
 
 //--------------------- initStepper

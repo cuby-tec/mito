@@ -19,7 +19,7 @@ uint16_t cmdPool[10];
 union{
 
 	char ff_filebuffer[14][12];
-	block_state block_buffer[BLOCK_BUFFER_SIZE];
+	block_state block_buffer[SEGMENT_QUEE_SIZE];
 
 };
 
@@ -31,7 +31,7 @@ struct Stepper_state_t sts_y;
 struct Stepper_state_t sts_z;
 struct Stepper_state_t sts_e;
 
-struct sSegment sector[SECTOR_SIZE];
+struct sSegment sector[SEGMENT_QUEE_SIZE];
 
 //static struct Stepper_state_t* psts = &sts;
 
@@ -65,6 +65,9 @@ uint16_t axis_flags; //X_FLAG, Y_FLAG, Z_FLAG, E_FLAG
 //block_state* current_block = &block;
 
 //stepper_state sts;
+
+
+uint8_t cmdBuffer_usb[sizeof(struct ComDataReq_t)];
 
 //-------------- Function
 

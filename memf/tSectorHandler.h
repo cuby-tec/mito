@@ -11,6 +11,6 @@
 //---------- vars
 extern TaskHandle_t sectorHandling;
 //--------- function
-extern uint32_t createTaskSectorHandler(void);
+extern int32_t createTaskSectorHandler(void);
 
 #endif /* MSMOTOR_TSECTORHANDLER_H_ */

@@ -42,7 +42,7 @@
 
 #include "Ktf_model.h"
 
-#include "tSectorHandler.h"
+#include "memf/tSectorHandler.h"
 
 //------------- defs
 
@@ -214,6 +214,7 @@ void start_t1(uint8_t pusc)
 /**
  * Получение нового блока.
  * Отработка ломаной линии.
+ * Контекст Прерывание
  */
 
 void continueBlock(void)
@@ -222,7 +223,7 @@ void continueBlock(void)
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 //TODO Получить новый segment
 
-    if(axis_flags&X_FLAG){
+    if(axis_flags&X_FLAG){// таймер остановлен
         initStepper(X_AXIS);    // sts.counter = 0;
         sync[1] &= ~X_FLAG;
 
