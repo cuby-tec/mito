@@ -12,6 +12,7 @@
 #include "msmotor/mempool.h"
 #include "mSegmentQuee.h"
 #include "cnc_sector.h"
+#include "msmotor/ms_init.h"
 
 //------------- defs
 
@@ -73,7 +74,8 @@ memf_release(void)
         // Вызывающая задача должна бы перейти в состояние Suspend
         // , а это продолжение обработки прерывания
         // и для тестирования будем увеличивать счётчик.
-        semaphore_counter++;
+        if(semaphore_counter<0xFF)
+            semaphore_counter++;
         NoOperation;
     }
     return semaphore_counter;

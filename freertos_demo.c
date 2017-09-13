@@ -233,7 +233,7 @@ main(void)
     }
 
     // задача обработки исчерпания сектора.
-    if(createTaskSectorHandler() != 0)
+    if(createTaskSectorHandler() != 0)  // 0
     {
         while(1)
         {

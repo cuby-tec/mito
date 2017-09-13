@@ -11,6 +11,7 @@
 #include <task.h>
 #include "priorities.h"
 
+#include "inc/typedefs.h"
 #include "msmotor/ms_model.h"
 
 #include "mSegmentQuee.h"
@@ -69,19 +70,14 @@ static void taskSectorhandler(void* params){
     //
 
 int32_t createTaskSectorHandler(void){
-    int r = xTaskCreate(taskSectorhandler, (const portCHAR *)"SectorHandler", SECTOR_HANDLER_STACK_SIZE, NULL,
-                    tskIDLE_PRIORITY + PRIORITY_SectorHandler_TASK, &sectorHandling) != pdTRUE;
-
-//    if(xTaskCreate(taskSectorhandler, (const portCHAR *)"SectorHandler", SECTOR_HANDLER_STACK_SIZE, NULL,
-//                   tskIDLE_PRIORITY + PRIORITY_SectorHandler_TASK, &sectorHandling) != pdTRUE)
-    if(r)
+    if(xTaskCreate(taskSectorhandler, (const portCHAR *)"SectorHandler", SECTOR_HANDLER_STACK_SIZE, NULL,
+                   tskIDLE_PRIORITY + PRIORITY_SectorHandler_TASK, &sectorHandling) != pdPASS)
     {
-
-        createSegmentQuee();
-
-        return(pdPASS); //1
+        //Error
+        return(1);
     }else{
-        return (errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY); //0
+        createSegmentQuee();
+        return (0); //0
     }
 
 }
