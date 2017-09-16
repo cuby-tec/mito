@@ -17,6 +17,9 @@
 #include "mSegmentQuee.h"
 #include "tSectorHandler.h"
 
+#include "inc/sysDrivers.h"
+
+#include "utils/vTaskGetRunTimeStats.h"
 
 
 #define SECTOR_HANDLER_STACK_SIZE   64
@@ -25,40 +28,63 @@
 
 //-------------- vars
 TaskHandle_t sectorHandling;
+volatile uint32_t counter =0;
+//static uint32_t be_portf1;
+//static TaskStatus_t shStatus;
+static const char* taskname = "SectorHandler";
+
+#define TASK_ARRAY_SIZE 4
+#define pulTotalRunTime NULL
+
+#pragma NOINIT(pxTaskStatusArray)
+TaskStatus_t pxTaskStatusArray[5];
+
 
 //-------------- function
 
 static void taskSectorhandler(void* params){
     static uint32_t eventCounter;
+    volatile UBaseType_t uxArraySize, x;
+    volatile uint8_t memf_counter;
+
+//    unsigned long ulTotalRunTime, ulStatsAsPercentage;
+
     while(1){
 
-        eventCounter = ulTaskNotifyTake(pdFALSE, portMAX_DELAY);
+//        eventCounter = ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+       if( xSemaphoreTake(memf_semaphor_handler,portMAX_DELAY) == pdTRUE)
+       {
+           /* The mutex was successfully obtained so the shared resource can be
+            * accessed safely. */
+           NoOperation;
+           ms_nextSector();    // Индикация
+
+       }
+//        vTaskDelay(5);
+
+//        eventCounter = 1;
 
         if(eventCounter != 0){
-                ms_nextSector();    // Индикация
-                if(memf_release()>SEGMENT_QUEE_SIZE){
-                    NoOperation;
-                    // Очередь пуста; пополнение отстаёт от обработчика Сегментов. Беда.
-                    // Хост должен снизить скорость перемещения инструмента.
-                }
-            if(eventCounter == 1)
+            counter++;
+            ms_nextSector();    // Индикация
+            memf_counter = memf_release();
+            if(memf_counter == SEGMENT_QUEE_SIZE){
+                // Очередь пуста
                 NoOperation;
-            else
-                switch(eventCounter){
-                case 2:
-                    NoOperation;
-                    break;
-                case 3:
-                    NoOperation;
-                    break;
-                case 4:
-                    NoOperation;
-                    break;
-                default:
-                    NoOperation;
-                    break;
-                }
+            }
+            NoOperation;
 
+        }else{
+
+//            vTaskGetRunTimeStats(statsBuffer);
+            uxTaskGetSystemState(pxTaskStatusArray, TASK_ARRAY_SIZE, pulTotalRunTime);
+
+//            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0);
+//            uxTaskGetSystemState();
+//            vTaskDelay(500);
+//            while(1){
+                NoOperation;
+//            }
         }
 
 
@@ -70,7 +96,7 @@ static void taskSectorhandler(void* params){
     //
 
 int32_t createTaskSectorHandler(void){
-    if(xTaskCreate(taskSectorhandler, (const portCHAR *)"SectorHandler", SECTOR_HANDLER_STACK_SIZE, NULL,
+    if(xTaskCreate(taskSectorhandler, taskname, SECTOR_HANDLER_STACK_SIZE, NULL,
                    tskIDLE_PRIORITY + PRIORITY_SectorHandler_TASK, &sectorHandling) != pdPASS)
     {
         //Error

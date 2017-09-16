@@ -47,6 +47,7 @@
 
 #include "orderlyTask.h"
 #include "memf/tSectorHandler.h"
+#include "memf/SegmentTask.h"
 
 //*****************************************************************************
 //
@@ -241,6 +242,20 @@ main(void)
         }
     }
 
+
+    // Задача обработки смены сегмента.
+/*
+    if(createSegmentTask() != 0)
+    {
+        while(1)
+        {
+            NoOperation;
+        }
+    }
+*/
+
+
+
     //
     // Create the switch task.  #define LEFT_BUTTON             GPIO_PIN_4
     //        PFx               #define RIGHT_BUTTON            GPIO_PIN_0
@@ -253,11 +268,13 @@ main(void)
         }
     }
 
+
     // Create orderly task.
     if(createtask_orderly() != 0){
         while(1){
         }
     }
+
 
     //
     // Start the scheduler.  This should not return.

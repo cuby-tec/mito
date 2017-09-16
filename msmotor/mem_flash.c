@@ -7,7 +7,7 @@
 
 
 #include "mem_flash.h"
-#include "grbl/settings.h"
+//#include "grbl/settings.h"
 //------------ Definition ------
 
 

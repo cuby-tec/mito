@@ -12,7 +12,7 @@
 #define MEM_FLASH_H_
 #include "inc/typedefs.h"
 //#include <settings.h>
-#include "grbl/settings_t.h"
+//#include "grbl/settings_t.h"
 
 //---------- Definition -------
 

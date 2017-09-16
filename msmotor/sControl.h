@@ -8,6 +8,7 @@
 #ifndef MSMOTOR_SCONTROL_H_
 #define MSMOTOR_SCONTROL_H_
 
+#include <stdint.h>
 
 #define DOUBLE_n
 #define CHAR_BIT    8

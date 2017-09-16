@@ -19,6 +19,8 @@
 //-------------- vars
 extern SemaphoreHandle_t memf_semaphor_handler;
 
+extern SemaphoreHandle_t rcvd_semaphore_handler;
+
 //--------------- function
 
 /**

@@ -33,6 +33,7 @@
 #define PRIORITY_SWITCH_TASK            2
 #define PRIORITY_LED_TASK               3
 #define PRIORITY_ORDERLY_TASK           10
-#define PRIORITY_SectorHandler_TASK     50
+#define PRIORITY_SegmentTask            50
+#define PRIORITY_SectorHandler_TASK     60
 
 #endif // __PRIORITIES_H__

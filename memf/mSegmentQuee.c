@@ -18,6 +18,8 @@
 
 //-------------- vars
 SemaphoreHandle_t memf_semaphor_handler;
+SemaphoreHandle_t rcvd_semaphore_handler;
+
 static uint8_t semaphore_counter;
 
 uint8_t next_buffer_head;  // Index of the next buffer head
@@ -74,8 +76,8 @@ memf_release(void)
         // Вызывающая задача должна бы перейти в состояние Suspend
         // , а это продолжение обработки прерывания
         // и для тестирования будем увеличивать счётчик.
-        if(semaphore_counter<0xFF)
-            semaphore_counter++;
+//        if(semaphore_counter<0xFF)
+//            semaphore_counter++;
         NoOperation;
     }
     return semaphore_counter;
@@ -122,13 +124,17 @@ void createSegmentQuee(void)
     {
         //TODO semaphore create
     /* The semaphore was created successfully. The semaphore can now be used. */
-
         semaphore_counter = SEGMENT_QUEE_SIZE;
-
         init_cmdQuee();
-
-
         NoOperation;
+        rcvd_semaphore_handler = xSemaphoreCreateMutex();
+        if(rcvd_semaphore_handler == NULL){
+            while(1)
+            {
+                /* There was insufficient heap memory available for the mutex to be created. */
+                NoOperation;
+            }
+        }
     }
 }
 

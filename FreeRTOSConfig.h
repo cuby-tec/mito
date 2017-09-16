@@ -104,6 +104,15 @@ to exclude the API function. */
 #define INCLUDE_xTaskGetHandle              1
 #define configUSE_TASK_NOTIFICATIONS        1
 #define configUSE_COUNTING_SEMAPHORES       1
+//#define INCLUDE_xTaskGetHandle              0
+//#define configUSE_TRACE_FACILITY            1
+
+//#define configGENERATE_RUN_TIME_STATS       1
+//#define configUSE_STATS_FORMATTING_FUNCTIONS    1
+//#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS  1
+//#define portGET_RUN_TIME_COUNTER_VALUE      1
+//#define portALT_GET_RUN_TIME_COUNTER_VALUE  1
+
 /* Be ENORMOUSLY careful if you want to modify these two values and make sure
  * you read http://www.freertos.org/a00110.html#kernel_priority first!
  */
