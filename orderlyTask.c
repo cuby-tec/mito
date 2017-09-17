@@ -63,6 +63,7 @@ static struct ComDataReq_t* msegment;
 void orderly_routine(void* pvParameters ){
     uint32_t ulNotifiedValue;
 //    volatile eTaskState state;
+    BaseType_t sema;
     BaseType_t ret;
     static uint32_t be_portf3;
 //    testPrepare();
@@ -79,6 +80,30 @@ void orderly_routine(void* pvParameters ){
 
         if(ulNotifiedValue & SignalUSBbufferReady){
             msegment = (struct ComDataReq_t *)cmdBuffer_usb;
+            /* Потсупила новая команда.
+             * Parse command;
+             * TakeSemaphore_rcvd
+             * send status
+             */
+
+            switch(msegment->command)
+            {
+            case 1: // new Command&data received.
+                sema = xSemaphoreTake(rcvd_semaphore_handler,5);
+                if(sema == pdPASS){
+                    if(MEMF_GetNumFreeBlocks() != 0)
+                        if(msegment->instrument1_parameter.head.linenumber >
+                                getHeadLineNumber())
+                        {
+                            memcpy(segmentBuffer,&msegment->instrument1_parameter,sizeof(struct sSegment));
+                        }
+                    xSemaphoreGive(rcvd_semaphore_handler);
+                }else{
+                    NoOperation;
+                }
+                break;
+            }
+
             NoOperation;
         }
 

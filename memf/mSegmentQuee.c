@@ -34,18 +34,89 @@ static uint8_t next_block_index(uint8_t block_index);
 static uint8_t prev_block_index(uint8_t block_index);
 
 
+uint32_t
+MEMF_GetNumFreeBlocks(void)
+{
+    uint32_t result = 0;
+    if(block_buffer_head<block_buffer_tail){
+        result += SEGMENT_QUEE_SIZE;
+    }
+    return (result+block_buffer_head - block_buffer_tail);
+}
+
+uint32_t
+getHeadLineNumber(void)
+{
+    uint32_t result;
+    struct sSegment* segment = cmdQuee[block_buffer_head];
+
+    if(segment != NULL)
+        //        return (cmdQuee[block_buffer_head]->head.linenumber);
+        result = segment->head.linenumber;
+
+    return (result);
+}
+
+static init_next_block(uint32_t index){
+    struct sSegment* segment = cmdQuee[index];
+
+    pblock = &segment->axis[X_AXIS];
+    pblock_y = &segment->axis[Y_AXIS];
+    pblock_z = &segment->axis[Z_AXIS];
+    pblock_e = &segment->axis[E_AXIS];
+}
+
+/**
+ * Переместить указатели текущего блока на следующий сегмент,
+ * если он доступен.
+ */
+uint32_t
+move_pblock(void)
+{
+    uint32_t result, next_segment;
+
+    next_segment = next_block_index(block_buffer_tail);
+    if(next_segment != next_block_index(block_buffer_head)){
+        // сегмент next_segment актуален.
+        init_next_block(next_segment);
+        result = TRUE;
+    }else{
+        result = FALSE;
+    }
+
+    return (result);
+}
+
+/**
+ * Выделение места для нового блока MEMF.
+ * если места нет, то ожидать семафора.
+ */
+void* MEMF_Alloc(void)
+{
+    BaseType_t sem;
+
+    sem = xSemaphoreTake(memf_semaphor_handler, portMAX_DELAY);
+    if(sem == pdTRUE){
+        block_buffer_head = next_block_index(block_buffer_head);
+        return (void*)cmdQuee[block_buffer_head];
+    }
+}
+
+/**
+ * Смещение head для записи нового сегмента.
+ */
 struct sSegment* getSegment(void)
 {
     struct sSegment* result = NULL;
     //cmdQuee[block_buffer_head]=OS_MEMF_Alloc(&cmdPool,1);
-    if(xSemaphoreTake(memf_semaphor_handler,SEGMENT_DELAY))
-    {
+//    if(xSemaphoreTake(memf_semaphor_handler,SEGMENT_DELAY))
+//    {
         /* The mutex was successfully obtained so the shared resource can be
          * accessed safely. */
         block_buffer_head = next_block_index(block_buffer_head);
         result = cmdQuee[block_buffer_head];
 
-    }
+//    }
     return (result);
 }
 
@@ -61,23 +132,20 @@ struct sSegment* plan_get_current_block(void)
 // Освободить блок/Сегмент,т.е. увеличить сяётчик семафора,
 //      передвинуть указатель block_buffer_head
 uint8_t
-memf_release(void)
-{
-    if(semaphore_counter<SEGMENT_QUEE_SIZE){
-        if(xSemaphoreGive(memf_semaphor_handler) == pdPASS){
-            semaphore_counter++;
+memf_release(void){
+    //    if(semaphore_counter<SEGMENT_QUEE_SIZE){
+    if(xSemaphoreGive(memf_semaphor_handler) == pdPASS){
+        semaphore_counter--;
 
-            if (++block_buffer_tail == SEGMENT_QUEE_SIZE){
-                block_buffer_tail = 0;
-            }
-            NoOperation;
-        }
+        block_buffer_tail = next_block_index(block_buffer_tail);
+        NoOperation;
+        //    }
     }else{
         // Вызывающая задача должна бы перейти в состояние Suspend
         // , а это продолжение обработки прерывания
         // и для тестирования будем увеличивать счётчик.
-//        if(semaphore_counter<0xFF)
-//            semaphore_counter++;
+        //        if(semaphore_counter<0xFF)
+        //            semaphore_counter++;
         NoOperation;
     }
     return semaphore_counter;
@@ -98,12 +166,14 @@ static init_cmdQuee(void){
 
     initBlock();    // load defaults
 
-    for(i=0;i<SEGMENT_QUEE_SIZE;i++){
-        cmdQuee[i] = &sector[i];
-    }
     block_buffer_tail = 0;
     block_buffer_head = block_buffer_tail;
     next_buffer_head  = block_buffer_tail;
+
+   for(i=0;i<SEGMENT_QUEE_SIZE;i++){
+        cmdQuee[i] = &sector[i];
+        block_buffer_head = i;
+    }
 }
 
 // Returns the index of the previous block

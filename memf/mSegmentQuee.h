@@ -44,4 +44,19 @@ extern void createSegmentQuee(void);
  */
 extern struct sSegment* getSegment(void);
 
+extern uint32_t MEMF_GetNumFreeBlocks(void);
+
+extern void* MEMF_Alloc(void);
+
+/**
+ * Номер последнего введённого Сегмента.
+ */
+extern uint32_t getHeadLineNumber(void);
+
+/**
+ * Переместить указатели текущего блока на следующий сегмент,
+ * если он доступен.
+ */
+extern uint32_t move_pblock(void);
+
 #endif /* MEMF_MSEGMENTQUEE_H_ */

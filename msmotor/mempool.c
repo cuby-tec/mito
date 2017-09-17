@@ -69,6 +69,12 @@ uint16_t axis_flags; //X_FLAG, Y_FLAG, Z_FLAG, E_FLAG
 
 uint8_t cmdBuffer_usb[sizeof(struct ComDataReq_t)];
 
+uint8_t segmentBuffer[sizeof(struct sSegment)];
+
+static struct sMs_State ms_state;
+
+struct sMs_State* pMs_State = &ms_state;
+
 //-------------- Function
 
 
