@@ -9,6 +9,7 @@
 
 #include <FreeRTOS.h>
 #include <task.h>
+#include <semphr.h>
 #include "priorities.h"
 #include "limits.h"
 #include "inc/typedefs.h"
@@ -50,51 +51,38 @@ bool sema_tail = TRUE;
 //-------------- function
 
 static void taskSectorhandler(void* params){
-    static uint32_t eventCounter;
+//    static uint32_t eventCounter;
     volatile UBaseType_t uxArraySize, x;
-    volatile uint8_t memf_counter;
+    volatile UBaseType_t memf_counter;
 
-    uint32_t ulNotifiedValue;
-    BaseType_t ret;
+    struct sSegment* empty_segment;
 
-//    unsigned long ulTotalRunTime, ulStatsAsPercentage;
+    //    unsigned long ulTotalRunTime, ulStatsAsPercentage;
 
     while(1){
 
-        ret = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotifiedValue, SECTOR_DELAY );//portMAX_DELAY
+//void* MEMF_Alloc(void)
 
-        if(SECTOR_RECEIVED & ulNotifiedValue){
-
-            //        eventCounter = ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-            // rcvd_semaphore_handler
-            if(xSemaphoreTake(rcvd_semaphore_handler,portMAX_DELAY) == pdTRUE)
-            {
-                /* The mutex was successfully obtained so the shared resource can be
-                 * accessed safely. */
-                uint8_t* ss = (uint8_t*)MEMF_Alloc();
-                memcpy(ss, segmentBuffer, sizeof(struct sSegment));
-                xSemaphoreGive(rcvd_semaphore_handler);
-
-                NoOperation;
-                ms_nextSector();    // Индикация
-
-            }
-            //        vTaskDelay(5);
-
-            //        eventCounter = 1;
-        }
-
-        if(SECTOR_TO_RELEAS & ulNotifiedValue){
-            // if( xSemaphoreTake(memf_semaphor_handler,portMAX_DELAY) == pdTRUE)
+        if( xSemaphoreTake(memf_semaphor_handler,portMAX_DELAY) == pdTRUE){
             // move pblock
             // block_buffer_tail = next_block_index(block_buffer_tail);
-            memf_counter = memf_release();
+//            memf_counter = memf_release();
+            memf_counter = uxSemaphoreGetCount(memf_semaphor_handler);
+            //todo Загрузить следующий сегмент
+            empty_segment = getSegment();   //(struct sSegment*)MEMF_Alloc();
+            if(empty_segment != NULL){
+                empty_segment->head.linenumber += SEGMENT_QUEE_SIZE;
+                ms_nextSector();    // Индикация
+            }else{
+                // header догнал tail
+                NoOperation;
+            }
         }
 
-
+/*
         if(eventCounter != 0){
             counter++;
-            ms_nextSector();    // Индикация
+//            ms_nextSector();    // Индикация
             memf_counter = memf_release();
             if(memf_counter == SEGMENT_QUEE_SIZE){
                 // Очередь пуста
@@ -104,16 +92,17 @@ static void taskSectorhandler(void* params){
 
         }else{
 
-//            vTaskGetRunTimeStats(statsBuffer);
+            //            vTaskGetRunTimeStats(statsBuffer);
             uxTaskGetSystemState(pxTaskStatusArray, TASK_ARRAY_SIZE, pulTotalRunTime);
 
-//            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0);
-//            uxTaskGetSystemState();
-//            vTaskDelay(500);
-//            while(1){
-                NoOperation;
-//            }
+            //            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0);
+            //            uxTaskGetSystemState();
+            //            vTaskDelay(500);
+            //            while(1){
+            NoOperation;
+            //            }
         }
+*/
 
 
     }//task routine

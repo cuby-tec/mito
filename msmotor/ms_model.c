@@ -236,12 +236,12 @@ void continueBlock(void)
             pMs_State->instrumrnt1 = eIns1_stoped; // haven't segments.
         }
     }
-
-    if(pMs_State->instrumrnt1 == eIns1_stoped){
-        //todo аврийная ситуация: нет новых сегментов.
-        NoOperation;
-        return;
-    }
+//todo temporary blocked
+//    if(pMs_State->instrumrnt1 == eIns1_stoped){
+//        //todo аврийная ситуация: нет новых сегментов.
+//        NoOperation;
+//        return;
+//    }
 
     if(axis_flags&X_FLAG){// таймер остановлен
         initStepper(X_AXIS);    // sts.counter = 0;
@@ -324,8 +324,8 @@ void continueBlock(void)
 //        if(state_task == eSuspended){
 //        ms_nextSector();    // Индикация
 //            vTaskNotifyGiveFromISR(sectorHandling, &xHigherPriorityTaskWoken);
-//            xSemaphoreGiveFromISR(memf_semaphor_handler,&xHigherPriorityTaskWoken);
-        xTaskNotifyFromISR(sectorHandling,SECTOR_TO_RELEAS,eSetBits,&xHigherPriorityTaskWoken);
+        xSemaphoreGiveFromISR(memf_semaphor_handler,&xHigherPriorityTaskWoken);
+//        xTaskNotifyFromISR(sectorHandling,SECTOR_TO_RELEAS,eSetBits,&xHigherPriorityTaskWoken);
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 //        }
 #endif

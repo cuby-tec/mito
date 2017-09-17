@@ -8,9 +8,6 @@
 #ifndef MSMOTOR_TSECTORHANDLER_H_
 #define MSMOTOR_TSECTORHANDLER_H_
 
-#define SECTOR_TO_RELEAS     (1) // tail
-#define SECTOR_RECEIVED     (1<<1)  // from Orderly
-
 
 //---------- vars
 extern TaskHandle_t sectorHandling;

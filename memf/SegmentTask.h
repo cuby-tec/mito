@@ -11,6 +11,9 @@
 
 
 //------------- defs
+//#define SECTOR_TO_RELEAS     (1) // tail
+#define SECTOR_RECEIVED     (1<<1)  // from Orderly
+
 
 //-------------- vars
 

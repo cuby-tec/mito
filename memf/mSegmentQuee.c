@@ -79,6 +79,7 @@ move_pblock(void)
     if(next_segment != next_block_index(block_buffer_head)){
         // сегмент next_segment актуален.
         init_next_block(next_segment);
+        block_buffer_tail = next_segment;
         result = TRUE;
     }else{
         result = FALSE;
@@ -94,12 +95,14 @@ move_pblock(void)
 void* MEMF_Alloc(void)
 {
     BaseType_t sem;
+    //cmdQuee[block_buffer_head]=OS_MEMF_Alloc(&cmdPool,1);
 
     sem = xSemaphoreTake(memf_semaphor_handler, portMAX_DELAY);
     if(sem == pdTRUE){
         block_buffer_head = next_block_index(block_buffer_head);
         return (void*)cmdQuee[block_buffer_head];
     }
+    return (NULL);
 }
 
 /**
@@ -107,16 +110,17 @@ void* MEMF_Alloc(void)
  */
 struct sSegment* getSegment(void)
 {
+    uint8_t next_head;
     struct sSegment* result = NULL;
-    //cmdQuee[block_buffer_head]=OS_MEMF_Alloc(&cmdPool,1);
-//    if(xSemaphoreTake(memf_semaphor_handler,SEGMENT_DELAY))
-//    {
         /* The mutex was successfully obtained so the shared resource can be
          * accessed safely. */
-        block_buffer_head = next_block_index(block_buffer_head);
-        result = cmdQuee[block_buffer_head];
+        next_head = next_block_index(block_buffer_head);
+        if(next_head != block_buffer_tail)
+        {
+            block_buffer_head = next_head;
+            result = cmdQuee[block_buffer_head];
+        }
 
-//    }
     return (result);
 }
 
