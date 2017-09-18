@@ -36,7 +36,7 @@
 
 //------------- DEFS
 
-#define ORDERLYTASKSTACKSIZE   64//128//640//576 //128 //192 640 //
+#define ORDERLYTASKSTACKSIZE  128//640//576 //128 //192 640 //
 
 //---------  vars
 

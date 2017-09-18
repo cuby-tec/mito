@@ -23,11 +23,11 @@
 #include "utils/vTaskGetRunTimeStats.h"
 #include "msmotor/mempool.h"
 
-#define SECTOR_HANDLER_STACK_SIZE   64
+#define SECTOR_HANDLER_STACK_SIZE   384//320//256//192//128
 
 //------------- defs
 #define SECTOR_DELAY    portMAX_DELAY
-#define TASK_ARRAY_SIZE 4
+#define TASK_ARRAY_SIZE 5
 #define pulTotalRunTime NULL
 
 //-------------- vars
@@ -39,7 +39,7 @@ static const char* taskname = "SectorHandler";
 
 
 #pragma NOINIT(pxTaskStatusArray)
-TaskStatus_t pxTaskStatusArray[5];
+TaskStatus_t pxTaskStatusArray[6];
 
 /**
  * Флаг перехода на новый сегмент:
@@ -75,8 +75,11 @@ static void taskSectorhandler(void* params){
                 ms_nextSector();    // Индикация
             }else{
                 // header догнал tail
+//                vTaskGetRunTimeStats(statsBuffer);
+                uxTaskGetSystemState(pxTaskStatusArray, TASK_ARRAY_SIZE, pulTotalRunTime);
                 NoOperation;
             }
+            counter++;
         }
 
 /*
