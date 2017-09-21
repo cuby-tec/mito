@@ -75,6 +75,9 @@ static struct sMs_State ms_state;
 
 struct sMs_State* pMs_State = &ms_state;
 
+uint8_t rcvd_SegmentFlag = 0;
+
+
 //-------------- Function
 
 

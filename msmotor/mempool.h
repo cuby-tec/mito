@@ -96,6 +96,8 @@ extern uint8_t segmentBuffer[sizeof(struct sSegment)];
 
 extern struct sMs_State* pMs_State;
 
+extern uint8_t rcvd_SegmentFlag;
+
 //-------- Functions
 
 

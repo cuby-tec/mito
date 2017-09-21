@@ -9,6 +9,12 @@
 #define MSMOTOR_TSECTORHANDLER_H_
 
 
+//------------ defs
+
+//--------- signals
+#define sg_segmentRecieved      (1)
+
+
 //---------- vars
 extern TaskHandle_t sectorHandling;
 

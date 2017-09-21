@@ -32,7 +32,7 @@
 
 #include "exchange/status.h"
 
-
+#include "memf/tSectorHandler.h"
 
 //------------- DEFS
 
@@ -91,13 +91,17 @@ void orderly_routine(void* pvParameters ){
             case 1: // new Command&data received.
                 sema = xSemaphoreTake(rcvd_semaphore_handler,5);
                 if(sema == pdPASS){
-                    if(MEMF_GetNumFreeBlocks() != 0)
-                        if(msegment->instrument1_parameter.head.linenumber >
-                                getHeadLineNumber())
-                        {
-                            memcpy(segmentBuffer,&msegment->instrument1_parameter,sizeof(struct sSegment));
-                        }
+//                    if(MEMF_GetNumFreeBlocks() != 0)
+//                        if(msegment->instrument1_parameter.head.linenumber >
+//                                getHeadLineNumber())
+//                        {
+                            if(rcvd_SegmentFlag == 0){
+                                memcpy(segmentBuffer,&msegment->instrument1_parameter,sizeof(struct sSegment));
+                                rcvd_SegmentFlag = 1;
+                            }
+//                        }
                     xSemaphoreGive(rcvd_semaphore_handler);
+                    xTaskNotify(sectorHandling,sg_segmentRecieved,eSetBits);
                 }else{
                     NoOperation;
                 }

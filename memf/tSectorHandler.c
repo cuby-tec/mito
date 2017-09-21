@@ -50,12 +50,54 @@ bool sema_tail = TRUE;
 
 //-------------- function
 
+//todo Загрузить следующий сегмент
+// Ожидание получения доступа к буферу Сегмента приёмника.
+static void semaphoreTake(void)
+{
+    struct sSegment* empty_segment;
+    BaseType_t ret;
+    ret = xSemaphoreTake(rcvd_semaphore_handler,portMAX_DELAY);
+    if(ret == pdPASS){
+        empty_segment = getSegment();   //(struct sSegment*)MEMF_Alloc();
+        if(empty_segment != NULL){
+//            empty_segment->head.linenumber += SEGMENT_QUEE_SIZE;
+            memcpy((uint8_t*)empty_segment, segmentBuffer, sizeof(struct sSegment));
+            rcvd_SegmentFlag = 0;
+      }else{
+//            header догнал tail
+//                vTaskGetRunTimeStats(statsBuffer);
+            uxTaskGetSystemState(pxTaskStatusArray, TASK_ARRAY_SIZE, pulTotalRunTime);
+            NoOperation;
+        }
+
+        xSemaphoreGive(rcvd_semaphore_handler);
+     }
+}
+
+
+
+/**
+ * Копирование принятого Сегмента в свободный блок Сектора.
+ */
+static memf_segmentWait(void){
+
+    BaseType_t ret;
+    uint32_t ulNotifiedValue;
+    // Ожидание сообщения о том, что Сегмент принят.
+    ret = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotifiedValue,portMAX_DELAY );//portMAX_DELAY
+    if(ret == pdTRUE){
+        if( sg_segmentRecieved & ulNotifiedValue ){
+            semaphoreTake();
+        }
+    }
+}
+
 static void taskSectorhandler(void* params){
 //    static uint32_t eventCounter;
     volatile UBaseType_t uxArraySize, x;
     volatile UBaseType_t memf_counter;
 
-    struct sSegment* empty_segment;
+//    struct sSegment* empty_segment;
 
     //    unsigned long ulTotalRunTime, ulStatsAsPercentage;
 
@@ -68,17 +110,10 @@ static void taskSectorhandler(void* params){
             // block_buffer_tail = next_block_index(block_buffer_tail);
 //            memf_counter = memf_release();
             memf_counter = uxSemaphoreGetCount(memf_semaphor_handler);
-            //todo Загрузить следующий сегмент
-            empty_segment = getSegment();   //(struct sSegment*)MEMF_Alloc();
-            if(empty_segment != NULL){
-                empty_segment->head.linenumber += SEGMENT_QUEE_SIZE;
-                ms_nextSector();    // Индикация
-            }else{
-                // header догнал tail
-//                vTaskGetRunTimeStats(statsBuffer);
-                uxTaskGetSystemState(pxTaskStatusArray, TASK_ARRAY_SIZE, pulTotalRunTime);
-                NoOperation;
-            }
+            ms_nextSector();    // Индикация
+
+            memf_segmentWait();
+
             counter++;
         }
 
