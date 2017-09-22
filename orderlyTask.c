@@ -66,6 +66,7 @@ void orderly_routine(void* pvParameters ){
     BaseType_t sema, xStatus;
     BaseType_t ret;
     static uint32_t be_portf3;
+    uint8_t* ss;
 //    testPrepare();
 //    initBlock();
 
@@ -102,16 +103,18 @@ void orderly_routine(void* pvParameters ){
 //                        }
 //                    xSemaphoreGive(rcvd_semaphore_handler);
 //                    xTaskNotify(sectorHandling,sg_segmentRecieved,eSetBits);
-                    xStatus = xQueueSend(segmentQueueHandler,&msegment->instrument1_parameter,0);
-                    if(xStatus == pdPASS){
-                        NoOperation;
-                    }
-                    else{
-                        NoOperation;
-                    }
-//                }else{
-//                    NoOperation;
-//                }
+//                    xStatus = xQueueSend(segmentQueueHandler,&msegment->instrument1_parameter,0);
+                ss = (uint8_t*)MEMF_Alloc();
+                memcpy(ss, &msegment->instrument1_parameter, sizeof(struct sSegment));
+//                    if(xStatus == pdPASS){
+//                        NoOperation;
+//                    }
+//                    else{
+//                        NoOperation;
+//                    }
+////                }else{
+////                    NoOperation;
+////                }
                 break;
             }
 

@@ -33,7 +33,7 @@
 #include "driverlib/rom_map.h"
 #endif
 
-
+#include "sSegment.h"
 
 //----------- defs
 #define RED_LED   GPIO_PIN_1
@@ -75,6 +75,8 @@ extern void Timer_callback(void);
 //extern void Timer_Z_isr(void);
 
 //extern void Timer_E_isr(void);
+
+extern void pblockSegment(struct sSegment* );
 
 
 #endif /* MSMOTOR_MS_INIT_H_ */

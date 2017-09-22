@@ -231,6 +231,9 @@ void continueBlock(void)
         move_result = move_pblock();
         if(move_result == TRUE){
             pMs_State->instrumrnt1 = eIns1_work; // work
+            struct sSegment* segment = plan_get_current_block();
+            pblockSegment(segment);
+            sema_tail = FALSE;
         }
         else{
             pMs_State->instrumrnt1 = eIns1_stoped; // haven't segments.
@@ -326,6 +329,7 @@ void continueBlock(void)
 //            vTaskNotifyGiveFromISR(sectorHandling, &xHigherPriorityTaskWoken);
 //        xSemaphoreGiveFromISR(memf_semaphor_handler,&xHigherPriorityTaskWoken);
 //        xTaskNotifyFromISR(sectorHandling,SECTOR_TO_RELEAS,eSetBits,&xHigherPriorityTaskWoken);
+        sema_tail = TRUE;
         xTaskNotifyGive(sectorHandling);
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 //        }

@@ -142,6 +142,15 @@ void initBlock(void)
 
 }
 
+void pblockSegment(struct sSegment* segment)
+{
+    pblock = &segment->axis[X_AXIS];
+    pblock_y = &segment->axis[Y_AXIS];
+    pblock_z = &segment->axis[Z_AXIS];
+    pblock_e = &segment->axis[E_AXIS];
+
+}
+
 //--------------------- initStepper
 void initStepper(uint8_t axis)
 {

@@ -23,7 +23,7 @@
 #include "utils/vTaskGetRunTimeStats.h"
 #include "msmotor/mempool.h"
 
-#define SECTOR_HANDLER_STACK_SIZE   384//320//256//192//128
+#define SECTOR_HANDLER_STACK_SIZE   128//608//576//544//512//420//384//320//256//192//128
 
 //------------- defs
 #define SECTOR_DELAY    portMAX_DELAY
@@ -132,7 +132,7 @@ static void taskSectorhandler(void* params){
 //            memf_counter = uxSemaphoreGetCount(memf_semaphor_handler);
             ms_nextSector();    // Индикация
 
-            memf_segmentWait();
+//            memf_segmentWait();
 
             counter++;
 //        }

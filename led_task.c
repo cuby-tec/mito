@@ -202,11 +202,13 @@ LEDTask(void *pvParameters)
         //
         vTaskDelayUntil(&ui32WakeTime, ui32LEDToggleDelay / portTICK_RATE_MS);
 
+/*
         state = eTaskGetState(orderlyHandling);
         if(state == eSuspended){
 //            vTaskResume(orderlyHandling);
             state = eTaskGetState(orderlyHandling);
         }
+*/
         state = eTaskGetState(orderlyHandling);
 //        vAFunction();
 #ifndef DEBUG_NOTIFY
