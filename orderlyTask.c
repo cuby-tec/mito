@@ -63,7 +63,7 @@ static struct ComDataReq_t* msegment;
 void orderly_routine(void* pvParameters ){
     uint32_t ulNotifiedValue;
 //    volatile eTaskState state;
-    BaseType_t sema;
+    BaseType_t sema, xStatus;
     BaseType_t ret;
     static uint32_t be_portf3;
 //    testPrepare();
@@ -89,22 +89,29 @@ void orderly_routine(void* pvParameters ){
             switch(msegment->command)
             {
             case 1: // new Command&data received.
-                sema = xSemaphoreTake(rcvd_semaphore_handler,5);
-                if(sema == pdPASS){
+//                sema = xSemaphoreTake(rcvd_semaphore_handler,5);
+//                if(sema == pdPASS){
 //                    if(MEMF_GetNumFreeBlocks() != 0)
 //                        if(msegment->instrument1_parameter.head.linenumber >
 //                                getHeadLineNumber())
 //                        {
-                            if(rcvd_SegmentFlag == 0){
-                                memcpy(segmentBuffer,&msegment->instrument1_parameter,sizeof(struct sSegment));
-                                rcvd_SegmentFlag = 1;
-                            }
+//                            if(rcvd_SegmentFlag == 0){
+//                                memcpy(segmentBuffer,&msegment->instrument1_parameter,sizeof(struct sSegment));
+//                                rcvd_SegmentFlag = 1;
+//                            }
 //                        }
-                    xSemaphoreGive(rcvd_semaphore_handler);
-                    xTaskNotify(sectorHandling,sg_segmentRecieved,eSetBits);
-                }else{
-                    NoOperation;
-                }
+//                    xSemaphoreGive(rcvd_semaphore_handler);
+//                    xTaskNotify(sectorHandling,sg_segmentRecieved,eSetBits);
+                    xStatus = xQueueSend(segmentQueueHandler,&msegment->instrument1_parameter,0);
+                    if(xStatus == pdPASS){
+                        NoOperation;
+                    }
+                    else{
+                        NoOperation;
+                    }
+//                }else{
+//                    NoOperation;
+//                }
                 break;
             }
 

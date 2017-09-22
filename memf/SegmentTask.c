@@ -45,7 +45,7 @@ static void segmentHandler(void* params){
                 /* The mutex was successfully obtained so the shared resource can be
                  * accessed safely. */
                 uint8_t* ss = (uint8_t*)MEMF_Alloc();
-                memcpy(ss, segmentBuffer, sizeof(struct sSegment));
+//                memcpy(ss, segmentBuffer, sizeof(struct sSegment));
                 xSemaphoreGive(rcvd_semaphore_handler);
 
                 NoOperation;

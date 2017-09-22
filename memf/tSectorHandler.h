@@ -12,8 +12,9 @@
 //------------ defs
 
 //--------- signals
-#define sg_segmentRecieved      (1)
+#define sg_segmentRecieved      (1<<4)
 
+#define SECTOR_TO_RELEAS        (1)
 
 //---------- vars
 extern TaskHandle_t sectorHandling;

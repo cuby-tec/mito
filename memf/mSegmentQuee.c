@@ -16,7 +16,13 @@
 
 //------------- defs
 
+#define SegmentItemSize     sizeof(struct sSegment)
+
 //-------------- vars
+
+QueueHandle_t segmentQueueHandler;
+
+
 SemaphoreHandle_t memf_semaphor_handler;
 SemaphoreHandle_t rcvd_semaphore_handler;
 
@@ -97,11 +103,11 @@ void* MEMF_Alloc(void)
     BaseType_t sem;
     //cmdQuee[block_buffer_head]=OS_MEMF_Alloc(&cmdPool,1);
 
-    sem = xSemaphoreTake(memf_semaphor_handler, portMAX_DELAY);
-    if(sem == pdTRUE){
+//    sem = xSemaphoreTake(memf_semaphor_handler, portMAX_DELAY);
+//    if(sem == pdTRUE){
         block_buffer_head = next_block_index(block_buffer_head);
         return (void*)cmdQuee[block_buffer_head];
-    }
+//    }
     return (NULL);
 }
 
@@ -138,20 +144,20 @@ struct sSegment* plan_get_current_block(void)
 uint8_t
 memf_release(void){
     //    if(semaphore_counter<SEGMENT_QUEE_SIZE){
-    if(xSemaphoreGive(memf_semaphor_handler) == pdPASS){
+//    if(xSemaphoreGive(memf_semaphor_handler) == pdPASS){
         semaphore_counter--;
 
         block_buffer_tail = next_block_index(block_buffer_tail);
         NoOperation;
         //    }
-    }else{
+//    }else{
         // Вызывающая задача должна бы перейти в состояние Suspend
         // , а это продолжение обработки прерывания
         // и для тестирования будем увеличивать счётчик.
         //        if(semaphore_counter<0xFF)
         //            semaphore_counter++;
         NoOperation;
-    }
+//    }
     return semaphore_counter;
 }
 
@@ -189,14 +195,17 @@ prev_block_index(uint8_t block_index)
   return(block_index);
 }
 
-
 void createSegmentQuee(void)
 {
     // SemaphoreHandle_t SEGMENT_QUEE_SIZE
-    memf_semaphor_handler = xSemaphoreCreateCounting(SEGMENT_QUEE_SIZE,SEGMENT_QUEE_SIZE);
-    if(memf_semaphor_handler != NULL)
+//    memf_semaphor_handler = xSemaphoreCreateCounting(SEGMENT_QUEE_SIZE,SEGMENT_QUEE_SIZE);
+//    if(memf_semaphor_handler != NULL)
     {
         //TODO semaphore create
+
+        segmentQueueHandler = xQueueCreate(1,SegmentItemSize);  //SEGMENT_QUEE_SIZE
+
+
     /* The semaphore was created successfully. The semaphore can now be used. */
         semaphore_counter = SEGMENT_QUEE_SIZE;
         init_cmdQuee();

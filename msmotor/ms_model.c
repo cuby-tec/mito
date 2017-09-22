@@ -319,13 +319,14 @@ void continueBlock(void)
             sync[1] |= E_FLAG;
         }
 #ifndef DEBUG_NOTIFY
-        state_task = eTaskGetState(sectorHandling);
+//        state_task = eTaskGetState(sectorHandling);
         //    xTaskNotifyFromISR(orderlyHandling,X_axis_int,eSetBits,&xHigherPriorityTaskWoken);
 //        if(state_task == eSuspended){
 //        ms_nextSector();    // Индикация
 //            vTaskNotifyGiveFromISR(sectorHandling, &xHigherPriorityTaskWoken);
-        xSemaphoreGiveFromISR(memf_semaphor_handler,&xHigherPriorityTaskWoken);
+//        xSemaphoreGiveFromISR(memf_semaphor_handler,&xHigherPriorityTaskWoken);
 //        xTaskNotifyFromISR(sectorHandling,SECTOR_TO_RELEAS,eSetBits,&xHigherPriorityTaskWoken);
+        xTaskNotifyGive(sectorHandling);
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 //        }
 #endif

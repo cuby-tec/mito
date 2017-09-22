@@ -49,12 +49,16 @@ TaskStatus_t pxTaskStatusArray[6];
 bool sema_tail = TRUE;
 
 //-------------- function
+uint8_t lReceivedValue[sizeof(struct sSegment)];
 
 //todo Загрузить следующий сегмент
 // Ожидание получения доступа к буферу Сегмента приёмника.
 static void semaphoreTake(void)
 {
     struct sSegment* empty_segment;
+
+
+#ifdef SEMAPHORE
     BaseType_t ret;
     ret = xSemaphoreTake(rcvd_semaphore_handler,portMAX_DELAY);
     if(ret == pdPASS){
@@ -72,15 +76,28 @@ static void semaphoreTake(void)
 
         xSemaphoreGive(rcvd_semaphore_handler);
      }
+#endif
 }
-
 
 
 /**
  * Копирование принятого Сегмента в свободный блок Сектора.
  */
 static memf_segmentWait(void){
+    BaseType_t xStatus;
+    struct sSegment* segment;
 
+    xStatus = xQueueReceive(segmentQueueHandler,lReceivedValue,portMAX_DELAY);
+    if(xStatus == pdPASS){
+//        semaphoreTake();
+        segment = (struct sSegment*)lReceivedValue;
+        if(segment->head.linenumber){
+            NoOperation;
+            uint8_t* ss = (uint8_t*)MEMF_Alloc();
+            memcpy(ss, segment, sizeof(struct sSegment));
+        }
+    }
+#ifdef NOTIFY
     BaseType_t ret;
     uint32_t ulNotifiedValue;
     // Ожидание сообщения о том, что Сегмент принят.
@@ -90,12 +107,13 @@ static memf_segmentWait(void){
             semaphoreTake();
         }
     }
+#endif
 }
 
 static void taskSectorhandler(void* params){
 //    static uint32_t eventCounter;
     volatile UBaseType_t uxArraySize, x;
-    volatile UBaseType_t memf_counter;
+    volatile uint32_t memf_counter;
 
 //    struct sSegment* empty_segment;
 
@@ -104,18 +122,20 @@ static void taskSectorhandler(void* params){
     while(1){
 
 //void* MEMF_Alloc(void)
-
-        if( xSemaphoreTake(memf_semaphor_handler,portMAX_DELAY) == pdTRUE){
+        memf_counter = ulTaskNotifyTake(pdFALSE, portMAX_DELAY);
+//        if( xSemaphoreTake(memf_semaphor_handler,portMAX_DELAY) == pdTRUE){
+        //SECTOR_TO_RELEAS
+//        if( xTaskNotifyWait(0x00, ULONG_MAX, &ulNotifiedValue, portMAX_DELAY)){
             // move pblock
             // block_buffer_tail = next_block_index(block_buffer_tail);
 //            memf_counter = memf_release();
-            memf_counter = uxSemaphoreGetCount(memf_semaphor_handler);
+//            memf_counter = uxSemaphoreGetCount(memf_semaphor_handler);
             ms_nextSector();    // Индикация
 
             memf_segmentWait();
 
             counter++;
-        }
+//        }
 
 /*
         if(eventCounter != 0){
@@ -157,6 +177,7 @@ int32_t createTaskSectorHandler(void){
         //Error
         return(1);
     }else{
+        xTaskNotify(sectorHandling,SEGMENT_QUEE_SIZE,eSetValueWithOverwrite);
         createSegmentQuee();
         return (0); //0
     }
