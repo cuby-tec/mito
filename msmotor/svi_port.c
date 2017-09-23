@@ -428,7 +428,7 @@ void soft_interrupt_handler(void)
 //            && ( segment_request&(Z_FLAG)&sync[0] )
 //            && ( segment_request&(E_FLAG)&sync[0] ) )
 
-    if(( segment_request & (X_FLAG|Y_FLAG|Z_FLAG|E_FLAG)) == sync[0])
+    if(( segment_request & (X_FLAG|Y_FLAG|Z_FLAG|E_FLAG)) == mask_axis[0])
     {
         new_segment_request();
     }

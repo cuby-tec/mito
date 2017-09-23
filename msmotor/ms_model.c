@@ -79,6 +79,7 @@ byte direction = false;
 
 static uint32_t multy = 1;
 
+static uint32_t sync_axis;
 //static uint8_t rest = 0;
 
 //static uint32_t speedRate;
@@ -179,9 +180,9 @@ void start_t1(uint8_t pusc)
         sync[1] |= Z_FLAG;
         sync[1] |= E_FLAG;
 */
-    sync[0] |= X_FLAG|Y_FLAG|Z_FLAG|E_FLAG;
-    sync[1] |= X_FLAG|Y_FLAG|Z_FLAG|E_FLAG;
-
+    mask_axis[0] |= X_FLAG|Y_FLAG|Z_FLAG|E_FLAG;
+    mask_axis[1] |= X_FLAG|Y_FLAG|Z_FLAG|E_FLAG;
+    sync_axis = 0;
 //    if(sync[0] & X_FLAG){
 //        TimerEnable(TIMER_BASE_X_AXIS, TIMER_X);
     HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
@@ -233,11 +234,11 @@ void continueBlock(void)
             pMs_State->instrumrnt1 = eIns1_work; // work
             struct sSegment* segment = plan_get_current_block();
             pblockSegment(segment);
-            sema_tail = FALSE;
         }
         else{
             pMs_State->instrumrnt1 = eIns1_stoped; // haven't segments.
         }
+        sema_tail = FALSE;
     }
 //todo temporary blocked
 //    if(pMs_State->instrumrnt1 == eIns1_stoped){
@@ -248,7 +249,8 @@ void continueBlock(void)
 
     if(axis_flags&X_FLAG){// таймер остановлен
         initStepper(X_AXIS);    // sts.counter = 0;
-        sync[1] &= ~X_FLAG;
+//        mask_axis[1] &= ~X_FLAG;
+        sync_axis |= X_FLAG;
 
         sts.counter++;
         timerValue = sts.rate*multy;
@@ -258,7 +260,8 @@ void continueBlock(void)
     }
     if(axis_flags&Y_FLAG){
         initStepper(Y_AXIS);
-        sync[1] &= ~Y_FLAG;
+//        mask_axis[1] &= ~Y_FLAG;
+        sync_axis |= Y_FLAG;
 
         sts_y.counter++;
         timerValue = sts_y.rate*multy;
@@ -269,7 +272,8 @@ void continueBlock(void)
 
     if(axis_flags&Z_FLAG){
         initStepper(Z_AXIS);
-        sync[1] &= ~Z_FLAG;
+//        mask_axis[1] &= ~Z_FLAG;
+        sync_axis |= Z_FLAG;
 
         sts_z.counter++;
         timerValue = sts_z.rate*multy;
@@ -280,7 +284,8 @@ void continueBlock(void)
 
     if(axis_flags&E_FLAG){
         initStepper(E_AXIS);
-        sync[1] &= ~E_FLAG;
+//        mask_axis[1] &= ~E_FLAG;
+        sync_axis |= E_FLAG;
 
         sts_e.counter++;
         timerValue = sts_e.rate*multy;
@@ -291,49 +296,50 @@ void continueBlock(void)
     }
 
 
-    if(!(sync[1] & X_FLAG)
-            && !(sync[1] & Y_FLAG)
-            && !(sync[1] & Z_FLAG)
-            && !(sync[1] & E_FLAG) )
+//    if((sync_axis & X_FLAG)
+//            && (sync_axis & Y_FLAG)
+//            && (sync_axis & Z_FLAG)
+//            && (sync_axis & E_FLAG) )
+    if(sync_axis == mask_axis[0])
     {
-//        HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAV) = 0;
-//        HWREG(TIMER_BASE_Y_AXIS + TIMER_O_TAV) = 0;
-//        HWREG(TIMER_BASE_Z_AXIS + TIMER_O_TAV) = 0;
-//        HWREG(TIMER_BASE_E_AXIS + TIMER_O_TAV) = 0;
+        sync_axis = 0;
+        if(pMs_State->instrumrnt1 == eIns1_work){
+            if(mask_axis[0] & X_FLAG){
+                //            TimerEnable(TIMER_BASE_X_AXIS, TIMER_X);
+                HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
+                //            sync_axis &= ~X_FLAG;
+            }
+            if(mask_axis[0] && Y_FLAG){
+                //            TimerEnable(TIMER_BASE_Y_AXIS, TIMER_Y);
+                HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
+                //            sync_axis &= ~Y_FLAG;
+            }
+            if(mask_axis[0] & Z_FLAG){
+                //            TimerEnable(TIMER_BASE_Z_AXIS, TIMER_Z);
+                HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
+                //            sync_axis &= ~Z_FLAG;
+            }
+            if(mask_axis[0] & E_FLAG){
+                //            TimerEnable(TIMER_BASE_E_AXIS, TIMER_E);
+                HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
+                //            mask_axis[1] |= E_FLAG;
+            }
+            // uint32_t sd = *((uint32_t*)sectorHandling+50);
+            vTaskNotifyGiveFromISR(sectorHandling,&xHigherPriorityTaskWoken);
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+       }else{
+           xTaskNotifyFromISR(orderlyHandling,ot_sgQueueEmpty,eSetBits,&xHigherPriorityTaskWoken);
+           NoOperation;
+       }
 
-        if(sync[0] & X_FLAG){
-//            TimerEnable(TIMER_BASE_X_AXIS, TIMER_X);
-            HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
-            sync[1] |= X_FLAG;
-        }
-        if(sync[0] && Y_FLAG){
-//            TimerEnable(TIMER_BASE_Y_AXIS, TIMER_Y);
-            HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
-            sync[1] |= Y_FLAG;
-        }
-        if(sync[0] & Z_FLAG){
-//            TimerEnable(TIMER_BASE_Z_AXIS, TIMER_Z);
-            HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
-            sync[1] |= Z_FLAG;
-        }
-        if(sync[0] & E_FLAG){
-//            TimerEnable(TIMER_BASE_E_AXIS, TIMER_E);
-            HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
-            sync[1] |= E_FLAG;
-        }
-#ifndef DEBUG_NOTIFY
+        state_task = eTaskGetState(sectorHandling);
+        sema_tail = TRUE;
 //        state_task = eTaskGetState(sectorHandling);
-        //    xTaskNotifyFromISR(orderlyHandling,X_axis_int,eSetBits,&xHigherPriorityTaskWoken);
 //        if(state_task == eSuspended){
 //        ms_nextSector();    // Индикация
-//            vTaskNotifyGiveFromISR(sectorHandling, &xHigherPriorityTaskWoken);
+//        vTaskNotifyGiveFromISR(sectorHandling, &xHigherPriorityTaskWoken);
 //        xSemaphoreGiveFromISR(memf_semaphor_handler,&xHigherPriorityTaskWoken);
 //        xTaskNotifyFromISR(sectorHandling,SECTOR_TO_RELEAS,eSetBits,&xHigherPriorityTaskWoken);
-        sema_tail = TRUE;
-        xTaskNotifyGive(sectorHandling);
-        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-//        }
-#endif
     }
 }
 
@@ -355,34 +361,39 @@ void stub(uint32_t tmp)
 void exitBlock(void)
 {
 
-    if(sync[0] & X_FLAG & sync[1]){
-        sync[1] &= ~X_FLAG;
+    if(mask_axis[0] & X_FLAG & mask_axis[1]){
+//        mask_axis[1] &= ~X_FLAG;
+        sync_axis |= X_FLAG;
         TimerDisable(TIMER_BASE_X_AXIS, TIMER_X);
     }
 
-    if(sync[0] & Y_FLAG & sync[1]){
-        sync[1] &=~ Y_FLAG;
+    if(mask_axis[0] & Y_FLAG & mask_axis[1]){
+//        mask_axis[1] &=~ Y_FLAG;
+        sync_axis |= Y_FLAG;
         TimerDisable(TIMER_BASE_Y_AXIS, TIMER_Y);
     }
 
-    if(sync[0] & Z_FLAG & sync[1]){
-        sync[1] &=~ Z_FLAG;
+    if(mask_axis[0] & Z_FLAG & mask_axis[1]){
+//        mask_axis[1] &=~ Z_FLAG;
+        sync_axis |= Z_FLAG;
         TimerDisable(TIMER_BASE_Z_AXIS, TIMER_Z);
     }
 
-    if(sync[0] & E_FLAG & sync[1]){
-        sync[1] &=~ E_FLAG;
+    if(mask_axis[0] & E_FLAG & mask_axis[1]){
+//        mask_axis[1] &=~ E_FLAG;
+        sync_axis |= E_FLAG;
         TimerDisable(TIMER_BASE_E_AXIS, TIMER_E);
     }
 
 
-    if(!(sync[1] & X_FLAG)
-            && !(sync[1] & Y_FLAG)
-            && !(sync[1] & Z_FLAG)
-            && !(sync[1] & E_FLAG))
+//    if((sync_axis & X_FLAG)
+//            && (sync_axis & Y_FLAG)
+//            && (sync_axis & Z_FLAG)
+//            && (sync_axis & E_FLAG))
+    if(sync_axis == mask_axis[0])
     {
-//        flag = 1;
-    xTaskNotifyFromISR(orderlyHandling,X_axis_int_fin,eSetBits,NULL);
+        sync_axis = 0;
+        xTaskNotifyFromISR(orderlyHandling,X_axis_int_fin,eSetBits,NULL);
     }
 }
 

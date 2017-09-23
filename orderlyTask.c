@@ -48,8 +48,8 @@
 
 
 TaskHandle_t orderlyHandling;
-
-uint32_t taskcounter = 0;
+#pragma NOINIT(taskcounter)
+uint32_t taskcounter;
 
 
 static struct ComDataReq_t* msegment;
@@ -73,6 +73,7 @@ void orderly_routine(void* pvParameters ){
     initStepper(N_AXIS);
     ms_finBlock = exitBlock;
     start_t1(0);
+    taskcounter = 0;
     for( ;; ){
 //portMAX_DELAY
         ret = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotifiedValue,ORDERLY_DELAY );//portMAX_DELAY
@@ -106,12 +107,14 @@ void orderly_routine(void* pvParameters ){
 //                    xStatus = xQueueSend(segmentQueueHandler,&msegment->instrument1_parameter,0);
                 ss = (uint8_t*)MEMF_Alloc();
                 memcpy(ss, &msegment->instrument1_parameter, sizeof(struct sSegment));
-//                    if(xStatus == pdPASS){
-//                        NoOperation;
-//                    }
-//                    else{
-//                        NoOperation;
-//                    }
+                    if(pMs_State->instrumrnt1 == eIns1_stoped){
+                        pblockSegment(plan_get_current_block());
+                        start_t1(0);
+                        NoOperation;
+                    }
+                    else{
+                        NoOperation;
+                    }
 ////                }else{
 ////                    NoOperation;
 ////                }
@@ -133,14 +136,22 @@ void orderly_routine(void* pvParameters ){
             start_t1(0);
         }
 
+        if(ot_sgQueueEmpty & ulNotifiedValue){
+            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0);
+            NoOperation;
+        }
 //        if(ulNotifiedValue & 0x02){
 //            rgb_disable();
 //            NoOperation;
 //        }
         if(ret == pdFALSE){
             // Отправка статуса устройства.
-            HWREGBITB(&be_portf3,3) = ~HWREGBITB(&be_portf3,3);
-            GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, be_portf3);
+            if(pMs_State->instrumrnt1 == eIns1_stoped){
+                ms_nextSector();    // Индикация
+            }else{
+                HWREGBITB(&be_portf3,3) = ~HWREGBITB(&be_portf3,3);
+                GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, be_portf3);
+            }
         }
 
     } // end for(;;);
@@ -150,21 +161,7 @@ void orderly_routine(void* pvParameters ){
 
 uint32_t createtask_orderly(void){
     //TODO orderlyTask()
-/*
 
-     Construct BIOS Objects
-    Task_Params taskParams;
-     Construct writer/reader Task threads
-    Task_Params_init(&taskParams);
-    taskParams.stackSize = TASKSTACKSIZE;
-    taskParams.priority = 10;
-    taskParams.stack = &taskOrderlyStack;
-
-
-    Task_construct(&taskOrderlyStruct, (Task_FuncPtr)orderly_routine, &taskParams, NULL);
-
-    msInit(0);
-*/
     //
     // Create the Orderly task.
     //
@@ -173,6 +170,9 @@ uint32_t createtask_orderly(void){
     {
         return(1);
     }else{
+
+//        tskTaskControlBlock* tt = prvGetTCBFromHandle(orderlyHandling);
+
         return (0);
     }
 

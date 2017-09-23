@@ -49,6 +49,8 @@
 #include "memf/tSectorHandler.h"
 #include "memf/SegmentTask.h"
 
+#include "exchange/status.h"
+
 //*****************************************************************************
 //
 //! \addtogroup example_list

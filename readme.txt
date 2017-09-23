@@ -34,6 +34,7 @@ PA7     PF1         PF4     PA2
 //--------------------
 29.08.17	ms_nextSector - задержка состявляет 25uS 
 			от прерывания по завершению сегмента - continueBlock.
-	
-	
+			
+	volatile eTaskState state;
+	state = eTaskGetState(orderlyHandling);
 	

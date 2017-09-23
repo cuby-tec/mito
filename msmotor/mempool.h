@@ -42,7 +42,7 @@ extern uint32_t g_ui32Flags;
 
 //extern block_state* current_block;
 
-extern uint32_t sync[2];
+extern uint32_t mask_axis[2];
 
 //extern stepper_state sts;
 extern struct Stepper_state_t sts;

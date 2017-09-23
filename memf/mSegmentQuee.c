@@ -43,23 +43,30 @@ static uint8_t prev_block_index(uint8_t block_index);
 uint32_t
 MEMF_GetNumFreeBlocks(void)
 {
-    uint32_t result = 0;
+  /*  uint32_t result = 0;
     if(block_buffer_head<block_buffer_tail){
         result += SEGMENT_QUEE_SIZE;
     }
     return (result+block_buffer_head - block_buffer_tail);
+*/
+    return semaphore_counter;
 }
 
 uint32_t
 getHeadLineNumber(void)
 {
-    uint32_t result;
+    uint32_t result = NULL;
+/*
     struct sSegment* segment = cmdQuee[block_buffer_head];
 
     if(segment != NULL)
         //        return (cmdQuee[block_buffer_head]->head.linenumber);
         result = segment->head.linenumber;
-
+*/
+    // If queue dosn't empty.
+    if(semaphore_counter!=SEGMENT_QUEE_SIZE-1){
+        result = (cmdQuee[block_buffer_tail]->head.linenumber);
+    }
     return (result);
 }
 
@@ -79,18 +86,14 @@ static init_next_block(uint32_t index){
 uint32_t
 move_pblock(void)
 {
-    uint32_t result, next_segment;
-
-    next_segment = next_block_index(block_buffer_tail);
-    if(next_segment != next_block_index(block_buffer_head)){
+    uint32_t result = FALSE;
+    if(semaphore_counter){
+        block_buffer_tail = next_block_index(block_buffer_tail);
         // сегмент next_segment актуален.
-        init_next_block(next_segment);
-        block_buffer_tail = next_segment;
+        init_next_block(block_buffer_tail);
+        semaphore_counter--;
         result = TRUE;
-    }else{
-        result = FALSE;
     }
-
     return (result);
 }
 
@@ -100,14 +103,16 @@ move_pblock(void)
  */
 void* MEMF_Alloc(void)
 {
-    BaseType_t sem;
+//    BaseType_t sem;
     //cmdQuee[block_buffer_head]=OS_MEMF_Alloc(&cmdPool,1);
 
 //    sem = xSemaphoreTake(memf_semaphor_handler, portMAX_DELAY);
 //    if(sem == pdTRUE){
+    if(semaphore_counter<(SEGMENT_QUEE_SIZE-1)){
         block_buffer_head = next_block_index(block_buffer_head);
+        semaphore_counter++;
         return (void*)cmdQuee[block_buffer_head];
-//    }
+    }
     return (NULL);
 }
 
@@ -141,6 +146,7 @@ struct sSegment* plan_get_current_block(void)
 
 // Освободить блок/Сегмент,т.е. увеличить сяётчик семафора,
 //      передвинуть указатель block_buffer_head
+/*
 uint8_t
 memf_release(void){
     //    if(semaphore_counter<SEGMENT_QUEE_SIZE){
@@ -160,6 +166,7 @@ memf_release(void){
 //    }
     return semaphore_counter;
 }
+*/
 
 
  // Returns the index of the next block

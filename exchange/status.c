@@ -7,9 +7,9 @@
 
 //--------------
 
+#include "memf/mSegmentQuee.h"
 
 #include "Status_t.h"
-
 //------------- defs
 
 #define default_frameNumber  232
@@ -34,10 +34,22 @@ const struct Status_t default_status = {default_frameNumber, default_freeSegment
 
 };
 
+struct Status_t bu_status;
+uint32_t frame_number = 0;
+
 //-------------- function
 
 struct Status_t* getStatus(void)
 {
-    return &default_status;
+    struct Status_t* result = &bu_status;
+
+    memcpy(result, &default_status, sizeof(struct Status_t));
+
+    result->freeSegments = MEMF_GetNumFreeBlocks();
+    result->currentSegmentNumber = getHeadLineNumber();
+    result->frameNumber = ++frame_number;
+
+
+    return result;
 }
 

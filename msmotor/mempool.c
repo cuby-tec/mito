@@ -23,7 +23,7 @@ union{
 
 };
 
-uint32_t sync[2];
+uint32_t mask_axis[2];
 
 
 struct Stepper_state_t sts;

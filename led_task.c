@@ -72,7 +72,7 @@
 //
 //*****************************************************************************
 xQueueHandle g_pLEDQueue;
-
+TaskHandle_t ledTaskHandler;
 //
 // [G, R, B] range is 0 to 0xFFFF per color.
 //
@@ -267,7 +267,7 @@ LEDTaskInit(void)
     // Create the LED task.
     //
     if(xTaskCreate(LEDTask, (const portCHAR *)"LED", LEDTASKSTACKSIZE, NULL,
-                   tskIDLE_PRIORITY + PRIORITY_LED_TASK, NULL) != pdTRUE)
+                   tskIDLE_PRIORITY + PRIORITY_LED_TASK, &ledTaskHandler) != pdTRUE)
     {
         return(1);
     }

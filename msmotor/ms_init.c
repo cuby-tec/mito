@@ -332,8 +332,8 @@ void msInit(void){
 
 
 //=====================
-    sync[0] = 0;
-    sync[1] = 0;
+    mask_axis[0] = 0;
+    mask_axis[1] = 0;
 }
 
 
