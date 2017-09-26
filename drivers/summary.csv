@@ -1,23 +1,27 @@
 Pin#, PORT IO, Function, Directions
 10,PD7,WT5CCP1, , ,
 53,PD6,WT5CCP0, , ,
+6,PE3,AIN0, , ,
+7,PE2,AIN1, , ,
 61,PD0,GPIO_PD0, false, true,Input
 62,PD1,GPIO_PD1, false, true,Input
 63,PD2,GPIO_PD2, false, true,Input
 64,PD3,GPIO_PD3, false, true,Input
-43,PD4,GPIO_PD4, false, true,Input
-44,PD5,GPIO_PD5, false, true,Input
-59,PE4,GPIO_PE4, false, true,Output OD
-6,PE3,GPIO_PE3, false, true,Output OD
-7,PE2,GPIO_PE2, false, true,Output OD
-8,PE1,GPIO_PE1, false, true,Output OD
-9,PE0,GPIO_PE0, false, true,Output OD
+23,PA6,GPIO_PA6, false, true,Input
+24,PA7,GPIO_PA7, false, true,Input
+22,PA5,GPIO_PA5, false, true,Output
+19,PA2,GPIO_PA2, false, true,Output
+20,PA3,GPIO_PA3, false, true,Output
+21,PA4,GPIO_PA4, false, true,Output
 28,PF0,GPIO_PF0, false, true,Input
 5,PF4,GPIO_PF4, false, true,Input
 29,PF1,GPIO_PF1, true, false,Output
 31,PF3,GPIO_PF3, true, false,Output
 30,PF2,GPIO_PF2, true, false,Output
-4,PB7,T0CCP1, , ,
+17,PA0,GPIO_PA0, false, true,Input
+15,PC5,GPIO_PC5, false, false,Output
+14,PC6,GPIO_PC6, false, false,Output
+13,PC7,GPIO_PC7, false, false,Output
 58,PB4,T1CCP0, , ,
 57,PB5,T1CCP1, , ,
 45,PB0,T2CCP0, , ,
