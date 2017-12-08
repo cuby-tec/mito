@@ -31,6 +31,11 @@ PA5     PE2         PD6     PA4
 PA6     PE3         PD7     PA3
 PA7     PF1         PF4     PA2
 
+SSI pins
+CLK PB4/58
+RX	PB6/1
+TX	PB7/4
+
 //--------------------
 29.08.17	ms_nextSector - задержка состявляет 25uS 
 			от прерывания по завершению сегмента - continueBlock.
@@ -38,3 +43,4 @@ PA7     PF1         PF4     PA2
 	volatile eTaskState state;
 	state = eTaskGetState(orderlyHandling);
 	
+Текущее задание: loadMicrosteps@ms_init.c

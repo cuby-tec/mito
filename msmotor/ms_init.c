@@ -30,6 +30,7 @@
 //
 
 #include "drivers/pinout.h"
+#include "drivers/SPI_Microstepper.h"
 
 #include "ms_init.h"
 #include "ms_model.h"
@@ -142,13 +143,29 @@ void initBlock(void)
 
 }
 
+/**
+ * Загрузка микрошага в порт микрошага драйверов.
+ */
+void uploadMicrosteps(struct sSegment* segment){
+    uint8_t msdata[N_AXIS];
+    msdata[X_AXIS] = segment->axis[X_AXIS].microsteps;
+    msdata[Y_AXIS] = segment->axis[Y_AXIS].microsteps;
+    msdata[Z_AXIS] = segment->axis[Z_AXIS].microsteps;
+    msdata[E_AXIS] = segment->axis[E_AXIS].microsteps;
+    SPI_Send(msdata, N_AXIS);
+}
+
+/**
+ * инициализация нового сегмента.
+ *
+ */
 void pblockSegment(struct sSegment* segment)
 {
     pblock = &segment->axis[X_AXIS];
     pblock_y = &segment->axis[Y_AXIS];
     pblock_z = &segment->axis[Z_AXIS];
     pblock_e = &segment->axis[E_AXIS];
-
+    uploadMicrosteps(segment);
 }
 
 //--------------------- initStepper
@@ -334,6 +351,8 @@ void msInit(void){
 //=====================
     mask_axis[0] = 0;
     mask_axis[1] = 0;
+//======== SPI initializing
+    SPI_init();
 }
 
 

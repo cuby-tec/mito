@@ -35,7 +35,7 @@
 //
 //*****************************************************************************
 
-// This file was automatically generated on 26.09.2017 at 14:40:49
+// This file was automatically generated on 02.10.2017 at 12:22:17
 // by TI PinMux version 4.0.1496 
 //
 //*****************************************************************************
@@ -72,210 +72,236 @@ PinoutSet(void)
     //
     // Enable Peripheral Clocks 
     //
-	MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
-	MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
-	MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
-	MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
-	MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
-	MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB);
+    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC);
+    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
+    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);
+    MAP_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
 
-	//
-	// Unlock the Port Pin and Set the Commit Bit
-	//
-	HWREG(GPIO_PORTD_BASE+GPIO_O_LOCK) = GPIO_LOCK_KEY;
-	HWREG(GPIO_PORTD_BASE+GPIO_O_CR)   |= GPIO_PIN_7;
-	HWREG(GPIO_PORTD_BASE+GPIO_O_LOCK) = 0x0;
-	
+    //
+    // Unlock the Port Pin and Set the Commit Bit
+    //
+    HWREG(GPIO_PORTD_BASE+GPIO_O_LOCK) = GPIO_LOCK_KEY;
+    HWREG(GPIO_PORTD_BASE+GPIO_O_CR)   |= GPIO_PIN_7;
+    HWREG(GPIO_PORTD_BASE+GPIO_O_LOCK) = 0x0;
+
     //
     // Configure the GPIO Pin Mux for PD7
-	// for WT5CCP1
+    // for WT5CCP1
     //
-	MAP_GPIOPinConfigure(GPIO_PD7_WT5CCP1);
-	MAP_GPIOPinTypeTimer(GPIO_PORTD_BASE, GPIO_PIN_7);
+    MAP_GPIOPinConfigure(GPIO_PD7_WT5CCP1);
+    MAP_GPIOPinTypeTimer(GPIO_PORTD_BASE, GPIO_PIN_7);
 
     //
     // Configure the GPIO Pin Mux for PD6
-	// for WT5CCP0
+    // for WT5CCP0
     //
-	MAP_GPIOPinConfigure(GPIO_PD6_WT5CCP0);
-	MAP_GPIOPinTypeTimer(GPIO_PORTD_BASE, GPIO_PIN_6);
-
-    //
-    // Configure the GPIO Pin Mux for PE3
-	// for AIN0
-    //
-	MAP_GPIOPinTypeADC(GPIO_PORTE_BASE, GPIO_PIN_3);
-
-    //
-    // Configure the GPIO Pin Mux for PE2
-	// for AIN1
-    //
-	MAP_GPIOPinTypeADC(GPIO_PORTE_BASE, GPIO_PIN_2);
-
-    //
-    // Configure the GPIO Pin Mux for PD0
-	// for GPIO_PD0
-    //
-	MAP_GPIOPinTypeGPIOInput(GPIO_PORTD_BASE, GPIO_PIN_0);
-	MAP_GPIOPadConfigSet(GPIO_PORTD_BASE, GPIO_PIN_0, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
-
-    //
-    // Configure the GPIO Pin Mux for PD1
-	// for GPIO_PD1
-    //
-	MAP_GPIOPinTypeGPIOInput(GPIO_PORTD_BASE, GPIO_PIN_1);
-	MAP_GPIOPadConfigSet(GPIO_PORTD_BASE, GPIO_PIN_1, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
-
-    //
-    // Configure the GPIO Pin Mux for PD2
-	// for GPIO_PD2
-    //
-	MAP_GPIOPinTypeGPIOInput(GPIO_PORTD_BASE, GPIO_PIN_2);
-	MAP_GPIOPadConfigSet(GPIO_PORTD_BASE, GPIO_PIN_2, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+    MAP_GPIOPinConfigure(GPIO_PD6_WT5CCP0);
+    MAP_GPIOPinTypeTimer(GPIO_PORTD_BASE, GPIO_PIN_6);
 
     //
     // Configure the GPIO Pin Mux for PD3
-	// for GPIO_PD3
+    // for AIN4
     //
-	MAP_GPIOPinTypeGPIOInput(GPIO_PORTD_BASE, GPIO_PIN_3);
-	MAP_GPIOPadConfigSet(GPIO_PORTD_BASE, GPIO_PIN_3, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+    MAP_GPIOPinTypeADC(GPIO_PORTD_BASE, GPIO_PIN_3);
 
     //
-    // Configure the GPIO Pin Mux for PA6
-	// for GPIO_PA6
+    // Configure the GPIO Pin Mux for PD2
+    // for AIN5
     //
-	MAP_GPIOPinTypeGPIOInput(GPIO_PORTA_BASE, GPIO_PIN_6);
-	MAP_GPIOPadConfigSet(GPIO_PORTA_BASE, GPIO_PIN_6, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+    MAP_GPIOPinTypeADC(GPIO_PORTD_BASE, GPIO_PIN_2);
 
     //
-    // Configure the GPIO Pin Mux for PA7
-	// for GPIO_PA7
+    // Configure the GPIO Pin Mux for PE4
+    // for GPIO_PE4
     //
-	MAP_GPIOPinTypeGPIOInput(GPIO_PORTA_BASE, GPIO_PIN_7);
-	MAP_GPIOPadConfigSet(GPIO_PORTA_BASE, GPIO_PIN_7, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+    MAP_GPIOPinTypeGPIOInput(GPIO_PORTE_BASE, GPIO_PIN_4);
+    MAP_GPIOPadConfigSet(GPIO_PORTE_BASE, GPIO_PIN_4, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+
+    //
+    // Configure the GPIO Pin Mux for PE5
+    // for GPIO_PE5
+    //
+    MAP_GPIOPinTypeGPIOInput(GPIO_PORTE_BASE, GPIO_PIN_5);
+    MAP_GPIOPadConfigSet(GPIO_PORTE_BASE, GPIO_PIN_5, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+
+    //
+    // Configure the GPIO Pin Mux for PE2
+    // for GPIO_PE2
+    //
+    MAP_GPIOPinTypeGPIOInput(GPIO_PORTE_BASE, GPIO_PIN_2);
+    MAP_GPIOPadConfigSet(GPIO_PORTE_BASE, GPIO_PIN_2, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+
+    //
+    // Configure the GPIO Pin Mux for PE3
+    // for GPIO_PE3
+    //
+    MAP_GPIOPinTypeGPIOInput(GPIO_PORTE_BASE, GPIO_PIN_3);
+    MAP_GPIOPadConfigSet(GPIO_PORTE_BASE, GPIO_PIN_3, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+
+    //
+    // Configure the GPIO Pin Mux for PE0
+    // for GPIO_PE0
+    //
+    MAP_GPIOPinTypeGPIOInput(GPIO_PORTE_BASE, GPIO_PIN_0);
+    MAP_GPIOPadConfigSet(GPIO_PORTE_BASE, GPIO_PIN_0, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+
+    //
+    // Configure the GPIO Pin Mux for PE1
+    // for GPIO_PE1
+    //
+    MAP_GPIOPinTypeGPIOInput(GPIO_PORTE_BASE, GPIO_PIN_1);
+    MAP_GPIOPadConfigSet(GPIO_PORTE_BASE, GPIO_PIN_1, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
 
     //
     // Configure the GPIO Pin Mux for PA5
-	// for GPIO_PA5
+    // for GPIO_PA5
     //
-	MAP_GPIOPinTypeGPIOOutput(GPIO_PORTA_BASE, GPIO_PIN_5);
-	MAP_GPIOPinWrite(GPIO_PORTA_BASE, GPIO_PIN_5, GPIO_PIN_5);
+    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTA_BASE, GPIO_PIN_5);
+    MAP_GPIOPinWrite(GPIO_PORTA_BASE, GPIO_PIN_5, GPIO_PIN_5);
 
     //
     // Configure the GPIO Pin Mux for PA2
-	// for GPIO_PA2
+    // for GPIO_PA2
     //
-	MAP_GPIOPinTypeGPIOOutput(GPIO_PORTA_BASE, GPIO_PIN_2);
-	MAP_GPIOPinWrite(GPIO_PORTA_BASE, GPIO_PIN_2, GPIO_PIN_2);
+    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTA_BASE, GPIO_PIN_2);
+    MAP_GPIOPinWrite(GPIO_PORTA_BASE, GPIO_PIN_2, GPIO_PIN_2);
 
     //
     // Configure the GPIO Pin Mux for PA3
-	// for GPIO_PA3
+    // for GPIO_PA3
     //
-	MAP_GPIOPinTypeGPIOOutput(GPIO_PORTA_BASE, GPIO_PIN_3);
-	MAP_GPIOPinWrite(GPIO_PORTA_BASE, GPIO_PIN_3, GPIO_PIN_3);
+    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTA_BASE, GPIO_PIN_3);
+    MAP_GPIOPinWrite(GPIO_PORTA_BASE, GPIO_PIN_3, GPIO_PIN_3);
 
     //
     // Configure the GPIO Pin Mux for PA4
-	// for GPIO_PA4
+    // for GPIO_PA4
     //
-	MAP_GPIOPinTypeGPIOOutput(GPIO_PORTA_BASE, GPIO_PIN_4);
-	MAP_GPIOPinWrite(GPIO_PORTA_BASE, GPIO_PIN_4, GPIO_PIN_4);
+    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTA_BASE, GPIO_PIN_4);
+    MAP_GPIOPinWrite(GPIO_PORTA_BASE, GPIO_PIN_4, GPIO_PIN_4);
 
-	//
-	// Unlock the Port Pin and Set the Commit Bit
-	//
-	HWREG(GPIO_PORTF_BASE+GPIO_O_LOCK) = GPIO_LOCK_KEY;
-	HWREG(GPIO_PORTF_BASE+GPIO_O_CR)   |= GPIO_PIN_0;
-	HWREG(GPIO_PORTF_BASE+GPIO_O_LOCK) = 0x0;
-	
+    //
+    // Unlock the Port Pin and Set the Commit Bit
+    //
+    HWREG(GPIO_PORTF_BASE+GPIO_O_LOCK) = GPIO_LOCK_KEY;
+    HWREG(GPIO_PORTF_BASE+GPIO_O_CR)   |= GPIO_PIN_0;
+    HWREG(GPIO_PORTF_BASE+GPIO_O_LOCK) = 0x0;
+
     //
     // Configure the GPIO Pin Mux for PF0
-	// for GPIO_PF0
+    // for GPIO_PF0
     //
-	MAP_GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GPIO_PIN_0);
-	MAP_GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_0, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+    MAP_GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GPIO_PIN_0);
+    MAP_GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_0, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
 
     //
     // Configure the GPIO Pin Mux for PF4
-	// for GPIO_PF4
+    // for GPIO_PF4
     //
-	MAP_GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GPIO_PIN_4);
-	MAP_GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_4, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+    MAP_GPIOPinTypeGPIOInput(GPIO_PORTF_BASE, GPIO_PIN_4);
+    MAP_GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_4, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
 
     //
     // Configure the GPIO Pin Mux for PF1
-	// for GPIO_PF1
+    // for GPIO_PF1
     //
-	MAP_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1);
-	MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0x0);
+    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1);
+    MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0x0);
 
     //
     // Configure the GPIO Pin Mux for PF3
-	// for GPIO_PF3
+    // for GPIO_PF3
     //
-	MAP_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_3);
-	MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, 0x0);
-
-    //
-    // Configure the GPIO Pin Mux for PF2
-	// for GPIO_PF2
-    //
-	MAP_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_2);
-	MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, 0x0);
+    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_3);
+    MAP_GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, 0x0);
 
     //
     // Configure the GPIO Pin Mux for PA0
-	// for GPIO_PA0
+    // for GPIO_PA0
     //
-	MAP_GPIOPinTypeGPIOInput(GPIO_PORTA_BASE, GPIO_PIN_0);
-	MAP_GPIOPadConfigSet(GPIO_PORTA_BASE, GPIO_PIN_0, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+    MAP_GPIOPinTypeGPIOInput(GPIO_PORTA_BASE, GPIO_PIN_0);
+    MAP_GPIOPadConfigSet(GPIO_PORTA_BASE, GPIO_PIN_0, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
 
     //
     // Configure the GPIO Pin Mux for PC5
-	// for GPIO_PC5
+    // for GPIO_PC5
     //
-	MAP_GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_5);
+    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_5);
 
     //
     // Configure the GPIO Pin Mux for PC6
-	// for GPIO_PC6
+    // for GPIO_PC6
     //
-	MAP_GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_6);
+    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_6);
 
     //
     // Configure the GPIO Pin Mux for PC7
-	// for GPIO_PC7
+    // for GPIO_PC7
     //
-	MAP_GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_7);
+    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_7);
+
+    //
+    // Configure the GPIO Pin Mux for PA6
+    // for GPIO_PA6
+    //
+    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTA_BASE, GPIO_PIN_6);
+
+    //
+    // Configure the GPIO Pin Mux for PA7
+    // for GPIO_PA7
+    //
+    MAP_GPIOPinTypeGPIOInput(GPIO_PORTA_BASE, GPIO_PIN_7);
+
+    //
+    // Configure the GPIO Pin Mux for PB6
+    // for SSI2RX
+    //
+    MAP_GPIOPinConfigure(GPIO_PB6_SSI2RX);
+    MAP_GPIOPinTypeSSI(GPIO_PORTB_BASE, GPIO_PIN_6);
+
+    //
+    // Configure the GPIO Pin Mux for PB7
+    // for SSI2TX
+    //
+    MAP_GPIOPinConfigure(GPIO_PB7_SSI2TX);
+    MAP_GPIOPinTypeSSI(GPIO_PORTB_BASE, GPIO_PIN_7);
 
     //
     // Configure the GPIO Pin Mux for PB4
-	// for T1CCP0
+    // for SSI2CLK
     //
-	MAP_GPIOPinConfigure(GPIO_PB4_T1CCP0);
-	MAP_GPIOPinTypeTimer(GPIO_PORTB_BASE, GPIO_PIN_4);
+    MAP_GPIOPinConfigure(GPIO_PB4_SSI2CLK);
+    MAP_GPIOPinTypeSSI(GPIO_PORTB_BASE, GPIO_PIN_4);
+
+    //
+    // Configure the GPIO Pin Mux for PF2
+    // for T1CCP0
+    //
+    MAP_GPIOPinConfigure(GPIO_PF2_T1CCP0);
+    MAP_GPIOPinTypeTimer(GPIO_PORTF_BASE, GPIO_PIN_2);
 
     //
     // Configure the GPIO Pin Mux for PB5
-	// for T1CCP1
+    // for T1CCP1
     //
-	MAP_GPIOPinConfigure(GPIO_PB5_T1CCP1);
-	MAP_GPIOPinTypeTimer(GPIO_PORTB_BASE, GPIO_PIN_5);
+    MAP_GPIOPinConfigure(GPIO_PB5_T1CCP1);
+    MAP_GPIOPinTypeTimer(GPIO_PORTB_BASE, GPIO_PIN_5);
 
     //
     // Configure the GPIO Pin Mux for PB0
-	// for T2CCP0
+    // for T2CCP0
     //
-	MAP_GPIOPinConfigure(GPIO_PB0_T2CCP0);
-	MAP_GPIOPinTypeTimer(GPIO_PORTB_BASE, GPIO_PIN_0);
+    MAP_GPIOPinConfigure(GPIO_PB0_T2CCP0);
+    MAP_GPIOPinTypeTimer(GPIO_PORTB_BASE, GPIO_PIN_0);
 
     //
     // Configure the GPIO Pin Mux for PB1
-	// for T2CCP1
+    // for T2CCP1
     //
-	MAP_GPIOPinConfigure(GPIO_PB1_T2CCP1);
-	MAP_GPIOPinTypeTimer(GPIO_PORTB_BASE, GPIO_PIN_1);
+    MAP_GPIOPinConfigure(GPIO_PB1_T2CCP1);
+    MAP_GPIOPinTypeTimer(GPIO_PORTB_BASE, GPIO_PIN_1);
 
 }
 
@@ -285,4 +311,3 @@ PinoutSet(void)
 //! @}
 //
 //*****************************************************************************
-
