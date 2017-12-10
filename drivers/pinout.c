@@ -35,8 +35,8 @@
 //
 //*****************************************************************************
 
-// This file was automatically generated on 02.10.2017 at 12:22:17
-// by TI PinMux version 4.0.1496 
+// This file was automatically generated on 10.12.2017 at 14:49:38
+// by TI PinMux version 4.0.1510
 //
 //*****************************************************************************
 
@@ -247,12 +247,14 @@ PinoutSet(void)
     // for GPIO_PA6
     //
     MAP_GPIOPinTypeGPIOOutput(GPIO_PORTA_BASE, GPIO_PIN_6);
+    MAP_GPIOPinWrite(GPIO_PORTA_BASE, GPIO_PIN_6, GPIO_PIN_6);
 
     //
     // Configure the GPIO Pin Mux for PA7
     // for GPIO_PA7
     //
-    MAP_GPIOPinTypeGPIOInput(GPIO_PORTA_BASE, GPIO_PIN_7);
+    MAP_GPIOPinTypeGPIOOutput(GPIO_PORTA_BASE, GPIO_PIN_7);
+    MAP_GPIOPinWrite(GPIO_PORTA_BASE, GPIO_PIN_7, 0x0);
 
     //
     // Configure the GPIO Pin Mux for PB6

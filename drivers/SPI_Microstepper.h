@@ -22,7 +22,7 @@ void SPI_init(void);
 
 void SPI_Send(uint8_t* data,uint8_t count);
 
-void SPI_Read(uint8_t* data,uint8_t count);
+void SPI_Read(uint32_t* data,uint8_t count);
 
 
 #endif /* DRIVERS_SPI_MICROSTEPPER_H_ */

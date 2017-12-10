@@ -31,6 +31,7 @@
 
 #include "drivers/pinout.h"
 #include "drivers/SPI_Microstepper.h"
+#include "Microstep.h"
 
 #include "ms_init.h"
 #include "ms_model.h"
@@ -352,7 +353,58 @@ void msInit(void){
     mask_axis[0] = 0;
     mask_axis[1] = 0;
 //======== SPI initializing
+    //
+    // Enable the SSI0 peripheral
+    //
+    SysCtlPeripheralEnable(EXT_PRIPHERAL);
+    //
+    // Wait for the SSI0 module to be ready.
+    //
+    while(!SysCtlPeripheralReady(EXT_PRIPHERAL))
+    {
+    }
     SPI_init();
+//-------DEbug
+#define UMICROSTEP  //MEANDR //ONE
+#define MSG_LENGTH  3
+
+#ifdef MEANDR
+    uint8_t tx_array[MSG_LENGTH] = {0xAA,0xAA,0xAA};
+    uint8_t tx_array1[MSG_LENGTH] = {0x55,0x55,0x55};
+    while(1){
+        SPI_Send(tx_array, MSG_LENGTH);
+        SPI_Send(tx_array1, MSG_LENGTH);
+    }
+#endif
+#ifdef ONE
+    uint8_t tx_array[MSG_LENGTH] = {0x80,0x00,0x00};// e1:EN
+    uint8_t tx_array1[MSG_LENGTH] = {0x00,0x00,0x01};//x:M1
+    while(1){
+        SPI_Send(tx_array, MSG_LENGTH);
+        SPI_Send(tx_array1, MSG_LENGTH);
+    }
+
+#endif
+#ifdef UMICROSTEP
+    uint8_t j;
+    uint32_t rx;
+    union uMicrostep usteps;
+
+    for(j=0;j<4;j++)
+        usteps.data[j] = 0;
+//    union uMicrostep usteps;
+
+    while(1){
+        usteps.microsteps.X |= (M1|M2);
+        usteps.microsteps.EN |= (EN_X);
+        SPI_Send(usteps.data, MSG_LENGTH);
+        usteps.microsteps.X &= ~(M1|M2);
+        usteps.microsteps.EN &= ~(EN_X);
+        SPI_Send(usteps.data, MSG_LENGTH);
+        rx=0;
+        SPI_Read(&rx, 1);
+    }
+#endif
 }
 
 

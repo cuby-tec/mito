@@ -7,7 +7,9 @@
 
 //--------------
 
-
+#include "SPI_Microstepper.h"
+#include "msmotor/msport.h"
+#include "inc/typedefs.h"
 #include <stdbool.h>
 //#include <stdint.h>
 #include "inc/hw_memmap.h"
@@ -16,7 +18,6 @@
 #include "driverlib/ssi.h"
 #include "driverlib/sysctl.h"
 
-#include "SPI_Microstepper.h"
 
 //------------- defs
 #define ui32BitRate     1000000
@@ -28,13 +29,15 @@
 
 //-------------- function
 void SPI_init(void){
-    uint32_t pui32Data;
-    SSIConfigSetExpClk(SSI2_BASE, SysCtlClockGet(), SSI_FRF_MOTO_MODE_0, SSI_MODE_MASTER, ui32BitRate, ui32DataWidth);
-    SSIDataGetNonBlocking(SSI2_BASE, &pui32Data);
-    if(pui32Data){
-        while(pui32Data){
-            SSIDataGetNonBlocking(SSI2_BASE, &pui32Data);
-        }
+    uint32_t pui32Data[4];
+    SSIConfigSetExpClk(EXT_PORT, SysCtlClockGet(), SSI_FRF_MOTO_MODE_0, SSI_MODE_MASTER, ui32BitRate, ui32DataWidth);
+    //
+    // Enable the SSI0 module.
+    //
+    SSIEnable(EXT_PORT);
+
+    while(SSIDataGetNonBlocking(EXT_PORT, &pui32Data[0])){
+        NoOperation;
     }
 }
 
@@ -47,26 +50,46 @@ void SPI_Send(uint8_t* pui32DataTx,uint8_t count){
         // This allows you to assure that all the data you send makes it into
         // the send FIFO.
         //
-        SSIDataPut(SSI2_BASE, pui32DataTx[ui32Index]);
+        SSIDataPut(EXT_PORT, pui32DataTx[ui32Index]);
     }
 
     //
     // Wait until SSI2 is done transferring all the data in the transmit FIFO.
     //
-    while(SSIBusy(SSI2_BASE))
+    while(SSIBusy(EXT_PORT))
     {
     }
+    GPIOPinWrite(EXT_BASE, EXT_RCLK, EXT_RCLK);
+    NoOperation;
+    GPIOPinWrite(EXT_BASE, EXT_RCLK, 0);
 
 }
 
-void SPI_Read(uint8_t* data,uint8_t count){
-    uint8_t ui32Index;
-    uint32_t pui32DataRx[4];
-    for(ui32Index = 0; ui32Index < count; ui32Index++){
-        //
-        // Receive the data using the "blocking" Get function. This function
-        // will wait until there is data in the receive FIFO before returning.
-        //
-        SSIDataGet(SSI2_BASE, &pui32DataRx[ui32Index]);
+void SPI_Read(uint32_t* data,uint8_t count){
+//    uint8_t ui32Index;
+    uint32_t pui32DataRx;
+    //
+    // Read any residual data from the SSI port.  This makes sure the receive
+    // FIFOs are empty, so we don't read any unwanted junk.  This is done here
+    // because the SPI SSI mode is full-duplex, which allows you to send and
+    // receive at the same time.  The SSIDataGetNonBlocking function returns
+    // "true" when data was returned, and "false" when no data was returned.
+    // The "non-blocking" function checks if there is any data in the receive
+    // FIFO and does not "hang" if there isn't.
+    //
+    while(SSIDataGetNonBlocking(SSI2_BASE, &pui32DataRx))
+    {
     }
+
+    GPIOPinWrite(EXT_BASE, EXT_SHLD, 0);
+    NoOperation;
+    GPIOPinWrite(EXT_BASE, EXT_SHLD, EXT_SHLD);
+    //
+    // Receive the data using the "blocking" Get function. This function
+    // will wait until there is data in the receive FIFO before returning.
+    //
+//    SSIDataGet(SSI2_BASE, &pui32DataRx);
+    SSIDataPut(SSI2_BASE, 0);
+    SSIDataGetNonBlocking(SSI2_BASE, &pui32DataRx);
+    *data = pui32DataRx;
 }

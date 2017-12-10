@@ -75,4 +75,10 @@
 #define Z_FLAG  (1<<Z_AXIS)
 #define E_FLAG  (1<<E_AXIS)
 
+#define EXT_PORT        SSI2_BASE
+#define EXT_PRIPHERAL   SYSCTL_PERIPH_SSI2
+#define EXT_SHLD        GPIO_PIN_6  //GPIO_PORTA_BASE, GPIO_PIN_6
+#define EXT_RCLK        GPIO_PIN_7  //GPIO_PORTA_BASE, GPIO_PIN_7
+#define EXT_BASE        GPIO_PORTA_BASE
+
 #endif /* MSMOTOR_MSPORT_H_ */
