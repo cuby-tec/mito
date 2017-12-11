@@ -148,12 +148,44 @@ void initBlock(void)
  * Загрузка микрошага в порт микрошага драйверов.
  */
 void uploadMicrosteps(struct sSegment* segment){
-    uint8_t msdata[N_AXIS];
-    msdata[X_AXIS] = segment->axis[X_AXIS].microsteps;
-    msdata[Y_AXIS] = segment->axis[Y_AXIS].microsteps;
-    msdata[Z_AXIS] = segment->axis[Z_AXIS].microsteps;
-    msdata[E_AXIS] = segment->axis[E_AXIS].microsteps;
-    SPI_Send(msdata, N_AXIS);
+//    uint8_t msdata[N_AXIS];
+    uint8_t j;
+    union uMicrostep usteps;
+
+    for(j=0;j<4;j++)
+        usteps.data[j] = 0;
+
+    usteps.microsteps.X = segment->axis[X_AXIS].microsteps;
+    usteps.microsteps.Y = segment->axis[Y_AXIS].microsteps;
+    usteps.microsteps.Z = segment->axis[Z_AXIS].microsteps;
+    usteps.microsteps.E0 = segment->axis[E_AXIS].microsteps;
+//    usteps.microsteps.EN |= EN_E1;  \\ Disabled
+//    SPI_Send(msdata, N_AXIS);
+    SPI_Send(usteps.data, MSG_LENGTH);
+}
+
+void updateDirections(struct sSegment* segment)
+{
+    if(segment->axis[X_AXIS].direction == forward)
+        GPIOPinWrite(DIRECTION_PORT, DIR_X, DIR_X);
+    else
+        GPIOPinWrite(DIRECTION_PORT, DIR_X, 0);
+
+    if(segment->axis[Y_AXIS].direction == forward)
+        GPIOPinWrite(DIRECTION_PORT, DIR_Y, DIR_Y);
+    else
+        GPIOPinWrite(DIRECTION_PORT, DIR_Y, 0);
+
+    if(segment->axis[Z_AXIS].direction == forward)
+        GPIOPinWrite(DIRECTION_PORT, DIR_Z, DIR_Z);
+    else
+        GPIOPinWrite(DIRECTION_PORT, DIR_Z, 0);
+
+    if(segment->axis[E_AXIS].direction == forward)
+        GPIOPinWrite(DIRECTION_PORT, DIR_E, DIR_E);
+    else
+        GPIOPinWrite(DIRECTION_PORT, DIR_E, 0);
+
 }
 
 /**
@@ -167,6 +199,7 @@ void pblockSegment(struct sSegment* segment)
     pblock_z = &segment->axis[Z_AXIS];
     pblock_e = &segment->axis[E_AXIS];
     uploadMicrosteps(segment);
+    updateDirections(segment);
 }
 
 //--------------------- initStepper
@@ -352,6 +385,7 @@ void msInit(void){
 //=====================
     mask_axis[0] = 0;
     mask_axis[1] = 0;
+
 //======== SPI initializing
     //
     // Enable the SSI0 peripheral
@@ -365,8 +399,7 @@ void msInit(void){
     }
     SPI_init();
 //-------DEbug
-#define UMICROSTEP  //MEANDR //ONE
-#define MSG_LENGTH  3
+#define UMICROSTEP_no  //MEANDR //ONE
 
 #ifdef MEANDR
     uint8_t tx_array[MSG_LENGTH] = {0xAA,0xAA,0xAA};
@@ -404,7 +437,22 @@ void msInit(void){
         rx=0;
         SPI_Read(&rx, 1);
     }
+#else
+    uint8_t j;
+    uint32_t rx;
+    union uMicrostep usteps;
+
+    for(j=0;j<4;j++)
+        usteps.data[j] = 0;
+
+    usteps.microsteps.EN |= (EN_X+EN_Y+EN_Z+EN_E0+EN_E1);
+
+    SPI_Send(usteps.data, MSG_LENGTH);
+    rx=0;
+    SPI_Read(&rx, 1);
 #endif
+//================ end initialization
+
 }
 
 

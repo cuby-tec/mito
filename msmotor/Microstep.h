@@ -14,6 +14,10 @@
 #define _MICROSTEP_H
 #include <stdint.h>
 
+// определяется количеством разрядов Расширителя порта.
+#define MSG_LENGTH  3
+
+
 #define M1  (1)
 #define M2  (1<<1)
 #define M3  (1<<2)

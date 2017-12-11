@@ -166,7 +166,10 @@ void start_t1(uint8_t pusc)
     dump[0] = TimerLoadGet(TIMER_BASE_X_AXIS, TIMER_A);
 #endif
 
-    initStepper(N_AXIS);  // next block
+//    initStepper(N_AXIS);  // next block
+    struct sSegment* segment = plan_get_current_block();
+    pblockSegment(segment);
+
     if(pusc == 0){
         Timer1IntHandler();
         TimerYIntHandler();

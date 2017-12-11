@@ -40,8 +40,8 @@ uint32_t g_ui32Flags;
 // axis E -----------------------------------
 void update_Eaxis(void)
 {
-            HWREGBITW(&g_ui32Flags,E_AXIS) ^= 1;
-            GPIOPinWrite(DIRECTION_PORT, DIRECTION_E,(g_ui32Flags & E_FLAG)>>2);
+//            HWREGBITW(&g_ui32Flags,E_AXIS) ^= 1;
+//            GPIOPinWrite(DIRECTION_PORT, DIRECTION_E,(g_ui32Flags & E_FLAG)>>2);
     //    0x400253fc
 
             if(sts_e.counter > sts_e.point){
@@ -125,8 +125,8 @@ void update_Zaxis(void)
 {
     //    uint32_t rest;
     //    g_ui32Flags |=
-            HWREGBITW(&g_ui32Flags,Z_AXIS) ^= 1;
-            GPIOPinWrite(DIRECTION_PORT, DIRECTION_Z,(g_ui32Flags & Z_FLAG)<<0);
+//            HWREGBITW(&g_ui32Flags,Z_AXIS) ^= 1;
+//            GPIOPinWrite(DIRECTION_PORT, DIRECTION_Z,(g_ui32Flags & Z_FLAG)<<0);
     //    0x400253fc
 
             if(sts_z.counter > sts_z.point){
@@ -209,9 +209,9 @@ void update_Yaxis(void)
 //    uint32_t rest;
     if(axis_flags&Y_FLAG)
     {
-//            g_ui32Flags |=
-        HWREGBITW(&g_ui32Flags,Y_AXIS) ^= 1;
-        GPIOPinWrite(DIRECTION_PORT, DIRECTION_Y,(g_ui32Flags & Y_FLAG)<<2);
+//  //          g_ui32Flags |=
+//        HWREGBITW(&g_ui32Flags,Y_AXIS) ^= 1;
+//        GPIOPinWrite(DIRECTION_PORT, DIRECTION_Y,(g_ui32Flags & Y_FLAG)<<2);
 //            0x400253fc
 
         if(sts_y.counter > sts_y.point){
@@ -296,8 +296,8 @@ void update_Xaxis(void)
 
     // Обработка следующегошага.
 
-    HWREGBITW(&g_ui32Flags,X_AXIS) ^= 1;
-    GPIOPinWrite(DIRECTION_PORT, DIRECTION_X,(g_ui32Flags & X_FLAG)<<4);
+//    HWREGBITW(&g_ui32Flags,X_AXIS) ^= 1;
+//    GPIOPinWrite(DIRECTION_PORT, DIRECTION_X,(g_ui32Flags & X_FLAG)<<4);
     //            0x400253fc
 
     if(sts.counter > sts.point){
@@ -397,7 +397,7 @@ void new_segment_request(void)
  */
 void soft_interrupt_handler(void)
 {
-    uint32_t status = GPIOIntStatus(DIRECTION_PORT, false);
+//    uint32_t status = GPIOIntStatus(DIRECTION_PORT, false);
     if(axis_flags&X_FLAG)
     {
         update_Xaxis(); // port E pin 4

@@ -65,7 +65,7 @@ extern struct sControl* pblock_e;
 
 extern uint32_t speedRate[N_AXIS];
 
-extern const struct sControl default_block;
+extern struct sControl default_block;
 
 extern const struct sHead default_segment_head;
 

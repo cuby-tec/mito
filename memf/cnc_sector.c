@@ -54,26 +54,54 @@ void init_cncsector(void)
         {
             pctl = &psc->axis[j];
             switch(j){
-            case 0:
+            case X_AXIS:
                 load_defaults(pctl);
                 pctl->axis = X_AXIS;
                 break;
-            case 1:
+            case Y_AXIS:
                 load_defaults(pctl);
                 pctl->axis = Y_AXIS;
                 break;
-            case 2:
+            case Z_AXIS:
                 load_defaults(pctl);
                 pctl->axis = Z_AXIS;
                 break;
-            case 3:
+            case E_AXIS:
                 load_defaults(pctl);
                 pctl->axis = E_AXIS;
                 break;
             }
+        }
 
+        pctl = &psc->axis[X_AXIS];
+        switch(i)
+        {
+        case 0:
+            pctl->direction = backward;
+            pctl->microsteps = 0;
+            break;
+        case 1:
+            pctl->direction = forward;
+            pctl->microsteps = 1;
+            break;
+        case 2:
+            pctl->direction = backward;
+            pctl->microsteps = 2;
+        case 3:
+            pctl->direction = forward;
+            pctl->microsteps = 3;
+            break;
+        case 4:
+            pctl->direction = backward;
+            pctl->microsteps = 7;
+            break;
+        default:
+            if(i % 2 == 0)
+                pctl->direction = backward;
+            else
+                pctl->direction = forward;
 
-
+            break;
         }
 
     }

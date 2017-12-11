@@ -49,11 +49,23 @@ struct sControl* pblock_z;
 struct sControl* pblock_e;
 
 
+#define DEFAULT_STEPS   10000
+#define DEFAULT_ACCELERATEUNTIL 3
+#define DEFAULT_initial_rate    141798//70898//50132
+#define DEFAULT_nominal_rate    37994//18997//13382//5370
+#define DEFAULT_final_rate      141798//70898//50132
 
 uint32_t speedRate[N_AXIS];
 
-const struct sControl default_block = {
-   X_AXIS, 2, 0, 3, 10, 3, 7,  50132, 5370, 50132, 0, 1, 2, 3, forward, 0, 0
+struct sControl default_block = {
+   X_AXIS, 2, 0, 3,
+   DEFAULT_STEPS,
+   DEFAULT_ACCELERATEUNTIL,
+   DEFAULT_STEPS - DEFAULT_ACCELERATEUNTIL ,
+   DEFAULT_initial_rate,
+   DEFAULT_nominal_rate,
+   DEFAULT_final_rate,
+   0, 1, 2, 3, forward, 0, 0
 };
 
 const struct sHead default_segment_head = {

@@ -46,11 +46,11 @@
 
 
 
-#define DIRECTION_PORT      GPIO_PORTE_BASE
-#define DIRECTION_X         GPIO_PIN_4
-#define DIRECTION_Y         GPIO_PIN_3
-#define DIRECTION_Z         GPIO_PIN_2
-#define DIRECTION_E         GPIO_PIN_1
+#define DIRECTION_PORT      GPIO_PORTA_BASE
+#define DIR_X         GPIO_PIN_5
+#define DIR_Y         GPIO_PIN_4
+#define DIR_Z         GPIO_PIN_3
+#define DIR_E         GPIO_PIN_2
 
 
 #define PORT_PULS_WIDTH     0x04FF
