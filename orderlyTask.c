@@ -72,13 +72,17 @@ void orderly_routine(void* pvParameters ){
 
     initStepper(N_AXIS);
     ms_finBlock = exitBlock;
-    start_t1(0);
+//    start_t1(0);
     taskcounter = 0;
     for( ;; ){
 //portMAX_DELAY
         ret = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotifiedValue,ORDERLY_DELAY );//portMAX_DELAY
 //        state = eTaskGetState(orderlyHandling);
-
+        //X_axis_int
+        //X_axis_int_fin
+        //SignalUSBbufferReady (1<<2) // Получена команда по каналу USB.
+        //ot_sgQueueEmpty     (1<<3) //выполнена ОБработка всех сегментов и новых сегментов нет.
+        //ot_sgTest
 
         if(ulNotifiedValue & SignalUSBbufferReady){
             msegment = (struct ComDataReq_t *)cmdBuffer_usb;
@@ -140,6 +144,16 @@ void orderly_routine(void* pvParameters ){
             GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_1, 0);
             NoOperation;
         }
+
+        if(ot_sgTest & ulNotifiedValue){
+            // start test sequence.
+            initBlock();    // initialize sectors.
+            initStepper(N_AXIS);
+            ms_finBlock = continueBlock;
+            start_t1(0);
+
+        }
+
 //        if(ulNotifiedValue & 0x02){
 //            rgb_disable();
 //            NoOperation;

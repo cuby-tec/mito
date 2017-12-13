@@ -126,7 +126,7 @@ void Timer_callback(void)
     }
 }
 
-//-------------------- initBlock
+//-------------------- initBlock & sSector. for test purposes.
 void initBlock(void)
 {
     struct sSegment* segment;

@@ -181,7 +181,7 @@ next_block_index(uint8_t block_index)
 static init_cmdQuee(void){
     uint32_t i;
 
-    initBlock();    // load defaults
+//    initBlock();    // load defaults
 
     block_buffer_tail = 0;
     block_buffer_head = block_buffer_tail;
@@ -214,7 +214,7 @@ void createSegmentQuee(void)
 
 
     /* The semaphore was created successfully. The semaphore can now be used. */
-        semaphore_counter = SEGMENT_QUEE_SIZE;
+        semaphore_counter = 0;  //SEGMENT_QUEE_SIZE;
         init_cmdQuee();
         NoOperation;
         rcvd_semaphore_handler = xSemaphoreCreateMutex();

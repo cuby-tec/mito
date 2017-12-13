@@ -40,6 +40,8 @@
 #include "queue.h"
 #include "semphr.h"
 
+#include "orderlyTask.h"
+
 //*****************************************************************************
 //
 // The stack size for the display task.
@@ -96,7 +98,8 @@ SwitchTask(void *pvParameters)
                 if((ui8CurButtonState & ALL_BUTTONS) == LEFT_BUTTON)
                 {
                     ui8Message = LEFT_BUTTON;
-
+                    //Start test
+                    xTaskNotify(orderlyHandling,ot_sgTest,eSetBits);
                     //
                     // Guard UART from concurrent access.
                     //
