@@ -411,7 +411,7 @@ void msInit(void){
 #endif
 #ifdef ONE
     uint8_t tx_array[MSG_LENGTH] = {0x80,0x00,0x00};// e1:EN
-    uint8_t tx_array1[MSG_LENGTH] = {0x00,0x00,0x01};//x:M1
+    uint8_t tx_array1[MSG_LENGTH] = {0x00,0x00,0x01};//x:MS1
     while(1){
         SPI_Send(tx_array, MSG_LENGTH);
         SPI_Send(tx_array1, MSG_LENGTH);
@@ -428,10 +428,10 @@ void msInit(void){
 //    union uMicrostep usteps;
 
     while(1){
-        usteps.microsteps.X |= (M1|M2);
+        usteps.microsteps.X |= (MS1|MS2);
         usteps.microsteps.EN |= (EN_X);
         SPI_Send(usteps.data, MSG_LENGTH);
-        usteps.microsteps.X &= ~(M1|M2);
+        usteps.microsteps.X &= ~(MS1|MS2);
         usteps.microsteps.EN &= ~(EN_X);
         SPI_Send(usteps.data, MSG_LENGTH);
         rx=0;

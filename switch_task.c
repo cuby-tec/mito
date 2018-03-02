@@ -35,12 +35,17 @@
 #include "switch_task.h"
 #include "led_task.h"
 #include "priorities.h"
-#include "FreeRTOS.h"
-#include "task.h"
+
+#include <limits.h>
+#include "driverlib/interrupt.h"
+#include "inc/hw_ints.h"
+
 #include "queue.h"
 #include "semphr.h"
 
 #include "orderlyTask.h"
+#include "kalibrovka/ms_kalibrovka.h"
+#include "drivers/HALmodele.h"
 
 //*****************************************************************************
 //
@@ -52,6 +57,8 @@
 extern xQueueHandle g_pLEDQueue;
 extern xSemaphoreHandle g_pUARTSemaphore;
 
+TaskHandle_t switchTaskHandle;
+
 //*****************************************************************************
 //
 // This task reads the buttons' state and passes this information to LEDTask.
@@ -60,12 +67,15 @@ extern xSemaphoreHandle g_pUARTSemaphore;
 static void
 SwitchTask(void *pvParameters)
 {
+//    uint32_t ulNotificationValue;
     portTickType ui16LastTime;
     uint32_t ui32SwitchDelay = 25;
     uint8_t ui8CurButtonState, ui8PrevButtonState;
     uint8_t ui8Message;
 
     ui8CurButtonState = ui8PrevButtonState = 0;
+    IntEnable (INT_GPIOE);
+    set_Xmin_IntType_rising();
 
     //
     // Get the current tick count.
@@ -99,7 +109,9 @@ SwitchTask(void *pvParameters)
                 {
                     ui8Message = LEFT_BUTTON;
                     //Start test
-                    xTaskNotify(orderlyHandling,ot_sgTest,eSetBits);
+//                    xTaskNotify(orderlyHandling,ot_sgTest,eSetBits);
+//                    xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, portMAX_DELAY);
+                    kalibrovka();
                     //
                     // Guard UART from concurrent access.
                     //
@@ -168,7 +180,7 @@ SwitchTaskInit(void)
     //
     if(xTaskCreate(SwitchTask, (const portCHAR *)"Switch",
                    SWITCHTASKSTACKSIZE, NULL, tskIDLE_PRIORITY +
-                   PRIORITY_SWITCH_TASK, NULL) != pdTRUE)
+                   PRIORITY_SWITCH_TASK, &switchTaskHandle) != pdTRUE)
     {
         return(1);
     }

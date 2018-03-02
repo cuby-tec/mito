@@ -6,11 +6,13 @@
  */
 
 //--------------
+#include "cnc_sector.h"
 
 #include "msmotor/mempool.h"
 
-#include "cnc_sector.h"
 #include "mSegmentQuee.h"
+
+#include "msmotor/Microstep.h"
 //------------- defs
 
 //-------------- vars
@@ -46,8 +48,8 @@ void init_cncsector(void)
     for(i=0;i<SEGMENT_QUEE_SIZE;i++)
     {
         //        sector[i].head.axis_number ;
-        //        psc = &sector[i];
-        psc = (struct sSegment*)MEMF_Alloc();
+                psc = &sector[i];
+//        psc = (struct sSegment*)MEMF_Alloc();
         if(psc){
             psc->head.axis_number = default_segment_head.axis_number; //N_AXIS;
             psc->head.linenumber = i + default_segment_head.linenumber;
@@ -113,4 +115,33 @@ void init_cncsector(void)
     }
 }
 
+/**
+ * #define DEFAULT_initial_rate    200530//141798//70898//50132
+ * #define DEFAULT_nominal_rate    53528//37994//18997//13382//5370
+ * #define DEFAULT_final_rate      200530//141798//70898//50132
+ */
+void buildSegment_MoveToXmin(struct sSegment* psc)
+{
+    struct sControl* pctl;
+
+    NoOperation; //TODO buildSegment_startMoveToXmin
+    psc->head.axis_number = 1;// Кол задействованных осей.
+    psc->head.linenumber = 0x20;
+    psc->head.axis_mask = X_FLAG;
+    psc->head.reserved = 0x20;
+
+    pctl = &psc->axis[X_AXIS];
+    load_defaults(pctl);
+    pctl->axis = X_AXIS;
+    pctl->direction = backward;
+    pctl->microsteps = Full_Step;
+    pctl->initial_rate = 258883;//517767;
+    pctl->nominal_rate = 81669;//163338;//81669;
+    pctl->final_rate = pctl->initial_rate;
+    pctl->steps = 100;  //TODO Параметры устройства.
+    pctl->accelerate_until = 2;
+    pctl->decelerate_after = pctl->steps - pctl->accelerate_until;
+    //TODO buildSegment_startMoveToXmin
+
+}
 

@@ -25,6 +25,16 @@
 #ifndef __SWITCH_TASK_H__
 #define __SWITCH_TASK_H__
 
+#include <FreeRTOS.h>
+#include <task.h>
+
+
+//---------------- defs
+#define ENDER_XMIN_HANDLE   (1<<0)
+
+//---------- vars
+extern TaskHandle_t switchTaskHandle;
+
 //*****************************************************************************
 //
 // Prototypes for the switch task.

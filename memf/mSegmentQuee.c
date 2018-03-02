@@ -7,6 +7,9 @@
  */
 
 //--------------
+#include "FreeRTOS.h"
+#include "task.h"
+#include "event_groups.h"
 
 #include "inc/typedefs.h"
 #include "msmotor/mempool.h"
@@ -22,6 +25,7 @@
 
 QueueHandle_t segmentQueueHandler;
 
+EventGroupHandle_t memf_events;
 
 SemaphoreHandle_t memf_semaphor_handler;
 SemaphoreHandle_t rcvd_semaphore_handler;
@@ -97,24 +101,7 @@ move_pblock(void)
     return (result);
 }
 
-/**
- * Выделение места для нового блока MEMF.
- * если места нет, то ожидать семафора.
- */
-void* MEMF_Alloc(void)
-{
-//    BaseType_t sem;
-    //cmdQuee[block_buffer_head]=OS_MEMF_Alloc(&cmdPool,1);
 
-//    sem = xSemaphoreTake(memf_semaphor_handler, portMAX_DELAY);
-//    if(sem == pdTRUE){
-    if(semaphore_counter<(SEGMENT_QUEE_SIZE-1)){
-        block_buffer_head = next_block_index(block_buffer_head);
-        semaphore_counter++;
-        return (void*)cmdQuee[block_buffer_head];
-    }
-    return (NULL);
-}
 
 /**
  * Смещение head для записи нового сегмента.
@@ -133,6 +120,38 @@ struct sSegment* getSegment(void)
         }
 
     return (result);
+}
+
+
+/**
+ * Выделение места для нового блока MEMF.
+ * если места нет, то ожидать семафора.
+ */
+void* MEMF_Alloc(void)
+{
+//    BaseType_t sem;
+    //cmdQuee[block_buffer_head]=OS_MEMF_Alloc(&cmdPool,1);
+
+//    sem = xSemaphoreTake(memf_semaphor_handler, portMAX_DELAY);
+//    if(sem == pdTRUE){
+#ifdef EVENT_GROUPS_H
+    struct sSegment* segment;
+    EventBits_t uxBits;
+    segment = getSegment();
+    if(segment == NULL){
+        uxBits = xEventGroupWaitBits(memf_events, MEMF_BIT0, pdTRUE,pdFALSE, portMAX_DELAY);
+        if(uxBits & MEMF_BIT0)
+            segment = getSegment();
+    }
+    return (segment);
+#else
+    if(semaphore_counter<(SEGMENT_QUEE_SIZE-1)){
+        block_buffer_head = next_block_index(block_buffer_head);
+        semaphore_counter++;
+        return (void*)cmdQuee[block_buffer_head];
+    }
+    return (NULL);
+#endif
 }
 
 
@@ -189,7 +208,7 @@ static init_cmdQuee(void){
 
    for(i=0;i<SEGMENT_QUEE_SIZE;i++){
         cmdQuee[i] = &sector[i];
-        block_buffer_head = i;
+        block_buffer_tail = i;
     }
 }
 
@@ -212,6 +231,7 @@ void createSegmentQuee(void)
 
         segmentQueueHandler = xQueueCreate(1,SegmentItemSize);  //SEGMENT_QUEE_SIZE
 
+        memf_events = xEventGroupCreate();
 
     /* The semaphore was created successfully. The semaphore can now be used. */
         semaphore_counter = 0;  //SEGMENT_QUEE_SIZE;

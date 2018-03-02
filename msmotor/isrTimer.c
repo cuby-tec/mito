@@ -85,7 +85,7 @@ Timer1IntHandler(void)
     //
     // Use the flags to Toggle the LED for this timer
     //
-    GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, GPIO_PIN_2);
+    GPIOPinWrite(GPIO_PORTF_BASE, BLUE_GPIO_PIN, GPIO_PIN_2);
 
     sts.counter++;
 
@@ -105,7 +105,7 @@ Timer1IntHandler(void)
 
     }
     axis_flags |= X_FLAG;
-    GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, ~GPIO_PIN_2);
+    GPIOPinWrite(GPIO_PORTF_BASE, BLUE_GPIO_PIN, ~GPIO_PIN_2);
     HWREG(NVIC_SW_TRIG) = INT_GPIOA - 16; //Trigger the INT_GPIOA interrupt.
     //           GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, ~GPIO_PIN_2);
     return;

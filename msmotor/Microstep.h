@@ -8,7 +8,15 @@
 //  @ Author : 
 //
 //
-
+/**
+ * Table 1: Microstepping Resolution Truth Table
+ * MS1  MS2 MS3     Microstep Resolution Excitation Mode
+ * L    L   L       Full Step 2 Phase
+ * H    L   L       Half Step 1-2 Phase
+ * L    H   L       Quarter Step W1-2 Phase
+ * H    H   L       Eighth Step 2W1-2 Phase
+ * H    H   H       Sixteenth Step 4W1-2 Phase
+ */
 
 #if !defined(_MICROSTEP_H)
 #define _MICROSTEP_H
@@ -18,9 +26,16 @@
 #define MSG_LENGTH  3
 
 
-#define M1  (1)
-#define M2  (1<<1)
-#define M3  (1<<2)
+#define MS1  (1)
+#define MS2  (1<<1)
+#define MS3  (1<<2)
+
+#define Full_Step   (0)
+#define Half_Step   (MS1)
+#define Quarter_Step    (MS2)
+#define Eighth_Step     (MS1|MS2)
+#define Sixteenth_Step  (MS1|MS2|MS3)
+
 #define EN_X    (1<<0)
 #define EN_Y    (1<<1)
 #define EN_Z    (1<<2)

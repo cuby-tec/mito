@@ -45,6 +45,10 @@ extern void axisX_rateHandler();
 #endif
 extern void ms_nextSector();
 
+extern void start_xkalibrovka();
+
+extern void stop_xkalibrovka();
+
 //extern void testPrepare(void);
 
 #endif /* MSMOTOR_MS_MODEL_H_ */

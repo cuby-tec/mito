@@ -28,6 +28,7 @@
 
 #include "msmotor/ms_init.h"
 #include <msmotor/isrTimer.h>
+#include "drivers/HALmodele.h"
 
 //*****************************************************************************
 //
@@ -70,6 +71,7 @@ extern void TimerYIntHandler(void);
 extern void TimerZIntHandler(void);
 extern void TimerEIntHandler(void);
 extern void Timer_callback(void);
+extern void PortEnderIntHandler(void);
 //*****************************************************************************
 //
 // The vector table.  Note that the proper constructs must be placed on this to
@@ -101,7 +103,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // GPIO Port B
     IntDefaultHandler,                      // GPIO Port C
     IntDefaultHandler,                      // GPIO Port D
-    IntDefaultHandler,                      // GPIO Port E
+    PortEnderIntHandler,                      // GPIO Port E
     IntDefaultHandler,                      // UART0 Rx and Tx
     IntDefaultHandler,                      // UART1 Rx and Tx
     IntDefaultHandler,                      // SSI0 Rx and Tx

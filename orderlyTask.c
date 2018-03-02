@@ -154,6 +154,9 @@ void orderly_routine(void* pvParameters ){
 
         }
 
+        if(ender_xmin_test & ulNotifiedValue){
+            NoOperation;
+        }
 //        if(ulNotifiedValue & 0x02){
 //            rgb_disable();
 //            NoOperation;

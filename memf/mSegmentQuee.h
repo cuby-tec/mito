@@ -15,6 +15,7 @@
 #include "msmotor/msport.h"
 
 //------------- defs
+#define MEMF_BIT0   (1<<0)
 
 //-------------- vars
 extern QueueHandle_t segmentQueueHandler;

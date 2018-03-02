@@ -42,5 +42,17 @@ TX	PB7/4
 			
 	volatile eTaskState state;
 	state = eTaskGetState(orderlyHandling);
+
+//*******************
+ LEDTask 			// LEDTaskInit
+taskSectorhandler	// createTaskSectorHandler
+SwitchTask 			// SwitchTaskInit
+orderly_routine		// createtask_orderly
+//***********
+
+
 	
 Текущее задание: loadMicrosteps@ms_init.c
+
+
+

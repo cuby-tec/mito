@@ -132,7 +132,9 @@ static void ms_async_block(){
 
 
 
-
+/**
+ * sts должен быть загружен данными.
+ */
 #define V3
 //Запуск таймера оси.
 void start_t1(uint8_t pusc)
@@ -400,8 +402,25 @@ void exitBlock(void)
     }
 }
 
+void stop_xkalibrovka()
+{
+    TimerDisable(TIMER_BASE_X_AXIS, TIMER_X);
+}
 
+void start_xkalibrovka()
+{
+    ms_finBlock = exitBlock;
+    struct sSegment* segment = plan_get_current_block();
+    pblockSegment(segment);
+    initStepper(X_AXIS);
+    Timer1IntHandler();
+    mask_axis[0] = X_FLAG;
+    mask_axis[1] = X_FLAG;
+    sync_axis = 0;
 
+    //        TimerEnable(TIMER_BASE_X_AXIS, TIMER_X);
+        HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
+}
 
 //------------- interrupt
 

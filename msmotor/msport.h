@@ -81,4 +81,19 @@
 #define EXT_RCLK        GPIO_PIN_7  //GPIO_PORTA_BASE, GPIO_PIN_7
 #define EXT_BASE        GPIO_PORTA_BASE
 
+// Enders
+#define ENDER_BASE      GPIO_PORTE_BASE
+
+#define ENDER_X_MIN     GPIO_PIN_4
+#define ENDER_X_MAX     GPIO_PIN_5
+
+#define ENDER_Y_MIN     GPIO_PIN_2
+#define ENDER_Y_MAX     GPIO_PIN_3
+
+#define ENDER_Z_MIN     GPIO_PIN_0
+#define ENDER_Z_MAX     GPIO_PIN_1
+
+#define ENDER_ACTIVE    true
+#define ENDER_PASSIVE   false
+
 #endif /* MSMOTOR_MSPORT_H_ */
