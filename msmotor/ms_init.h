@@ -78,5 +78,6 @@ extern void Timer_callback(void);
 
 extern void pblockSegment(struct sSegment* );
 
+extern void disableMotors(void);
 
 #endif /* MSMOTOR_MS_INIT_H_ */

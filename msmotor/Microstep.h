@@ -43,13 +43,13 @@
 #define EN_E1   (1<<4)
 
 struct Microstep {
-	uint32_t E1:3;
-	uint32_t EN:5;
-	uint32_t Z:3;
-	uint32_t E0:3;
+	uint32_t E1:3;  // E1 axis microsteps bits
+	uint32_t EN:5;  // enable microsteps bits
+	uint32_t Z:3;   // Z axis microsteps bits
+	uint32_t E0:3;  // E0 axis microsteps bits
 	uint32_t em2:2;
-	uint32_t X:3;
-	uint32_t Y:3;
+	uint32_t X:3;   // X axis microsteps bits
+	uint32_t Y:3;   // Y axis microsteps bits
 	uint32_t em1:2;
     uint32_t em0:8;
 };

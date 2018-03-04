@@ -14,6 +14,7 @@
 
 //-------------- vars
 
+extern uint32_t interrupt_counter;
 
 //--------------- function
 /** выпонение действий Калибровки в контексте Task

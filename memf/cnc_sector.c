@@ -115,6 +115,9 @@ void init_cncsector(void)
     }
 }
 
+#define kalibrovka_INIT  354490//501325
+#define kalibrovka_NORM  143781//203338
+
 /**
  * #define DEFAULT_initial_rate    200530//141798//70898//50132
  * #define DEFAULT_nominal_rate    53528//37994//18997//13382//5370
@@ -135,13 +138,37 @@ void buildSegment_MoveToXmin(struct sSegment* psc)
     pctl->axis = X_AXIS;
     pctl->direction = backward;
     pctl->microsteps = Full_Step;
-    pctl->initial_rate = 258883;//517767;
-    pctl->nominal_rate = 81669;//163338;//81669;
+    pctl->initial_rate = kalibrovka_INIT;//258883;//517767;
+    pctl->nominal_rate = kalibrovka_NORM;//105003;//81669;//163338;//81669;
     pctl->final_rate = pctl->initial_rate;
     pctl->steps = 100;  //TODO Параметры устройства.
-    pctl->accelerate_until = 2;
+    pctl->accelerate_until = 1;
     pctl->decelerate_after = pctl->steps - pctl->accelerate_until;
     //TODO buildSegment_startMoveToXmin
 
 }
 
+void buildSegment_MoveToXmax(struct sSegment* psc)
+{
+    struct sControl* pctl;
+
+    NoOperation; //TODO buildSegment_startMoveToXmin
+    psc->head.axis_number = 1;// Кол задействованных осей.
+    psc->head.linenumber = 0x20;
+    psc->head.axis_mask = X_FLAG;
+    psc->head.reserved = 0x20;
+
+    pctl = &psc->axis[X_AXIS];
+    load_defaults(pctl);
+    pctl->axis = X_AXIS;
+    pctl->direction = forward; //backward
+    pctl->microsteps = Full_Step;
+    pctl->initial_rate = kalibrovka_INIT;//258883;//517767;
+    pctl->nominal_rate = kalibrovka_NORM;//105003;//81669;//163338;//81669;
+    pctl->final_rate = pctl->initial_rate;
+    pctl->steps = 100;  //TODO Параметры устройства.
+    pctl->accelerate_until = 1;
+    pctl->decelerate_after = pctl->steps - pctl->accelerate_until;
+    //TODO buildSegment_startMoveToXmin
+
+}

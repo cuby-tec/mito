@@ -15,7 +15,10 @@
 //--------------- function
 extern void init_cncsector(void);
 
+//        Движение в сторону оси Xmin; уменьшение координаты.
 extern void buildSegment_MoveToXmin(struct sSegment* psc);
 
+//        Движение в сторону оси Xmax; увеличение координаты.
+extern void buildSegment_MoveToXmax(struct sSegment* psc);
 
 #endif /* MSMOTOR_CNC_SECTOR_H_ */

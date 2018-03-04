@@ -405,6 +405,7 @@ void exitBlock(void)
 void stop_xkalibrovka()
 {
     TimerDisable(TIMER_BASE_X_AXIS, TIMER_X);
+    TimerIntClear(TIMER_BASE_X_AXIS, TIMER_CAPA_EVENT);
 }
 
 void start_xkalibrovka()

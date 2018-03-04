@@ -75,7 +75,7 @@ SwitchTask(void *pvParameters)
 
     ui8CurButtonState = ui8PrevButtonState = 0;
     IntEnable (INT_GPIOE);
-    set_Xmin_IntType_rising();
+//    set_Xmin_IntType_rising();
 
     //
     // Get the current tick count.

@@ -136,8 +136,9 @@ void orderly_routine(void* pvParameters ){
 
         if(ulNotifiedValue & X_axis_int_fin)
         {
-            ms_finBlock = continueBlock;
-            start_t1(0);
+//            ms_finBlock = continueBlock;
+//            start_t1(0);
+            NoOperation;    // TODO Kalibrovka
         }
 
         if(ot_sgQueueEmpty & ulNotifiedValue){

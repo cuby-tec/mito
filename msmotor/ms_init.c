@@ -144,13 +144,21 @@ void initBlock(void)
 
 }
 
+union uMicrostep usteps;
+
+
+void disableMotors(void)
+{
+    usteps.microsteps.EN = 0x1F;
+    SPI_Send(usteps.data, MSG_LENGTH);
+}
+
 /**
  * Загрузка микрошага в порт микрошага драйверов.
  */
 void uploadMicrosteps(struct sSegment* segment){
 //    uint8_t msdata[N_AXIS];
     uint8_t j;
-    union uMicrostep usteps;
 
     for(j=0;j<4;j++)
         usteps.data[j] = 0;

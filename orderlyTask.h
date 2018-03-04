@@ -20,6 +20,7 @@
 #define SignalUSBbufferReady (1<<2) // Получена команда по каналу USB.
 #define ot_sgQueueEmpty     (1<<3) //выполнена ОБработка всех сегментов и новых сегментов нет.
 #define ot_sgTest       (1<<4)
+#define ender_xmin_test (1<<5)
 
 //---------- vars
 extern TaskHandle_t orderlyHandling;
