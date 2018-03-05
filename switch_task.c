@@ -68,6 +68,7 @@ static void
 SwitchTask(void *pvParameters)
 {
 //    uint32_t ulNotificationValue;
+//    set_DisableIntEnders();
     portTickType ui16LastTime;
     uint32_t ui32SwitchDelay = 25;
     uint8_t ui8CurButtonState, ui8PrevButtonState;

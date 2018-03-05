@@ -14,6 +14,13 @@
 
 //------------- defs
 
+enum ender_edge{
+    kl_xminrise=1,  // Xmin
+    kl_xminfall,    // Xmin
+    kl_xmaxrise,    // Xmax
+    kl_xmax_fall    // Xmax
+};
+
 //-------------- vars
 
 
@@ -30,5 +37,10 @@ extern void set_Xmin_IntType_falling();
 
 //Обработка прерываний концевых выключателей. Port E
 extern void PortEnderIntHandler();
+
+// назначение прерывания
+extern void set_EnderEdge(enum ender_edge edge);
+
+extern void set_DisableIntEnders(void);
 
 #endif /* DRIVERS_HALMODELE_H_ */

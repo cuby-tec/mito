@@ -83,6 +83,54 @@ void set_Xmin_IntType_falling()
 
 }
 
+/**
+ * Установка типа прерывания для концевого выключателя.
+ */
+void set_EnderEdge(enum ender_edge edge)
+{
+    switch(edge){
+    case kl_xminrise:
+        GPIOIntDisable(ENDER_BASE, ENDER_X_MIN);
+        // sets detection to edge and trigger to rising
+        GPIOIntTypeSet(ENDER_BASE, ENDER_X_MIN, GPIO_RISING_EDGE);
+    //    GPIOIntTypeSet(ENDER_BASE, ENDER_X_MIN, GPIO_HIGH_LEVEL);
+        GPIOIntClear(ENDER_BASE, ENDER_X_MIN);
+        GPIOIntEnable(ENDER_BASE, ENDER_X_MIN);
+        break;
+
+    case kl_xminfall:
+        GPIOIntDisable(ENDER_BASE, ENDER_X_MIN);
+        // sets detection to edge and trigger to rising
+        GPIOIntTypeSet(ENDER_BASE, ENDER_X_MIN, GPIO_FALLING_EDGE);
+        GPIOIntClear(ENDER_BASE, ENDER_X_MIN);
+        GPIOIntEnable(ENDER_BASE, ENDER_X_MIN);
+        break;
+
+    case kl_xmaxrise:
+        GPIOIntDisable(ENDER_BASE, ENDER_X_MAX);
+        // sets detection to edge and trigger to rising
+        GPIOIntTypeSet(ENDER_BASE, ENDER_X_MAX, GPIO_RISING_EDGE);
+        GPIOIntClear(ENDER_BASE, ENDER_X_MAX);
+        GPIOIntEnable(ENDER_BASE, ENDER_X_MAX);
+        break;
+
+    case kl_xmax_fall:
+        GPIOIntDisable(ENDER_BASE, ENDER_X_MAX);
+        // sets detection to edge and trigger to rising
+        GPIOIntTypeSet(ENDER_BASE, ENDER_X_MAX, GPIO_FALLING_EDGE);
+        GPIOIntClear(ENDER_BASE, ENDER_X_MAX);
+        GPIOIntEnable(ENDER_BASE, ENDER_X_MAX);
+        break;
+
+
+    }// end switch(edge)
+}
+
+void set_DisableIntEnders(void)
+{
+    GPIOIntDisable(ENDER_BASE, ENDER_X_MIN | ENDER_X_MAX);
+}
+
 //---------------------------- interrupt handler ----------
 void PortEnderIntHandler()
 {
@@ -91,16 +139,17 @@ void PortEnderIntHandler()
 //    stop_xkalibrovka();
     // If bMasked is set as true, then the masked interrupt status is returned;
     intstatus = GPIOIntStatus(ENDER_BASE, false);
-    if(intstatus & ENDER_X_MIN){
+    if( ENDER_X_MIN & intstatus){
         GPIOIntClear(ENDER_BASE, ENDER_X_MIN);
-        stop_xkalibrovka();
+        stop_xkalibrovka(X_AXIS);
         xTaskNotifyFromISR(switchTaskHandle,ENDER_XMIN_HANDLE,eSetBits,NULL);
-        interrupt_counter++;
 //        orderlyHandling
 //        xTaskNotifyFromISR(orderlyHandling,ender_xmin_test,eSetBits,NULL);
 
-    }else{
-        NoOperation;
+    }else if( ENDER_X_MAX & intstatus){
+        GPIOIntClear(ENDER_BASE, ENDER_X_MAX);
+        stop_xkalibrovka(X_AXIS);
+        xTaskNotifyFromISR(switchTaskHandle,ENDER_XMAX_HANDLE,eSetBits,NULL);
     }
 
 }

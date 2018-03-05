@@ -12,6 +12,17 @@
 
 #include "msmotor/sSegment.h"
 
+
+//--------- defs
+
+enum kl_move{
+    kl_Xforward = 1,
+    kl_Xbackward,
+    kl_Yforward,
+    kl_Ybackward
+};
+
+
 //--------------- function
 extern void init_cncsector(void);
 
@@ -20,5 +31,7 @@ extern void buildSegment_MoveToXmin(struct sSegment* psc);
 
 //        Движение в сторону оси Xmax; увеличение координаты.
 extern void buildSegment_MoveToXmax(struct sSegment* psc);
+
+extern void kl_buildSement(struct sSegment* psc, enum kl_move axisdir);
 
 #endif /* MSMOTOR_CNC_SECTOR_H_ */

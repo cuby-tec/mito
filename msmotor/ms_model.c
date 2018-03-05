@@ -402,21 +402,24 @@ void exitBlock(void)
     }
 }
 
-void stop_xkalibrovka()
+void stop_xkalibrovka(uint8_t axle)
 {
     TimerDisable(TIMER_BASE_X_AXIS, TIMER_X);
     TimerIntClear(TIMER_BASE_X_AXIS, TIMER_CAPA_EVENT);
 }
 
-void start_xkalibrovka()
+/**
+ * axle -> mean X_AXIS or Y_AXIS etc.
+ */
+void start_xkalibrovka(uint8_t axle)
 {
     ms_finBlock = exitBlock;
     struct sSegment* segment = plan_get_current_block();
     pblockSegment(segment);
-    initStepper(X_AXIS);
+    initStepper(axle);//X_AXIS
     Timer1IntHandler();
-    mask_axis[0] = X_FLAG;
-    mask_axis[1] = X_FLAG;
+    mask_axis[0] = (1<<axle);//X_FLAG
+    mask_axis[1] = (1<<axle);//X_FLAG
     sync_axis = 0;
 
     //        TimerEnable(TIMER_BASE_X_AXIS, TIMER_X);

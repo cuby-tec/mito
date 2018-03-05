@@ -45,9 +45,11 @@ extern void axisX_rateHandler();
 #endif
 extern void ms_nextSector();
 
-extern void start_xkalibrovka();
+//extern void start_xkalibrovka();
+extern void start_xkalibrovka(uint8_t axle);
 
-extern void stop_xkalibrovka();
+//extern void stop_xkalibrovka();
+extern void stop_xkalibrovka(uint8_t axle);
 
 //extern void testPrepare(void);
 

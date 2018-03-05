@@ -149,7 +149,7 @@ union uMicrostep usteps;
 
 void disableMotors(void)
 {
-    usteps.microsteps.EN = 0x1F;
+    usteps.microsteps.EN = 0x3F;
     SPI_Send(usteps.data, MSG_LENGTH);
 }
 
