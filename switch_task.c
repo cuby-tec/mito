@@ -52,7 +52,7 @@
 // The stack size for the display task.
 //
 //*****************************************************************************
-#define SWITCHTASKSTACKSIZE        128         // Stack size in words
+#define SWITCHTASKSTACKSIZE        512//360//240//160//128         // Stack size in words
 
 extern xQueueHandle g_pLEDQueue;
 extern xSemaphoreHandle g_pUARTSemaphore;

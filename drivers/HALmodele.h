@@ -25,9 +25,11 @@ enum ender_edge{
 
 
 //--------------- function
- extern int32_t getEnders();
+ extern uint32_t getEnders();
 
- extern int32_t getXminEnder();
+ extern uint32_t getXminEnder();
+
+ extern bool getXmaxEnder();
 
 // Назначить прерыввание при переходе из состояния Active->Passive (0->1).
 extern void set_Xmin_IntType_rising();

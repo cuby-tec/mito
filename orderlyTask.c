@@ -113,7 +113,7 @@ void orderly_routine(void* pvParameters ){
                 memcpy(ss, &msegment->instrument1_parameter, sizeof(struct sSegment));
                     if(pMs_State->instrumrnt1 == eIns1_stoped){
                         pblockSegment(plan_get_current_block());
-                        start_t1(0);
+//                        start_t1(0); // debug
                         NoOperation;
                     }
                     else{
@@ -151,7 +151,7 @@ void orderly_routine(void* pvParameters ){
             initBlock();    // initialize sectors.
             initStepper(N_AXIS);
             ms_finBlock = continueBlock;
-            start_t1(0);
+//            start_t1(0); // debug
 
         }
 

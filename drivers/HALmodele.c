@@ -17,6 +17,8 @@
 #include "inc/hw_types.h"
 
 #include "HALmodele.h"
+#include "inc/hw_gpio.h"
+#include "inc/sysDrivers.h"
 
 #include "msmotor/ms_model.h"
 #include "switch_task.h"
@@ -35,21 +37,29 @@
 
 //-------------- function
 
-int32_t getEnders()
+uint32_t getEnders()
 {
-    int32_t result;
+    uint32_t result;
     result = GPIOPinRead(ENDER_BASE, ENDER_Z_MIN|ENDER_Z_MAX
                          |ENDER_Y_MIN|ENDER_Y_MAX|ENDER_X_MIN|ENDER_X_MAX);
 
     return result;
 }
 
-int32_t getXminEnder()
+uint32_t getXminEnder()
 {
-    int32_t result;//,a = 0;
+    uint32_t result;//,a = 0;
     result = GPIOPinRead(ENDER_BASE, ENDER_X_MIN);
 //    HWREGBITW(&a, ENDER_X_MIN) ^=1 ;
     return (result&ENDER_X_MIN?true:false); //result;
+}
+
+bool getXmaxEnder()
+{
+    uint32_t result;//,a = 0;
+    result = GPIOPinRead(ENDER_BASE, ENDER_X_MAX);
+//    HWREGBITW(&a, ENDER_X_MIN) ^=1 ;
+    return (result&ENDER_X_MAX?true:false); //result;
 }
 
 void set_Xmin_IntType_rising()
@@ -128,28 +138,52 @@ void set_EnderEdge(enum ender_edge edge)
 
 void set_DisableIntEnders(void)
 {
-    GPIOIntDisable(ENDER_BASE, ENDER_X_MIN | ENDER_X_MAX);
-}
+//    GPIOIntDisable(ENDER_BASE, ENDER_X_MIN | ENDER_X_MAX);
+    HWREG(ENDER_BASE + GPIO_O_IM) &= ~(ENDER_X_MIN | ENDER_X_MAX);
 
+}
+uint32_t int_a = 1;
 //---------------------------- interrupt handler ----------
 void PortEnderIntHandler()
 {
     uint32_t intstatus;
-    GPIOIntDisable(ENDER_BASE, ENDER_X_MIN);
-//    stop_xkalibrovka();
+    //    stop_xkalibrovka();
     // If bMasked is set as true, then the masked interrupt status is returned;
-    intstatus = GPIOIntStatus(ENDER_BASE, false);
-    if( ENDER_X_MIN & intstatus){
-        GPIOIntClear(ENDER_BASE, ENDER_X_MIN);
-        stop_xkalibrovka(X_AXIS);
-        xTaskNotifyFromISR(switchTaskHandle,ENDER_XMIN_HANDLE,eSetBits,NULL);
-//        orderlyHandling
-//        xTaskNotifyFromISR(orderlyHandling,ender_xmin_test,eSetBits,NULL);
 
-    }else if( ENDER_X_MAX & intstatus){
-        GPIOIntClear(ENDER_BASE, ENDER_X_MAX);
-        stop_xkalibrovka(X_AXIS);
+    //    intstatus = GPIOIntStatus(ENDER_BASE, true);
+    intstatus = HWREG(ENDER_BASE + GPIO_O_MIS);
+
+    // Предотвращение дребезга
+    //    GPIOIntDisable(ENDER_BASE, ENDER_X_MIN | ENDER_X_MAX);
+    HWREG(ENDER_BASE + GPIO_O_IM) &= ~(ENDER_X_MIN | ENDER_X_MAX);
+
+    if( ENDER_X_MIN & intstatus){
+        //        GPIOIntClear(ENDER_BASE, ENDER_X_MIN);
+        //        stop_xkalibrovka(X_AXIS);
+        HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TAEN; //
+        TimerIntClear(TIMER_BASE_X_AXIS, TIMER_CAPA_EVENT);
+
+        xTaskNotifyFromISR(switchTaskHandle,ENDER_XMIN_HANDLE,eSetBits,NULL);
+        //        orderlyHandling
+        //        xTaskNotifyFromISR(orderlyHandling,ender_xmin_test,eSetBits,NULL);
+        HWREG(ENDER_BASE + GPIO_O_ICR) = ENDER_X_MIN;
+
+    }
+
+    if( ENDER_X_MAX & intstatus){
+        interrupt_counter++;
+        //        GPIOIntClear(ENDER_BASE, ENDER_X_MAX);
+        //        stop_xkalibrovka(X_AXIS);
+        HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TAEN; //
+        TimerIntClear(TIMER_BASE_X_AXIS, TIMER_CAPA_EVENT);
+
         xTaskNotifyFromISR(switchTaskHandle,ENDER_XMAX_HANDLE,eSetBits,NULL);
+        HWREG(ENDER_BASE + GPIO_O_ICR) = ENDER_X_MAX;
+    }
+    if((intstatus & ENDER_X_MIN)&&(intstatus & ENDER_X_MAX)){
+        while(int_a){
+            NoOperation;
+        }
     }
 
 }

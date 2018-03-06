@@ -398,13 +398,14 @@ void exitBlock(void)
     if(sync_axis == mask_axis[0])
     {
         sync_axis = 0;
-        xTaskNotifyFromISR(orderlyHandling,X_axis_int_fin,eSetBits,NULL);
+//        xTaskNotifyFromISR(orderlyHandling,X_axis_int_fin,eSetBits,NULL);// debug
     }
 }
 
 void stop_xkalibrovka(uint8_t axle)
 {
-    TimerDisable(TIMER_BASE_X_AXIS, TIMER_X);
+//    TimerDisable(TIMER_BASE_X_AXIS, TIMER_X);
+    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TAEN; //
     TimerIntClear(TIMER_BASE_X_AXIS, TIMER_CAPA_EVENT);
 }
 
