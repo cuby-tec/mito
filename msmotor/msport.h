@@ -21,11 +21,18 @@
 #define TIMER_Z     TIMER_A
 #define TIMER_E     TIMER_B
 
-//BASE port
+//TIMER BASE port
 #define TIMER_BASE_X_AXIS   TIMER1_BASE
 #define TIMER_BASE_Y_AXIS   TIMER1_BASE
 #define TIMER_BASE_Z_AXIS   TIMER2_BASE
 #define TIMER_BASE_E_AXIS   TIMER2_BASE
+
+//TIMER EN
+#define TIMER_X_AXIS_EN     TIMER_CTL_TAEN
+#define TIMER_Y_AXIS_EN     TIMER_CTL_TBEN
+#define TIMER_Z_AXIS_EN     TIMER_CTL_TAEN
+#define TIMER_E_AXIS_EN     TIMER_CTL_TBEN
+
 
 // interrupt port
 #define INT_TIMER_X         INT_TIMER1A

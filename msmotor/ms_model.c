@@ -418,13 +418,23 @@ void start_xkalibrovka(uint8_t axle)
     struct sSegment* segment = plan_get_current_block();
     pblockSegment(segment);
     initStepper(axle);//X_AXIS
-    Timer1IntHandler();
     mask_axis[0] = (1<<axle);//X_FLAG
     mask_axis[1] = (1<<axle);//X_FLAG
     sync_axis = 0;
 
+    switch(axle){
+    case X_AXIS:
     //        TimerEnable(TIMER_BASE_X_AXIS, TIMER_X);
+        Timer1IntHandler();
         HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
+        break;
+
+    case Y_AXIS:
+        TimerYIntHandler();
+        HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_Y_AXIS_EN; //TIMER_CTL_TBEN;
+        break;
+
+    } // end switch(axle)
 }
 
 //------------- interrupt

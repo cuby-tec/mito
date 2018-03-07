@@ -18,7 +18,9 @@ enum ender_edge{
     kl_xminrise=1,  // Xmin
     kl_xminfall,    // Xmin
     kl_xmaxrise,    // Xmax
-    kl_xmax_fall    // Xmax
+    kl_xmax_fall,    // Xmax
+    kl_ymax_fall,   // Ymax
+    kl_ymax_rise    // Ymax
 };
 
 //-------------- vars

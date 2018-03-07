@@ -132,6 +132,21 @@ void set_EnderEdge(enum ender_edge edge)
         GPIOIntEnable(ENDER_BASE, ENDER_X_MAX);
         break;
 
+// Y ======================
+    case kl_ymax_rise:
+        GPIOIntDisable(ENDER_BASE, ENDER_Y_MAX);
+         GPIOIntTypeSet(ENDER_BASE, ENDER_Y_MAX, GPIO_RISING_EDGE);
+         GPIOIntClear(ENDER_BASE, ENDER_Y_MAX);
+         GPIOIntEnable(ENDER_BASE, ENDER_Y_MAX);
+        break;
+
+    case kl_ymax_fall:
+        GPIOIntDisable(ENDER_BASE, ENDER_Y_MAX);
+        GPIOIntTypeSet(ENDER_BASE, ENDER_Y_MAX, GPIO_FALLING_EDGE);
+        GPIOIntClear(ENDER_BASE, ENDER_Y_MAX);
+        GPIOIntEnable(ENDER_BASE, ENDER_Y_MAX);
+        break;
+
 
     }// end switch(edge)
 }
@@ -155,7 +170,7 @@ void PortEnderIntHandler()
 
     // Предотвращение дребезга
     //    GPIOIntDisable(ENDER_BASE, ENDER_X_MIN | ENDER_X_MAX);
-    HWREG(ENDER_BASE + GPIO_O_IM) &= ~(ENDER_X_MIN | ENDER_X_MAX);
+    HWREG(ENDER_BASE + GPIO_O_IM) &= ~(ENDER_X_MIN | ENDER_X_MAX|ENDER_Y_MAX|ENDER_Y_MIN);
 
     if( ENDER_X_MIN & intstatus){
         //        GPIOIntClear(ENDER_BASE, ENDER_X_MIN);
@@ -171,7 +186,6 @@ void PortEnderIntHandler()
     }
 
     if( ENDER_X_MAX & intstatus){
-        interrupt_counter++;
         //        GPIOIntClear(ENDER_BASE, ENDER_X_MAX);
         //        stop_xkalibrovka(X_AXIS);
         HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TAEN; //
@@ -180,6 +194,16 @@ void PortEnderIntHandler()
         xTaskNotifyFromISR(switchTaskHandle,ENDER_XMAX_HANDLE,eSetBits,NULL);
         HWREG(ENDER_BASE + GPIO_O_ICR) = ENDER_X_MAX;
     }
+
+    if( ENDER_Y_MAX & intstatus){
+        interrupt_counter++;
+        HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) &= ~TIMER_Y_AXIS_EN;//~TIMER_CTL_TBEN; //
+        TimerIntClear(TIMER_BASE_Y_AXIS, TIMER_CAPB_EVENT);
+        xTaskNotifyFromISR(switchTaskHandle,ENDER_YMAX_HANDLE,eSetBits,NULL);
+        HWREG(ENDER_BASE + GPIO_O_ICR) = ENDER_Y_MAX;
+    }
+
+
     if((intstatus & ENDER_X_MIN)&&(intstatus & ENDER_X_MAX)){
         while(int_a){
             NoOperation;

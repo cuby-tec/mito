@@ -32,6 +32,7 @@
 //---------------- defs
 #define ENDER_XMIN_HANDLE   (1<<0)
 #define ENDER_XMAX_HANDLE   (1<<1)
+#define ENDER_YMAX_HANDLE   (1<<2)
 
 //---------- vars
 extern TaskHandle_t switchTaskHandle;

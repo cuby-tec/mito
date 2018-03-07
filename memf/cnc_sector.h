@@ -32,6 +32,6 @@ extern void buildSegment_MoveToXmin(struct sSegment* psc);
 //        Движение в сторону оси Xmax; увеличение координаты.
 extern void buildSegment_MoveToXmax(struct sSegment* psc);
 
-extern void kl_buildSement(struct sSegment* psc, enum kl_move axisdir);
+extern void kl_buildSegment(struct sSegment* psc, enum kl_move axisdir);
 
 #endif /* MSMOTOR_CNC_SECTOR_H_ */

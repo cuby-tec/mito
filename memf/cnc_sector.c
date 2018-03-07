@@ -173,7 +173,7 @@ void buildSegment_MoveToXmax(struct sSegment* psc)
 
 
 
-void kl_buildSement(struct sSegment* psc, enum kl_move axisdir)
+void kl_buildSegment(struct sSegment* psc, enum kl_move axisdir)
 {
     struct sControl* pctl;
 
@@ -221,9 +221,44 @@ void kl_buildSement(struct sSegment* psc, enum kl_move axisdir)
         break;
 
     case kl_Yforward:
+        NoOperation; // buildSegment_startMoveToXmin
+        psc->head.axis_number = 1;// Кол задействованных осей.
+        psc->head.linenumber = 0x23;
+        psc->head.axis_mask = Y_FLAG;
+        psc->head.reserved = 0x23;
+
+        pctl = &psc->axis[Y_AXIS];
+        load_defaults(pctl);
+        pctl->axis = Y_AXIS;
+        pctl->direction = forward;
+        pctl->steps = 1000;  //TODO Параметры устройства.
+        pctl->microsteps = Full_Step;
+        pctl->initial_rate = kalibrovka_INIT;//258883;//517767;
+        pctl->nominal_rate = kalibrovka_NORM;//105003;//81669;//163338;//81669;
+        pctl->final_rate = pctl->initial_rate;
+        pctl->accelerate_until = kalibrovka_accelerate_until;//1;
+        pctl->decelerate_after = pctl->steps - pctl->accelerate_until;
         break;
 
     case kl_Ybackward:
+        NoOperation; // buildSegment_startMoveToXmin
+        psc->head.axis_number = 1;// Кол задействованных осей.
+        psc->head.linenumber = 0x22;
+        psc->head.axis_mask = Y_FLAG;
+        psc->head.reserved = 0x22;
+
+        pctl = &psc->axis[Y_AXIS];
+        load_defaults(pctl);
+        pctl->axis = Y_AXIS;
+        pctl->direction = backward;
+        pctl->steps = 100000;  //TODO Параметры устройства.
+        pctl->microsteps = Full_Step;
+        pctl->initial_rate = 200530;//kalibrovka_INIT;//258883;//517767;
+        pctl->nominal_rate = 81335;//kalibrovka_NORM;//105003;//81669;//163338;//81669;
+        pctl->final_rate = pctl->initial_rate;
+        pctl->accelerate_until = kalibrovka_accelerate_until;//1;
+        pctl->decelerate_after = pctl->steps - pctl->accelerate_until;
+
         break;
 
     }// end switch(axisdir)
