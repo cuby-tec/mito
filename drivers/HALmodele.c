@@ -147,6 +147,19 @@ void set_EnderEdge(enum ender_edge edge)
         GPIOIntEnable(ENDER_BASE, ENDER_Y_MAX);
         break;
 
+    case kl_ymin_rise:
+        GPIOIntDisable(ENDER_BASE, ENDER_Y_MIN);
+        GPIOIntTypeSet(ENDER_BASE, ENDER_Y_MIN, GPIO_RISING_EDGE);
+        GPIOIntClear(ENDER_BASE, ENDER_Y_MIN);
+        GPIOIntEnable(ENDER_BASE, ENDER_Y_MIN);
+        break;
+
+    case kl_ymin_fall:
+        GPIOIntDisable(ENDER_BASE, ENDER_Y_MIN);
+        GPIOIntTypeSet(ENDER_BASE, ENDER_Y_MIN, GPIO_FALLING_EDGE);
+        GPIOIntClear(ENDER_BASE, ENDER_Y_MIN);
+        GPIOIntEnable(ENDER_BASE, ENDER_Y_MIN);
+        break;
 
     }// end switch(edge)
 }
@@ -196,13 +209,19 @@ void PortEnderIntHandler()
     }
 
     if( ENDER_Y_MAX & intstatus){
-        interrupt_counter++;
         HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) &= ~TIMER_Y_AXIS_EN;//~TIMER_CTL_TBEN; //
         TimerIntClear(TIMER_BASE_Y_AXIS, TIMER_CAPB_EVENT);
         xTaskNotifyFromISR(switchTaskHandle,ENDER_YMAX_HANDLE,eSetBits,NULL);
         HWREG(ENDER_BASE + GPIO_O_ICR) = ENDER_Y_MAX;
     }
 
+    if( ENDER_Y_MIN & intstatus){
+        HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) &= ~TIMER_Y_AXIS_EN;//~TIMER_CTL_TBEN; //
+        TimerIntClear(TIMER_BASE_Y_AXIS, TIMER_CAPB_EVENT);
+        xTaskNotifyFromISR(switchTaskHandle,ENDER_YMIN_HANDLE,eSetBits,NULL);
+        interrupt_counter++;
+
+    }
 
     if((intstatus & ENDER_X_MIN)&&(intstatus & ENDER_X_MAX)){
         while(int_a){

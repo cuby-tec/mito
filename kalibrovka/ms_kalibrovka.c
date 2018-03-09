@@ -112,7 +112,7 @@ static bool kalibrovka_move(enum en_Kalibrovka_state kState)
         ulNotificationValue = 0;
         while(!result){
             start_xkalibrovka(X_AXIS);
-            if(xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, pdMS_TO_TICKS(400))==pdTRUE)//portMAX_DELAY
+            if(xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, pdMS_TO_TICKS(600))==pdTRUE)//portMAX_DELAY
             {
                 // ender Xmin achieved
                 if(ENDER_XMIN_HANDLE & ulNotificationValue){
@@ -154,7 +154,7 @@ static bool kalibrovka_move(enum en_Kalibrovka_state kState)
         while(!result){
             start_xkalibrovka(X_AXIS);
             //        kl2_a:
-            if(xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, pdMS_TO_TICKS(400))==pdTRUE)//portMAX_DELAY
+            if(xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, pdMS_TO_TICKS(600))==pdTRUE)//portMAX_DELAY
             {
                 // ender Xmax achieved
                 if(ENDER_XMAX_HANDLE & ulNotificationValue){
@@ -187,11 +187,11 @@ static bool kalibrovka_move(enum en_Kalibrovka_state kState)
 // Ymax ==================================
     case kalibrovka_ymax_increase:
         result = false;
-        kl_buildSegment(psc, kl_Ybackward);
+        kl_buildSegment(psc, kl_Yforward);
         set_EnderEdge(kl_ymax_fall);
         while(!result){
             start_xkalibrovka(Y_AXIS);
-            if(xTaskNotifyWait(ULONG_MAX, ULONG_MAX, &ulNotificationValue, portMAX_DELAY)==pdTRUE)
+            if(xTaskNotifyWait(ULONG_MAX, ULONG_MAX, &ulNotificationValue, pdMS_TO_TICKS(800))==pdTRUE)
             {
                 if(ENDER_YMAX_HANDLE & ulNotificationValue){
                     NoOperation;
@@ -205,7 +205,7 @@ static bool kalibrovka_move(enum en_Kalibrovka_state kState)
 
     case kalibrovka_ymax_decrease:
         result = false;
-        kl_buildSegment(psc, kl_Yforward);
+        kl_buildSegment(psc, kl_Ybackward);
         set_EnderEdge(kl_ymax_rise);
 //        while(!result){
             start_xkalibrovka(Y_AXIS);
@@ -223,6 +223,43 @@ static bool kalibrovka_move(enum en_Kalibrovka_state kState)
         NoOperation;
         break;
 
+        // Ymin kalibrovka
+    case kalibrovka_ymin_decrese:
+        result = false;
+        kl_buildSegment(psc, kl_Ybackward);
+        set_EnderEdge(kl_ymin_fall);
+        while(!result){
+            start_xkalibrovka(Y_AXIS);
+            if(xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, pdMS_TO_TICKS(800))){
+                if(ENDER_YMIN_HANDLE & ulNotificationValue){
+                    NoOperation;
+                    result = true;
+                }
+                else{
+                    NoOperation;
+                }
+            }
+
+        }
+        break;
+
+    case kalibrovka_ymin_increase:
+        result = false;
+        kl_buildSegment(psc, kl_Yforward);
+        set_EnderEdge(kl_ymin_rise);
+        start_xkalibrovka(Y_AXIS);
+        if(xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, pdMS_TO_TICKS(800)))
+        {
+            if(ENDER_YMIN_HANDLE & ulNotificationValue){
+                NoOperation;
+                result = true;
+            }else{
+                NoOperation;
+            }
+        }
+
+        break;
+
     }// end switch(kState)
 
     return result;
@@ -232,6 +269,9 @@ static bool kalibrovka_move(enum en_Kalibrovka_state kState)
 
 void kalibrovka (void)
 {
+    uint32_t enders_wrong;
+
+
     interrupt_counter = 0;
 
     //    IntEnable (INT_GPIOE);
@@ -239,15 +279,22 @@ void kalibrovka (void)
     // Проверка состояния концевого выключателя оси Xmin.
     set_DisableIntEnders();
 //    state = kalibrovka_xmax_increase;// DEBUG
-    state = kalibrovka_ymax_increase;//kalibrovka_ymax_increase;
-    goto kl1;
+//    state = kalibrovka_ymax_increase;//kalibrovka_ymax_increase;
+//    goto kl1;
 
-    // Калибровка по оси X-min
+    if( enders_wrong = (getEnders() & ALL_ENDERS) ^ ALL_ENDERS )
+    {
+        NoOperation;
+        goto kal_exit;
+    }
+
+
+    // Калибровка по оси X ===============
     if(getXminEnder() == ENDER_ACTIVE){
         // Инструмент находится в рабочей области.
-        NoOperation; //TODO XMIN-Ender
+        NoOperation; // XMIN-Ender
 
-        state = kalibrovka_xmin_decrease;
+        state = kalibrovka_xmin_decrease; // <<--
         //        Движение в сторону оси Xmin с уменьшением координаты.
         if(kalibrovka_move(state))
         {
@@ -256,50 +303,83 @@ void kalibrovka (void)
             NoOperation;
         }
     }else{
+        // Инструмент находится за пределами рабочей области.
         state = kalibrovka_xmin_increase;
     }
-    // Инструмент находится за пределами рабочей области.
-    NoOperation; // kalibrovka_xmin_increase
+
+    // kalibrovka_xmin_increase ->
     if(kalibrovka_move(state))
     {
         NoOperation;
         state = kalibrovka_xmax_increase;
+    }else{
+        goto kal_exit;
     }
 
+    // kalibrovka_xmax_increase -->>
     NoOperation;
-    if(getXmaxEnder())
-        // Калибровка Xmax increase
-        if(kalibrovka_move(state))
-        {
-            NoOperation;
-            vTaskDelay(pdMS_TO_TICKS(400));
-            state = kalibrovka_ymax_decrease;//kalibrovka_xmax_decrease;
-        }
+    // Калибровка Xmax increase
+    if(kalibrovka_move(state))
+    {
+        NoOperation;
+        vTaskDelay(pdMS_TO_TICKS(400));
+        state = kalibrovka_xmax_decrease;//kalibrovka_xmax_decrease;
+    }
 
+    // Kalibrovka Xmax decrease.
+    if(kalibrovka_move(state))
+    {
+        NoOperation;
+        vTaskDelay(pdMS_TO_TICKS(400));
+        state = kalibrovka_ymax_increase;//kalibrovka_xmax_decrease;
+    }
+
+
+    //kalibrovka Y =============
     // Калибровка Ymax decrease.
     //kalibrovka_ymax_increase
-    kl1:   if(kalibrovka_move(state))
+    if(kalibrovka_move(state))
     {
         NoOperation;
         intstatus = GPIOIntStatus(ENDER_BASE, false);
-//        set_DisableIntEnders();
+        //        set_DisableIntEnders();
         vTaskDelay(pdMS_TO_TICKS(400));
         state = kalibrovka_ymax_decrease;
     }else{
         goto kal_exit;
     }
 
-    // Калибровка по оси Ymax
-        if(kalibrovka_move(state)){
+    // kalibrovka_ymax_decrease
+    if(kalibrovka_move(state)){
         NoOperation;
         state = kalibrovka_ymin_decrese;
     }else{
         goto kal_exit;
     }
 
+    // kalibrovka_ymin_decrese
+    if(kalibrovka_move(state)){
+        NoOperation;
+        //            state = kalibrovka
+        state = kalibrovka_ymin_increase;
+    }else{
+        goto kal_exit;
+    }
 
-//    set_DisableIntEnders();
-//    vTaskDelay(pdMS_TO_TICKS(1000));
+    // откат kalibrovka_ymin_increase
+    if(kalibrovka_move(state)){
+        NoOperation;
+    }else{
+        goto kal_exit;
+    }
+
+
+    // finish
+
+
+
+    //    set_DisableIntEnders();
+    //    vTaskDelay(pdMS_TO_TICKS(1000));
     if(interrupt_counter>2){
         NoOperation;
         vTaskDelay(pdMS_TO_TICKS(3000));
