@@ -40,7 +40,11 @@ enum en_Kalibrovka_state {
     kalibrovka_ymax_decrease,   // Движение по оси Y в сторону уменьшения координаты.
     kalibrovka_ymax_increase,    // Движение по оси Y в сторону увеличения координаты.
     kalibrovka_ymin_decrese,
-    kalibrovka_ymin_increase
+    kalibrovka_ymin_increase,
+    kalibrovka_zmax_increase,  // Z ========
+    kalibrovka_zmax_decrease,
+    kalibrovka_zmin_increase,
+    kalibrovka_zmin_decrease
 };
 
 
@@ -106,7 +110,7 @@ static bool kalibrovka_move(enum en_Kalibrovka_state kState)
         result = false;
         //- назначить фронт/спад прерывания концевика: Acive to Passive;
         //        set_Xmin_IntType_falling();
-        set_EnderEdge(kl_xminfall);
+        set_EnderEdge(kl_xmin_fall);
         //- Назначить направление движения и разрешённые оси;
         buildSegment_MoveToXmin(psc);
         ulNotificationValue = 0;
@@ -170,7 +174,7 @@ static bool kalibrovka_move(enum en_Kalibrovka_state kState)
     case kalibrovka_xmax_decrease:
         result = false;
         kl_buildSegment(psc, kl_Xbackward);
-        set_EnderEdge(kl_xmaxrise);
+        set_EnderEdge(kl_xmax_rise);
         start_xkalibrovka(X_AXIS);
         //        kl3_kxd:
         while(!result){
@@ -251,7 +255,6 @@ static bool kalibrovka_move(enum en_Kalibrovka_state kState)
         if(xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, pdMS_TO_TICKS(800)))
         {
             if(ENDER_YMIN_HANDLE & ulNotificationValue){
-                NoOperation;
                 result = true;
             }else{
                 NoOperation;
@@ -260,7 +263,39 @@ static bool kalibrovka_move(enum en_Kalibrovka_state kState)
 
         break;
 
-    }// end switch(kState)
+     case kalibrovka_zmax_increase:
+        result = false;
+        kl_buildSegment(psc, kl_Zforward);
+        set_EnderEdge(kl_zmax_fall);
+        while(!result){
+            start_xkalibrovka(Z_AXIS);
+            if(xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, pdMS_TO_TICKS(800))){
+                if(ENDER_ZMAX_HANDLE & ulNotificationValue){
+                    result = true;
+                }else{
+                    NoOperation;
+                }
+            }
+        }
+        break;
+
+     case kalibrovka_zmax_decrease:
+         result = false;
+         kl_buildSegment(psc, kl_Zbackward);
+         set_EnderEdge(kl_zmax_rise);
+         start_xkalibrovka(Z_AXIS);
+         if(xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, pdMS_TO_TICKS(800))){
+             if(ENDER_ZMAX_HANDLE & ulNotificationValue){
+                 result = true;
+             }else{
+                 NoOperation;
+             }
+         }
+
+         break;
+
+
+   }// end switch(kState)
 
     return result;
 }
@@ -269,7 +304,7 @@ static bool kalibrovka_move(enum en_Kalibrovka_state kState)
 
 void kalibrovka (void)
 {
-    uint32_t enders_wrong;
+    uint32_t enders_wrong = getEnders();
 
 
     interrupt_counter = 0;
@@ -282,12 +317,13 @@ void kalibrovka (void)
 //    state = kalibrovka_ymax_increase;//kalibrovka_ymax_increase;
 //    goto kl1;
 
-    if( enders_wrong = (getEnders() & ALL_ENDERS) ^ ALL_ENDERS )
+    if( (enders_wrong & ALL_ENDERS) ^ ALL_ENDERS )
     {
         NoOperation;
         goto kal_exit;
     }
-
+    state = kalibrovka_zmax_increase;
+    goto kl_Z;
 
     // Калибровка по оси X ===============
     if(getXminEnder() == ENDER_ACTIVE){
@@ -369,9 +405,28 @@ void kalibrovka (void)
     // откат kalibrovka_ymin_increase
     if(kalibrovka_move(state)){
         NoOperation;
+        state = kalibrovka_zmax_increase;
     }else{
         goto kal_exit;
     }
+
+    kl_Z:
+    // kalibrovka Z ===================
+    if(kalibrovka_move(state)){
+        state = kalibrovka_zmax_decrease;
+        vTaskDelay(pdMS_TO_TICKS(400));
+    }else{
+        goto kal_exit;
+    }
+
+    if(kalibrovka_move(state)){
+        state = kalibrovka_zmin_decrease;
+    }else{
+        NoOperation;
+        goto kal_exit;
+    }
+
+
 
 
     // finish
@@ -385,7 +440,8 @@ void kalibrovka (void)
         vTaskDelay(pdMS_TO_TICKS(3000));
     }
 
-    kal_exit:    disableMotors();
+    kal_exit:
+    disableMotors();
     NoOperation;
 
 }

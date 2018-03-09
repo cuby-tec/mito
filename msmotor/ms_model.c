@@ -434,6 +434,11 @@ void start_xkalibrovka(uint8_t axle)
         HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_Y_AXIS_EN; //TIMER_CTL_TBEN;
         break;
 
+    case Z_AXIS:
+        TimerZIntHandler();
+        HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_Z_AXIS_EN; //TIMER_CTL_TAEN;
+        break;
+
     } // end switch(axle)
 }
 

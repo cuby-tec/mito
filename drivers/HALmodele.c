@@ -108,7 +108,7 @@ void set_EnderEdge(enum ender_edge edge)
         GPIOIntEnable(ENDER_BASE, ENDER_X_MIN);
         break;
 
-    case kl_xminfall:
+    case kl_xmin_fall:
         GPIOIntDisable(ENDER_BASE, ENDER_X_MIN);
         // sets detection to edge and trigger to rising
         GPIOIntTypeSet(ENDER_BASE, ENDER_X_MIN, GPIO_FALLING_EDGE);
@@ -116,7 +116,7 @@ void set_EnderEdge(enum ender_edge edge)
         GPIOIntEnable(ENDER_BASE, ENDER_X_MIN);
         break;
 
-    case kl_xmaxrise:
+    case kl_xmax_rise:
         GPIOIntDisable(ENDER_BASE, ENDER_X_MAX);
         // sets detection to edge and trigger to rising
         GPIOIntTypeSet(ENDER_BASE, ENDER_X_MAX, GPIO_RISING_EDGE);
@@ -161,6 +161,34 @@ void set_EnderEdge(enum ender_edge edge)
         GPIOIntEnable(ENDER_BASE, ENDER_Y_MIN);
         break;
 
+    case kl_zmax_rise:
+        GPIOIntDisable(ENDER_BASE, ENDER_Z_MAX);
+        GPIOIntTypeSet(ENDER_BASE, ENDER_Z_MAX, GPIO_RISING_EDGE);
+        GPIOIntClear(ENDER_BASE, ENDER_Z_MAX);
+        GPIOIntEnable(ENDER_BASE, ENDER_Z_MAX);
+        break;
+
+    case kl_zmax_fall:
+        GPIOIntDisable(ENDER_BASE, ENDER_Z_MAX);
+        GPIOIntTypeSet(ENDER_BASE, ENDER_Z_MAX, GPIO_FALLING_EDGE);
+        GPIOIntClear(ENDER_BASE, ENDER_Z_MAX);
+        GPIOIntEnable(ENDER_BASE, ENDER_Z_MAX);
+        break;
+
+    case kl_zmin_rise:
+        GPIOIntDisable(ENDER_BASE, ENDER_Z_MIN);
+        GPIOIntTypeSet(ENDER_BASE, ENDER_Z_MIN, GPIO_RISING_EDGE);
+        GPIOIntClear(ENDER_BASE, ENDER_Z_MIN);
+        GPIOIntEnable(ENDER_BASE, ENDER_Z_MIN);
+        break;
+
+    case kl_zmin_fall:
+        GPIOIntDisable(ENDER_BASE, ENDER_Z_MIN);
+        GPIOIntTypeSet(ENDER_BASE, ENDER_Z_MIN, GPIO_FALLING_EDGE);
+        GPIOIntClear(ENDER_BASE, ENDER_Z_MIN);
+        GPIOIntEnable(ENDER_BASE, ENDER_Z_MIN);
+        break;
+
     }// end switch(edge)
 }
 
@@ -183,7 +211,7 @@ void PortEnderIntHandler()
 
     // Предотвращение дребезга
     //    GPIOIntDisable(ENDER_BASE, ENDER_X_MIN | ENDER_X_MAX);
-    HWREG(ENDER_BASE + GPIO_O_IM) &= ~(ENDER_X_MIN | ENDER_X_MAX|ENDER_Y_MAX|ENDER_Y_MIN);
+    HWREG(ENDER_BASE + GPIO_O_IM) &= ~ALL_ENDERS; //~(ENDER_X_MIN | ENDER_X_MAX|ENDER_Y_MAX|ENDER_Y_MIN);
 
     if( ENDER_X_MIN & intstatus){
         //        GPIOIntClear(ENDER_BASE, ENDER_X_MIN);
@@ -199,11 +227,8 @@ void PortEnderIntHandler()
     }
 
     if( ENDER_X_MAX & intstatus){
-        //        GPIOIntClear(ENDER_BASE, ENDER_X_MAX);
-        //        stop_xkalibrovka(X_AXIS);
         HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) &= ~TIMER_CTL_TAEN; //
         TimerIntClear(TIMER_BASE_X_AXIS, TIMER_CAPA_EVENT);
-
         xTaskNotifyFromISR(switchTaskHandle,ENDER_XMAX_HANDLE,eSetBits,NULL);
         HWREG(ENDER_BASE + GPIO_O_ICR) = ENDER_X_MAX;
     }
@@ -219,15 +244,35 @@ void PortEnderIntHandler()
         HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) &= ~TIMER_Y_AXIS_EN;//~TIMER_CTL_TBEN; //
         TimerIntClear(TIMER_BASE_Y_AXIS, TIMER_CAPB_EVENT);
         xTaskNotifyFromISR(switchTaskHandle,ENDER_YMIN_HANDLE,eSetBits,NULL);
-        interrupt_counter++;
-
+        HWREG(ENDER_BASE + GPIO_O_ICR) = ENDER_Y_MIN;
     }
+
+    if( ENDER_Z_MAX & intstatus ){
+        HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) &= ~TIMER_Z_AXIS_EN;
+        TimerIntClear(TIMER_BASE_Z_AXIS, TIMER_CAPA_EVENT);
+        xTaskNotifyFromISR(switchTaskHandle,ENDER_ZMAX_HANDLE,eSetBits,NULL);
+        HWREG(ENDER_BASE + GPIO_O_ICR) = ENDER_Z_MAX;
+    }
+
+    if( ENDER_Z_MIN & intstatus ){
+        HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) &= ~TIMER_Z_AXIS_EN;
+        TimerIntClear(TIMER_BASE_Z_AXIS, TIMER_CAPA_EVENT);
+        xTaskNotifyFromISR(switchTaskHandle,ENDER_ZMIN_HANDLE,eSetBits,NULL);
+        HWREG(ENDER_BASE + GPIO_O_ICR) = ENDER_Z_MIN;
+    }
+
+
+
+    interrupt_counter++;
+
+/*
 
     if((intstatus & ENDER_X_MIN)&&(intstatus & ENDER_X_MAX)){
         while(int_a){
             NoOperation;
         }
     }
+*/
 
 }
 

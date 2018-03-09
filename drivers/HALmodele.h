@@ -16,13 +16,17 @@
 
 enum ender_edge{
     kl_xminrise=1,  // Xmin
-    kl_xminfall,    // Xmin
-    kl_xmaxrise,    // Xmax
-    kl_xmax_fall,    // Xmax
+    kl_xmin_fall,    // Xmin
+    kl_xmax_rise,    // Xmax
+    kl_xmax_fall,   // Xmax
     kl_ymax_fall,   // Ymax
-    kl_ymax_rise,    // Ymax
+    kl_ymax_rise,   // Ymax
     kl_ymin_fall,   // Ymin
-    kl_ymin_rise    // Ymin
+    kl_ymin_rise,   // Ymin
+    kl_zmax_fall,   // Zmax
+    kl_zmax_rise,   // Zmax
+    kl_zmin_fall,   // Zmin
+    kl_zmin_rise    // Zmin
 };
 
 

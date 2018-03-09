@@ -19,7 +19,9 @@ enum kl_move{
     kl_Xforward = 1,
     kl_Xbackward,
     kl_Yforward,
-    kl_Ybackward
+    kl_Ybackward,
+    kl_Zforward,
+    kl_Zbackward
 };
 
 

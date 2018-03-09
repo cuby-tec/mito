@@ -179,7 +179,7 @@ void kl_buildSegment(struct sSegment* psc, enum kl_move axisdir)
 
     switch(axisdir){
     case kl_Xforward:
-        NoOperation; //buildSegment_startMoveToXmin
+//        NoOperation; //buildSegment_startMoveToXmin
         psc->head.axis_number = 1;// Кол задействованных осей.
         psc->head.linenumber = 0x20;
         psc->head.axis_mask = X_FLAG;
@@ -200,7 +200,6 @@ void kl_buildSegment(struct sSegment* psc, enum kl_move axisdir)
         break;
 
     case kl_Xbackward:
-        NoOperation; // buildSegment_startMoveToXmin
         psc->head.axis_number = 1;// Кол задействованных осей.
         psc->head.linenumber = 0x21;
         psc->head.axis_mask = X_FLAG;
@@ -221,7 +220,6 @@ void kl_buildSegment(struct sSegment* psc, enum kl_move axisdir)
         break;
 
     case kl_Yforward:
-        NoOperation; // buildSegment_startMoveToXmin
         psc->head.axis_number = 1;// Кол задействованных осей.
         psc->head.linenumber = 0x23;
         psc->head.axis_mask = Y_FLAG;
@@ -241,7 +239,6 @@ void kl_buildSegment(struct sSegment* psc, enum kl_move axisdir)
         break;
 
     case kl_Ybackward:
-        NoOperation; // buildSegment_startMoveToXmin
         psc->head.axis_number = 1;// Кол задействованных осей.
         psc->head.linenumber = 0x22;
         psc->head.axis_mask = Y_FLAG;
@@ -258,8 +255,47 @@ void kl_buildSegment(struct sSegment* psc, enum kl_move axisdir)
         pctl->final_rate = pctl->initial_rate;
         pctl->accelerate_until = kalibrovka_accelerate_until;//1;
         pctl->decelerate_after = pctl->steps - pctl->accelerate_until;
+        break;
+
+    case kl_Zforward:
+        psc->head.axis_number = 1;// Кол задействованных осей.
+        psc->head.linenumber = 0x24;
+        psc->head.axis_mask = Z_FLAG;
+        psc->head.reserved = 0x24;
+
+        pctl = &psc->axis[Z_AXIS];
+        load_defaults(pctl);
+        pctl->axis = Z_AXIS;
+        pctl->direction = forward;
+        pctl->steps = 10;  //TODO Параметры устройства.
+        pctl->microsteps = Full_Step;
+        pctl->initial_rate = kalibrovka_INIT;//258883;//517767;
+        pctl->nominal_rate = kalibrovka_NORM;//105003;//81669;//163338;//81669;
+        pctl->final_rate = pctl->initial_rate;
+        pctl->accelerate_until = kalibrovka_accelerate_until;//1;
+        pctl->decelerate_after = pctl->steps - pctl->accelerate_until;
+        break;
+
+    case kl_Zbackward:
+        psc->head.axis_number = 1;// Кол задействованных осей.
+        psc->head.linenumber = 0x25;
+        psc->head.axis_mask = Z_FLAG;
+        psc->head.reserved = 0x25;
+
+        pctl = &psc->axis[Z_AXIS];
+        load_defaults(pctl);
+        pctl->axis = Z_AXIS;
+        pctl->direction = backward;
+        pctl->steps = 100;  //TODO Параметры устройства.
+        pctl->microsteps = Full_Step;
+        pctl->initial_rate = kalibrovka_INIT;//258883;//517767;
+        pctl->nominal_rate = kalibrovka_NORM;//105003;//81669;//163338;//81669;
+        pctl->final_rate = pctl->initial_rate;
+        pctl->accelerate_until = kalibrovka_accelerate_until;//1;
+        pctl->decelerate_after = pctl->steps - pctl->accelerate_until;
 
         break;
+
 
     }// end switch(axisdir)
 }
