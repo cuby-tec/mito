@@ -149,7 +149,7 @@ union uMicrostep usteps;
 
 void disableMotors(void)
 {
-    usteps.microsteps.EN = 0x3F;
+    usteps.microsteps.EN = 0x1F;
     SPI_Send(usteps.data, MSG_LENGTH);
 }
 
@@ -167,6 +167,7 @@ void uploadMicrosteps(struct sSegment* segment){
     usteps.microsteps.Y = segment->axis[Y_AXIS].microsteps;
     usteps.microsteps.Z = segment->axis[Z_AXIS].microsteps;
     usteps.microsteps.E0 = segment->axis[E_AXIS].microsteps;
+    usteps.microsteps.E1 = segment->axis[Z_AXIS].microsteps;
 //    usteps.microsteps.EN |= EN_E1;  \\ Disabled
 //    SPI_Send(msdata, N_AXIS);
     SPI_Send(usteps.data, MSG_LENGTH);

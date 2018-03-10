@@ -44,7 +44,8 @@ enum en_Kalibrovka_state {
     kalibrovka_zmax_increase,  // Z ========
     kalibrovka_zmax_decrease,
     kalibrovka_zmin_increase,
-    kalibrovka_zmin_decrease
+    kalibrovka_zmin_decrease,
+    kalibrovka_finish
 };
 
 
@@ -90,7 +91,7 @@ static void kalibrovka_exception(uint32_t code)
     }
 }
 
-
+#define KALIBROVKA_DELAY_Z  1200
 #define BitsToClearOnEntry (ENDER_XMIN_HANDLE | ENDER_XMAX_HANDLE)
 
 static uint32_t ulNotificationValue;
@@ -98,6 +99,8 @@ static uint32_t ulNotificationValue;
 static bool kalibrovka_move(enum en_Kalibrovka_state kState)
 {
     bool result = false;
+    uint32_t i;
+
     struct sSegment* psc;
 
     NoOperation;
@@ -269,7 +272,7 @@ static bool kalibrovka_move(enum en_Kalibrovka_state kState)
         set_EnderEdge(kl_zmax_fall);
         while(!result){
             start_xkalibrovka(Z_AXIS);
-            if(xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, pdMS_TO_TICKS(800))){
+            if(xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, pdMS_TO_TICKS(KALIBROVKA_DELAY_Z))){
                 if(ENDER_ZMAX_HANDLE & ulNotificationValue){
                     result = true;
                 }else{
@@ -282,16 +285,53 @@ static bool kalibrovka_move(enum en_Kalibrovka_state kState)
      case kalibrovka_zmax_decrease:
          result = false;
          kl_buildSegment(psc, kl_Zbackward);
-         set_EnderEdge(kl_zmax_rise);
+
+         for(i=0;i<3;i++){
+             set_EnderEdge(kl_zmax_rise);
+             start_xkalibrovka(Z_AXIS);
+             if(xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, pdMS_TO_TICKS(KALIBROVKA_DELAY_Z))){
+                 if(ENDER_ZMAX_HANDLE & ulNotificationValue){
+                     result = true;
+                 }else{
+                     NoOperation;
+                 }
+             }
+         }
+         break;
+
+     case kalibrovka_zmin_decrease:
+         result = false;
+         kl_buildSegment(psc, kl_Zbackward);
+         set_EnderEdge(kl_zmin_fall);
+         while(!result){
+             start_xkalibrovka(Z_AXIS);
+             if(xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, pdMS_TO_TICKS(KALIBROVKA_DELAY_Z))){
+                 if( ENDER_ZMIN_HANDLE & ulNotificationValue ){
+                     result = true;
+                 }else{
+                     NoOperation;
+                 }
+             }
+         }
+         break;
+
+     case kalibrovka_zmin_increase:
+         result =  false;
+         kl_buildSegment(psc, kl_Zforward);
+         set_EnderEdge(kl_zmin_rise);
          start_xkalibrovka(Z_AXIS);
-         if(xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, pdMS_TO_TICKS(800))){
-             if(ENDER_ZMAX_HANDLE & ulNotificationValue){
-                 result = true;
+         for(i=0;i<2;i++){
+             if(xTaskNotifyWait(0x00, ULONG_MAX, &ulNotificationValue, pdMS_TO_TICKS(KALIBROVKA_DELAY_Z))){
+                 if(ENDER_ZMIN_HANDLE & ulNotificationValue){
+                     result = true;
+                 }else{
+                     NoOperation;
+                 }
+
              }else{
                  NoOperation;
              }
          }
-
          break;
 
 
@@ -319,6 +359,10 @@ void kalibrovka (void)
 
     if( (enders_wrong & ALL_ENDERS) ^ ALL_ENDERS )
     {
+        if(enders_wrong & ~(ENDER_Z_MIN)){
+            state = kalibrovka_zmin_increase;
+            goto kl_z1;
+        }
         NoOperation;
         goto kal_exit;
     }
@@ -412,6 +456,7 @@ void kalibrovka (void)
 
     kl_Z:
     // kalibrovka Z ===================
+    // kalibrovka_zmax_increase
     if(kalibrovka_move(state)){
         state = kalibrovka_zmax_decrease;
         vTaskDelay(pdMS_TO_TICKS(400));
@@ -419,6 +464,7 @@ void kalibrovka (void)
         goto kal_exit;
     }
 
+    //kalibrovka_zmax_decrease
     if(kalibrovka_move(state)){
         state = kalibrovka_zmin_decrease;
     }else{
@@ -426,9 +472,23 @@ void kalibrovka (void)
         goto kal_exit;
     }
 
-
-
-
+    //kalibrovka_zmin_decrease
+    if(kalibrovka_move(state)){
+        NoOperation;
+        state = kalibrovka_zmin_increase;
+    }else{
+        goto kal_exit;
+    }
+    kl_z1:
+    // kalibrovka_zmin_increase
+    if(kalibrovka_move(state)){
+        NoOperation;
+        state = kalibrovka_finish;
+    }
+    else{
+        NoOperation;
+        goto kal_exit;
+    }
     // finish
 
 
