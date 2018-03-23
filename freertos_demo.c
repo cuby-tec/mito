@@ -48,6 +48,8 @@
 #include "orderlyTask.h"
 #include "memf/tSectorHandler.h"
 #include "memf/SegmentTask.h"
+#include "hotend/hotendTask.h"
+
 
 #include "exchange/status.h"
 
@@ -256,8 +258,6 @@ main(void)
     }
 */
 
-
-
     //
     // Create the switch task.  #define LEFT_BUTTON             GPIO_PIN_4
     //        PFx               #define RIGHT_BUTTON            GPIO_PIN_0
@@ -270,13 +270,18 @@ main(void)
         }
     }
 
-
     // Create orderly task.
     if(createtask_orderly() != 0){
         while(1){
         }
     }
 
+    // Create hotendTask
+    if(createtask_hotend() != 0){
+        while(1){
+            NoOperation;
+        }
+    }
 
     //
     // Start the scheduler.  This should not return.

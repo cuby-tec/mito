@@ -177,8 +177,9 @@ void orderly_routine(void* pvParameters ){
 }
 
 
-uint32_t createtask_orderly(void){
-    //TODO orderlyTask()
+uint32_t createtask_orderly(void)
+{
+    //orderlyTask()
 
     //
     // Create the Orderly task.

@@ -29,6 +29,7 @@
 #include "msmotor/ms_init.h"
 #include <msmotor/isrTimer.h>
 #include "drivers/HALmodele.h"
+#include "hotend/hotendHW.h"
 
 //*****************************************************************************
 //
@@ -72,6 +73,7 @@ extern void TimerZIntHandler(void);
 extern void TimerEIntHandler(void);
 extern void Timer_callback(void);
 extern void PortEnderIntHandler(void);
+extern void intHotendHandler(void);
 //*****************************************************************************
 //
 // The vector table.  Note that the proper constructs must be placed on this to
@@ -194,7 +196,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // Timer 5 subtimer A
     IntDefaultHandler,                      // Timer 5 subtimer B
     IntDefaultHandler,                      // Wide Timer 0 subtimer A
-    IntDefaultHandler,                      // Wide Timer 0 subtimer B
+    intHotendHandler,                      // Wide Timer 0 subtimer B
     IntDefaultHandler,                      // Wide Timer 1 subtimer A
     IntDefaultHandler,                      // Wide Timer 1 subtimer B
     IntDefaultHandler,                      // Wide Timer 2 subtimer A

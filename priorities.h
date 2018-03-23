@@ -35,5 +35,7 @@
 #define PRIORITY_ORDERLY_TASK           10
 #define PRIORITY_SegmentTask            50
 #define PRIORITY_SectorHandler_TASK     60
+#define PRIORITY_HOTEND_TASK           70
+
 
 #endif // __PRIORITIES_H__
