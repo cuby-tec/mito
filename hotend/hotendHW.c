@@ -106,6 +106,8 @@ void _init_ADC(void)
     ADCSequenceStepConfigure(ADC_HOTEND_BASE, SS3, 0, ADC_CTL_CH5 | ADC_CTL_IE |
                              ADC_CTL_END);
 
+//    ADCSequenceStepConfigure(ADC_HOTEND_BASE, SS3, 0, ADC_CTL_CH5 | ADC_CTL_END);
+
 
     ADCHardwareOversampleConfigure(ADC_HOTEND_BASE, OVERSAMPLING);
 

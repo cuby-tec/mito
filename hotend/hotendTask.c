@@ -18,9 +18,12 @@
 #include "priorities.h"
 #include <limits.h>
 #include "inc/typedefs.h"
+
+#include "thermistor/thermo.h"
+
 //------------- defs
 
-#define HOTENDTASKSTACKSIZE 80//64
+#define HOTENDTASKSTACKSIZE 896//768//640//544//360//180//80//64
 
 #define HOTEND_DELAY        500
 
@@ -82,6 +85,9 @@ void stop_hotend(void)
     NoOperation;
 }
 
+
+static float temperature;
+
 static uint32_t adc;
 
 
@@ -119,6 +125,11 @@ static void hotend_routine(void* pvParameters)
         }
 
         adc = ((float)adc_mean+0.5)/counter_mean;
+
+        temperature = ((float)4.7)/(((float)4096/((float)adc_2) -1));
+
+        temperature = get_temperature(temperature);
+
         NoOperation;
 
     } // end of for(;;)
