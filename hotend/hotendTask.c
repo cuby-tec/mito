@@ -20,7 +20,7 @@
 #include "inc/typedefs.h"
 //------------- defs
 
-#define HOTENDTASKSTACKSIZE 64
+#define HOTENDTASKSTACKSIZE 80//64
 
 #define HOTEND_DELAY        500
 
@@ -84,6 +84,11 @@ void stop_hotend(void)
 
 static uint32_t adc;
 
+
+static int32_t counter_mean;
+static uint32_t adc_1,adc_2;    // current and before value;
+static uint32_t adc_mean = 0;
+
 static void hotend_routine(void* pvParameters)
 {
     static BaseType_t ret;
@@ -95,6 +100,25 @@ static void hotend_routine(void* pvParameters)
 
 
         adc = get_hotend_adc();
+        if(counter_mean == 0){
+            adc_1 = adc;
+            adc_2 = adc;
+            adc_mean +=adc_1;
+            counter_mean ++;
+        }else if(counter_mean <20){
+            adc_1 = adc;
+//            adc_mean -= adc_2;
+            adc_mean += adc_1;
+            adc_2 = adc_1;
+            counter_mean ++;
+        }else{
+            adc_1 = adc;
+            adc_mean -= adc_2;
+            adc_mean += adc_1;
+            adc_2 = adc_1;
+        }
+
+        adc = ((float)adc_mean+0.5)/counter_mean;
         NoOperation;
 
     } // end of for(;;)

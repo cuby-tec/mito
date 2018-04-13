@@ -33,6 +33,15 @@
 //#include "inc/typedefs.h"
 
 //------------- defs
+/**
+ * Oversampling is accomplished by averaging multiple
+ * samples from the same analog input. Six different
+ * oversampling rates are supported; 2x, 4x,
+ * 8x, 16x, 32x, and 64x. Specifying an oversampling
+ * factor of zero disables hardware oversam-
+ * pling.
+ */
+#define OVERSAMPLING    64
 
 //-------------- vars
 
@@ -96,6 +105,9 @@ void _init_ADC(void)
 
     ADCSequenceStepConfigure(ADC_HOTEND_BASE, SS3, 0, ADC_CTL_CH5 | ADC_CTL_IE |
                              ADC_CTL_END);
+
+
+    ADCHardwareOversampleConfigure(ADC_HOTEND_BASE, OVERSAMPLING);
 
     //
     // Since sample sequence 3 is now configured, it must be enabled.
