@@ -82,6 +82,8 @@ void stop_hotend(void)
     NoOperation;
 }
 
+static uint32_t adc;
+
 static void hotend_routine(void* pvParameters)
 {
     static BaseType_t ret;
@@ -90,6 +92,10 @@ static void hotend_routine(void* pvParameters)
     for(;;){
 
         ret = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotifiedValue, HOTEND_DELAY);
+
+
+        adc = get_hotend_adc();
+        NoOperation;
 
     } // end of for(;;)
 }

@@ -123,5 +123,9 @@
 
 #define INT_HOTEND_TIMER    INT_WTIMER0B
 
+#define ADC_HOTEND_PERIPH   SYSCTL_PERIPH_ADC0
+#define ADC_HOTEND_BASE     ADC0_BASE
+#define SS3                 3
+
 
 #endif /* MSMOTOR_MSPORT_H_ */

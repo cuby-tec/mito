@@ -8,7 +8,7 @@
 #ifndef HOTEND_HOTENDHW_H_
 #define HOTEND_HOTENDHW_H_
 
-
+#include "inc/typedefs.h"
 
 //------------- defs
 
@@ -19,7 +19,13 @@
 
 extern void initHotendHW(void);
 
+extern uint32_t get_hotend_adc(void);
+
+
 // interrupt handler WT0CCP1
 extern void intHotendHandler(void);
+
+
+
 
 #endif /* HOTEND_HOTENDHW_H_ */
