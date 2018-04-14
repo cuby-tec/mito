@@ -23,7 +23,7 @@
 
 //------------- defs
 
-#define HOTENDTASKSTACKSIZE 896//768//640//544//360//180//80//64
+#define HOTENDTASKSTACKSIZE 80//64
 
 #define HOTEND_DELAY        500
 
@@ -107,26 +107,26 @@ static void hotend_routine(void* pvParameters)
 
         adc = get_hotend_adc();
         if(counter_mean == 0){
-            adc_1 = adc;
+//            adc_1 = adc;
             adc_2 = adc;
-            adc_mean +=adc_1;
+            adc_mean +=adc;
             counter_mean ++;
         }else if(counter_mean <20){
-            adc_1 = adc;
+//            adc_1 = adc;
 //            adc_mean -= adc_2;
-            adc_mean += adc_1;
-            adc_2 = adc_1;
+            adc_mean += adc;
+            adc_2 = adc;
             counter_mean ++;
         }else{
-            adc_1 = adc;
+//            adc_1 = adc;
             adc_mean -= adc_2;
-            adc_mean += adc_1;
-            adc_2 = adc_1;
+            adc_mean += adc;
+            adc_2 = adc;
         }
 
-        adc = ((float)adc_mean+0.5)/counter_mean;
+//        adc = ((float)adc_mean+0.5)/counter_mean;
 
-        temperature = ((float)4.7)/(((float)4096/((float)adc_2) -1));
+        temperature = ((float)4.7)/(((float)4096/(((float)adc_mean+0.5)/counter_mean) -1));
 
         temperature = get_temperature(temperature);
 
