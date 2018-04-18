@@ -181,7 +181,10 @@ void initHotendHW(void)
 
 }
 
-
+void setTIMER_HOTEND(uint32_t value)
+{
+    HWREG(TIMER_BASE_HOTEND  + TIMER_O_TBMATCHR) = value;
+}
 
 
 /**

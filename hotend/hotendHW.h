@@ -25,7 +25,7 @@ extern uint32_t get_hotend_adc(void);
 // interrupt handler WT0CCP1
 extern void intHotendHandler(void);
 
-
+extern void setTIMER_HOTEND(uint32_t value);
 
 
 #endif /* HOTEND_HOTENDHW_H_ */

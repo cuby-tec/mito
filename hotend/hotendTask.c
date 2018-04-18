@@ -20,6 +20,7 @@
 #include "inc/typedefs.h"
 
 #include "thermistor/thermo.h"
+#include "pid/PID.h"
 
 //------------- defs
 
@@ -27,12 +28,27 @@
 
 #define HOTEND_DELAY        500
 
+// Control loop gains
+#define KD  0.120//0.1//0.013
+#define KP  0.8//0.75
+#define KI  1.0 - KP - KD//0.15
+#define PIDMAXVALUE 4294967295
+#define PIDMINVALUE 0
+#define SAMPLETIME  10
+#define SETPOINT    40
+
 //-------------- vars
 TaskHandle_t hotendHadling;
 
 
 static float_t temperature;
 static float_t current_temperature;
+
+
+// Structure to strore PID data and pointer to PID structure
+struct pid_controller ctrldata;
+_pid_t pid;
+
 
 //-------------- function
 
@@ -70,6 +86,20 @@ static void init_heater(void)
 void init_hotend(void)
 {
     init_heater();
+
+    /**
+     * init PID regulator
+     */
+
+    setTargetHotendTemperature(SETPOINT);
+
+    // Prepare PID controller for operation
+    pid = pid_create(&ctrldata, getTargetHotendTemperature(), KP, KI, KD, SAMPLETIME);
+    pid_limits(pid, PIDMINVALUE, PIDMAXVALUE);
+    // Allow PID to compute and change output
+    pid_auto(pid);
+
+
 }
 
 // Запустить Hotend инструмент.
@@ -85,15 +115,31 @@ void stop_hotend(void)
     NoOperation;
 }
 
+/**
+ * Управление таймером ХОТЕНДА
+ */
+static
+process_output(float out){
+    if(out>0)
+        setTIMER_HOTEND(out);
+    NoOperation;
+}
 
-static float temperature;
+//static float temperature;
 
 static uint32_t adc;
 
 
-static int32_t counter_mean;
-static uint32_t adc_1,adc_2;    // current and before value;
-static uint32_t adc_mean = 0;
+static uint32_t ticks = 100;
+
+uint32_t tick_get()
+{
+//  result += 100;
+    return ticks;
+}
+
+
+
 
 static void hotend_routine(void* pvParameters)
 {
@@ -104,36 +150,33 @@ static void hotend_routine(void* pvParameters)
 
         ret = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotifiedValue, HOTEND_DELAY);
 
-
         adc = get_hotend_adc();
-        if(counter_mean == 0){
-//            adc_1 = adc;
-            adc_2 = adc;
-            adc_mean +=adc;
-            counter_mean ++;
-        }else if(counter_mean <20){
-//            adc_1 = adc;
-//            adc_mean -= adc_2;
-            adc_mean += adc;
-            adc_2 = adc;
-            counter_mean ++;
-        }else{
-//            adc_1 = adc;
-            adc_mean -= adc_2;
-            adc_mean += adc;
-            adc_2 = adc;
+        current_temperature = ((float)4.7)/(((float)4096.0/((float)adc+0.5) - 1));
+
+            current_temperature = get_temperature(current_temperature);
+
+        if(!isnan(current_temperature )){
+
+            // Check if need to compute PID
+            if (pid_need_compute(pid)) {
+                // Read process feedback
+                //            pid->input = process_input();
+                pid->input = current_temperature;
+                // Compute new PID output value
+                pid_compute(pid);
+                //Change actuator value
+                process_output(pid->output);
+                //          if(i == TICK/2){
+                //              pid->setpoint = 150.0;
+                //          }
+                ticks += SAMPLETIME;
+            } // end of if
         }
-
-//        adc = ((float)adc_mean+0.5)/counter_mean;
-
-        temperature = ((float)4.7)/(((float)4096/(((float)adc_mean+0.5)/counter_mean) -1));
-
-        temperature = get_temperature(temperature);
-
-        NoOperation;
 
     } // end of for(;;)
 }
+
+
 
 
 
