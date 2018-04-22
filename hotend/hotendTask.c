@@ -28,15 +28,28 @@
 
 #define HOTEND_DELAY        500
 
+#define EXAMPLE2
+
 // Control loop gains
+#ifdef EXAMPLE1
 #define KD  0.120//0.1//0.013
 #define KP  0.8//0.75
 #define KI  1.0 - KP - KD//0.15
-#define PIDMAXVALUE 4294967295
+#define PIDMAXVALUE HOTEND_D10_PERIOD//4294967295
 #define PIDMINVALUE 0
-#define SAMPLETIME  10
+#define SAMPLETIME  HOTEND_DELAY
 #define SETPOINT    40
-
+#endif
+#ifdef EXAMPLE2
+#define KD  12.5//0.1//0.013
+#define KP  0.6//0.75
+//#define KI  1.0 - KP - KD//0.15
+#define KI  0.1
+#define PIDMAXVALUE HOTEND_D10_PERIOD//4294967295
+#define PIDMINVALUE 0
+#define SAMPLETIME  HOTEND_DELAY
+#define SETPOINT    40
+#endif
 //-------------- vars
 TaskHandle_t hotendHadling;
 
@@ -120,8 +133,19 @@ void stop_hotend(void)
  */
 static
 process_output(float out){
-    if(out>0)
-        setTIMER_HOTEND(out);
+    uint32_t value;
+    if(out>0){
+        value = out *800;//500;
+//        value *= 500;
+        if(value > HOTEND_D10_PERIOD)
+            value = HOTEND_D10_PERIOD -10;
+
+     }else{
+        value = 2;
+    }
+
+    setTIMER_HOTEND(value);
+
     NoOperation;
 }
 
@@ -139,7 +163,7 @@ uint32_t tick_get()
 }
 
 
-
+static  uint32_t counter = 0;
 
 static void hotend_routine(void* pvParameters)
 {
@@ -156,7 +180,7 @@ static void hotend_routine(void* pvParameters)
             current_temperature = get_temperature(current_temperature);
 
         if(!isnan(current_temperature )){
-
+            counter ++;
             // Check if need to compute PID
             if (pid_need_compute(pid)) {
                 // Read process feedback

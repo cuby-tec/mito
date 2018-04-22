@@ -49,10 +49,23 @@ taskSectorhandler	// createTaskSectorHandler
 SwitchTask 			// SwitchTaskInit
 orderly_routine		// createtask_orderly
 //***********
+//***************** USB *********
+Правильность назначения PIN
+    //
+    // Enable the GPIO peripheral used for USB, and configure the USB
+    // pins.
+    //
+    ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);
+    ROM_GPIOPinTypeUSBAnalog(GPIO_PORTD_BASE, GPIO_PIN_4 | GPIO_PIN_5);
 
+Проверка подключения USB устройства:
+$ lsusb
+	.........
+	Bus 003 Device 044: ID 1cbe:0003 Luminary Micro Inc. 
+	......... etc
 
-	
-Текущее задание: loadMicrosteps@ms_init.c
+lsusb -v | grep -E <'044'>
 
+...	Bus 003 Device 044: ID 1cbe:0003 Luminary Micro Inc. .. 
 
 

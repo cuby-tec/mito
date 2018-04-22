@@ -225,6 +225,7 @@ main(void)
         }
     }
 #endif
+#ifdef _USB
 //    while(1){}
     //
     // Create the LED task.
@@ -270,6 +271,7 @@ main(void)
         }
     }
 
+#endif
     // Create orderly task.
     if(createtask_orderly() != 0){
         while(1){
@@ -292,7 +294,6 @@ main(void)
     // In case the scheduler returns for some reason, print an error and loop
     // forever.
     //
-
     while(1)
     {
     }

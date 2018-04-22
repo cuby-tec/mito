@@ -16,12 +16,12 @@ OS_MEMF cmdPool;
 // stub
 uint16_t cmdPool[10];
 #endif
+/*
 union{
-
 	char ff_filebuffer[14][12];
 	block_state block_buffer[SEGMENT_QUEE_SIZE];
-
 };
+*/
 
 uint32_t mask_axis[2];
 

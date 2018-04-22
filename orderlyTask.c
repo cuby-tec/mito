@@ -92,9 +92,9 @@ void orderly_routine(void* pvParameters ){
              * send status
              */
 
-            switch(msegment->command)
+            switch(msegment->command.order)
             {
-            case 1: // new Command&data received.
+            case eoSegment: // new Command&data received.
 //                sema = xSemaphoreTake(rcvd_semaphore_handler,5);
 //                if(sema == pdPASS){
 //                    if(MEMF_GetNumFreeBlocks() != 0)
@@ -110,7 +110,7 @@ void orderly_routine(void* pvParameters ){
 //                    xTaskNotify(sectorHandling,sg_segmentRecieved,eSetBits);
 //                    xStatus = xQueueSend(segmentQueueHandler,&msegment->instrument1_parameter,0);
                 ss = (uint8_t*)MEMF_Alloc();
-                memcpy(ss, &msegment->instrument1_parameter, sizeof(struct sSegment));
+                memcpy(ss, &msegment->payload.instrument1_parameter, sizeof(struct sSegment));
                     if(pMs_State->instrumrnt1 == eIns1_stoped){
                         pblockSegment(plan_get_current_block());
 //                        start_t1(0); // debug
@@ -122,6 +122,10 @@ void orderly_routine(void* pvParameters ){
 ////                }else{
 ////                    NoOperation;
 ////                }
+                break;
+
+            case eoHotendParams:
+                NoOperation; // TODO hotend parameters
                 break;
             }
 

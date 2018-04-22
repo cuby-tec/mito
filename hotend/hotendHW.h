@@ -12,6 +12,8 @@
 
 //------------- defs
 
+#define HOTEND_D10_PERIOD   0xC355
+
 //-------------- vars
 
 

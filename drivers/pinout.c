@@ -35,9 +35,9 @@
 //
 //*****************************************************************************
 
-// This file was automatically generated on 22.03.2018 at 18:32:26
+// This file was automatically generated on 20.04.2018 at 20:17:00
 // by TI PinMux version 4.0.1511
-// V15
+//
 //*****************************************************************************
 
 #include <stdbool.h>
@@ -106,6 +106,18 @@ PinoutSet(void)
     //
     MAP_GPIOPinConfigure(GPIO_PC5_WT0CCP1);
     MAP_GPIOPinTypeTimer(GPIO_PORTC_BASE, GPIO_PIN_5);
+
+    //
+    // Configure the GPIO Pin Mux for PD5
+    // for USB0DP
+    //
+    MAP_GPIOPinTypeUSBAnalog(GPIO_PORTD_BASE, GPIO_PIN_5);
+
+    //
+    // Configure the GPIO Pin Mux for PD4
+    // for USB0DM
+    //
+    MAP_GPIOPinTypeUSBAnalog(GPIO_PORTD_BASE, GPIO_PIN_4);
 
     //
     // Configure the GPIO Pin Mux for PD3
