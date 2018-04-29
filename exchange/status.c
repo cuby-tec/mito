@@ -43,7 +43,7 @@ struct Status_t* getStatus(void)
 {
     struct Status_t* result = &bu_status;
 
-    memcpy(result, &default_status, sizeof(struct Status_t));
+//    memcpy(result, &default_status, sizeof(struct Status_t));
 
     result->freeSegments = MEMF_GetNumFreeBlocks();
     result->currentSegmentNumber = getHeadLineNumber();
@@ -53,3 +53,7 @@ struct Status_t* getStatus(void)
     return result;
 }
 
+void init_Status()
+{
+    memcpy(&bu_status, &default_status, sizeof(struct Status_t));
+}

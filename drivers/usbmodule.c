@@ -43,6 +43,8 @@ volatile uint32_t packet_counter = 0;
 
 volatile uint32_t size_list[3];
 
+static uint8_t *pvMsgData_tmp;
+
 //*****************************************************************************
 //
 // Global flag indicating that a USB configuration has been set.
@@ -51,6 +53,85 @@ volatile uint32_t size_list[3];
 static volatile bool g_bUSBConfigured = false;
 
 //-------------- function
+#define  sendStatus_p
+
+
+#ifdef sendStatus_p
+
+uint32_t
+sendStatus()
+{
+    uint32_t ui32Loop, ui32Space, ui32Count;
+
+    uint32_t ui32WriteIndex;
+    uint32_t ui32ReadIndex;
+
+    tUSBRingBufObject sTxRing;
+
+    packet_counter = 0;
+    g_ui32RxCount = 0;
+
+    //
+    // Get the current buffer information to allow us to write directly to
+    // the transmit buffer (we already have enough information from the
+    // parameters to access the receive buffer directly).
+    //
+    USBBufferInfoGet(&g_sTxBuffer, &sTxRing);
+
+    //
+    // How much space is there in the transmit buffer?
+    //
+    ui32Space = USBBufferSpaceAvailable(&g_sTxBuffer);
+
+    ui32WriteIndex = sTxRing.ui32WriteIndex;
+    uint32_t tmpr,i;
+    union{
+        uint8_t* bstatus;
+        uint32_t* mstatus;  //[8]
+        struct Status_t* cstatus;
+    }stunion;
+
+    stunion.cstatus = getStatus();
+
+    i = 0;
+
+    ui32Loop = sizeof(struct Status_t);
+    ui32Count = ui32Loop;
+
+    //
+    // Set up to process the characters by directly accessing the USB buffers.
+    //
+    ui32ReadIndex = (uint32_t)(pvMsgData_tmp - g_pui8USBRxBuffer);
+
+    while(ui32Loop)
+    {
+
+        g_pui8USBTxBuffer[ui32WriteIndex] = stunion.bstatus[i];
+        i++;
+
+        ui32WriteIndex++;
+        ui32WriteIndex = (ui32WriteIndex == BULK_BUFFER_SIZE) ?
+                0 : ui32WriteIndex;
+
+        ui32Loop--;
+    }
+
+    //
+    // We've processed the data in place so now send the processed data
+    // back to the host.
+    //
+    USBBufferDataWritten(&g_sTxBuffer, ui32Count);
+
+    //
+    // We processed as much data as we can directly from the receive buffer so
+    // we need to return the number of bytes to allow the lower layer to
+    // update its read pointer appropriately.
+    //
+    return(ui32Count);
+}
+#endif
+
+
 #define CHAR_SEND
 //*****************************************************************************
 //
@@ -73,7 +154,7 @@ static uint32_t
 EchoNewDataToHost(tUSBDBulkDevice *psDevice, uint8_t *pui8Data,
                   uint32_t ui32NumBytes)
 {
-    uint32_t ui32Loop, ui32Space, ui32Count;
+    uint32_t ui32Loop, ui32Space, ui32Count = 0;
     uint32_t ui32ReadIndex;
     uint32_t ui32WriteIndex;
     tUSBRingBufObject sTxRing;
@@ -96,6 +177,8 @@ EchoNewDataToHost(tUSBDBulkDevice *psDevice, uint8_t *pui8Data,
         return g_ui32RxCount;
     }
     xTaskNotifyFromISR(orderlyHandling,SignalUSBbufferReady,eSetBits,NULL);
+    pvMsgData_tmp = pui8Data;
+#ifndef sendStatus_p
     packet_counter = 0;
     g_ui32RxCount = 0;
     //
@@ -291,7 +374,7 @@ __asm(
     USBBufferDataWritten(&g_sTxBuffer, ui32Count);
 
 //    DEBUG_PRINT("Wrote %d bytes\n", ui32Count);
-
+#endif
     //
     // We processed as much data as we can directly from the receive buffer so
     // we need to return the number of bytes to allow the lower layer to

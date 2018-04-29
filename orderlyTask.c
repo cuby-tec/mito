@@ -95,37 +95,40 @@ void orderly_routine(void* pvParameters ){
             switch(msegment->command.order)
             {
             case eoSegment: // new Command&data received.
-//                sema = xSemaphoreTake(rcvd_semaphore_handler,5);
-//                if(sema == pdPASS){
-//                    if(MEMF_GetNumFreeBlocks() != 0)
-//                        if(msegment->instrument1_parameter.head.linenumber >
-//                                getHeadLineNumber())
-//                        {
-//                            if(rcvd_SegmentFlag == 0){
-//                                memcpy(segmentBuffer,&msegment->instrument1_parameter,sizeof(struct sSegment));
-//                                rcvd_SegmentFlag = 1;
-//                            }
-//                        }
-//                    xSemaphoreGive(rcvd_semaphore_handler);
-//                    xTaskNotify(sectorHandling,sg_segmentRecieved,eSetBits);
-//                    xStatus = xQueueSend(segmentQueueHandler,&msegment->instrument1_parameter,0);
+                //                sema = xSemaphoreTake(rcvd_semaphore_handler,5);
+                //                if(sema == pdPASS){
+                //                    if(MEMF_GetNumFreeBlocks() != 0)
+                //                        if(msegment->instrument1_parameter.head.linenumber >
+                //                                getHeadLineNumber())
+                //                        {
+                //                            if(rcvd_SegmentFlag == 0){
+                //                                memcpy(segmentBuffer,&msegment->instrument1_parameter,sizeof(struct sSegment));
+                //                                rcvd_SegmentFlag = 1;
+                //                            }
+                //                        }
+                //                    xSemaphoreGive(rcvd_semaphore_handler);
+                //                    xTaskNotify(sectorHandling,sg_segmentRecieved,eSetBits);
+                //                    xStatus = xQueueSend(segmentQueueHandler,&msegment->instrument1_parameter,0);
                 ss = (uint8_t*)MEMF_Alloc();
                 memcpy(ss, &msegment->payload.instrument1_parameter, sizeof(struct sSegment));
-                    if(pMs_State->instrumrnt1 == eIns1_stoped){
-                        pblockSegment(plan_get_current_block());
-//                        start_t1(0); // debug
-                        NoOperation;
-                    }
-                    else{
-                        NoOperation;
-                    }
-////                }else{
-////                    NoOperation;
-////                }
+                if(pMs_State->instrumrnt1 == eIns1_stoped){
+                    pblockSegment(plan_get_current_block());
+                    //                        start_t1(0); // debug
+                    NoOperation;
+                }
+                else{
+                    NoOperation;
+                }
+
+                sendStatus();
+
                 break;
 
-            case eoHotendParams:
+            case eoProfile:
                 NoOperation; // TODO hotend parameters
+
+                sendStatus();
+
                 break;
             }
 
@@ -195,7 +198,7 @@ uint32_t createtask_orderly(void)
     }else{
 
 //        tskTaskControlBlock* tt = prvGetTCBFromHandle(orderlyHandling);
-
+        init_Status();
         return (0);
     }
 

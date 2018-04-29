@@ -11,5 +11,6 @@
 
 uint8_t usb_init(void);
 
+uint32_t sendStatus();
 
 #endif /* DRIVERS_USBMODULE_H_ */

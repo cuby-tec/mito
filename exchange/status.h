@@ -18,5 +18,6 @@ extern const struct Status_t    default_status;
 //----------- function
 extern struct Status_t* getStatus(void);
 
+extern void init_Status();
 
 #endif /* EXCHANGE_STATUS_H_ */

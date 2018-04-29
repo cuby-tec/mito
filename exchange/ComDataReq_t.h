@@ -10,11 +10,14 @@
 
 #include "msmotor/sSegment.h"
 #include "sHotendControl.h"
+
+#include "sProfile.h"
+
 //------------- defs
 
 enum eOrder{
     eoState,            // Запрос состояния устройства.
-    eoHotendParams,    // Задание параметров Hotend
+    eoProfile,    // Задание параметров Hotend
     eoSegment           // Семент движения.
 };
 
@@ -37,6 +40,7 @@ struct ComDataReq_t{
     uint32_t    instrument2_paramter;       // или параметры инструмента 2
     uint32_t    instrument3_paramter;       // или параметры инструмента 3
     uint32_t    instrument4_paramter;       // или параметры инструмента 4
+    struct  sProfile profile;
     }payload;
 };
 
