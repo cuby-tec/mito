@@ -211,7 +211,7 @@ LEDTask(void *pvParameters)
 */
         state = eTaskGetState(orderlyHandling);
 //        vAFunction();
-#ifndef DEBUG_NOTIFY
+#ifdef DEBUG_NOTIFY
         xTaskNotify(orderlyHandling,X_axis_int,eSetBits);
 #endif
 

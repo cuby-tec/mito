@@ -9,6 +9,8 @@
 #define DRIVERS_USBMODULE_H_
 
 
+#define  sendStatus_p_NO
+
 uint8_t usb_init(void);
 
 uint32_t sendStatus();

@@ -8,6 +8,6 @@
 	<isElfFormat value="true"/>
 	<rts value="libc.a"/>
 	<createSlaveProjects value=""/>
-	<origin value="/home/walery/ti/TivaWare_C_Series-2.1.3.156/examples/boards/ek-tm4c123gxl/freertos_demo/ccs"/>
+	<origin value="/home/walery/workspace_v7/freertos_demo"/>
 	<isTargetManual value="true"/>
 </projectOptions>

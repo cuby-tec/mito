@@ -10,6 +10,8 @@
 #include "memf/mSegmentQuee.h"
 
 #include "Status_t.h"
+#include "hotend/hotendTask.h"
+
 //------------- defs
 
 #define default_frameNumber  232
@@ -48,7 +50,7 @@ struct Status_t* getStatus(void)
     result->freeSegments = MEMF_GetNumFreeBlocks();
     result->currentSegmentNumber = getHeadLineNumber();
     result->frameNumber = ++frame_number;
-
+    result->temperature = getCurrentHotendTemperature();
 
     return result;
 }

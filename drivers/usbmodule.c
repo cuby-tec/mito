@@ -53,7 +53,7 @@ static uint8_t *pvMsgData_tmp;
 static volatile bool g_bUSBConfigured = false;
 
 //-------------- function
-#define  sendStatus_p
+//#define  sendStatus_p_NO
 
 
 #ifdef sendStatus_p
@@ -176,7 +176,9 @@ EchoNewDataToHost(tUSBDBulkDevice *psDevice, uint8_t *pui8Data,
     if(g_ui32RxCount < sizeof(struct ComDataReq_t)){
         return g_ui32RxCount;
     }
+#ifdef sendStatus_p
     xTaskNotifyFromISR(orderlyHandling,SignalUSBbufferReady,eSetBits,NULL);
+#endif
     pvMsgData_tmp = pui8Data;
 #ifndef sendStatus_p
     packet_counter = 0;

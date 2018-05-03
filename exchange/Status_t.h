@@ -23,6 +23,8 @@ struct Status_t {
     uint32_t    instrument2_parameter;
     uint32_t    instrument3_parameter;
     uint32_t    instrument4_parameter;
+    // hotend section
+    float       temperature;
 };
 
 

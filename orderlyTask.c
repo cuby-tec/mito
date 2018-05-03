@@ -33,10 +33,11 @@
 #include "exchange/status.h"
 
 #include "memf/tSectorHandler.h"
+#include "drivers/usbmodule.h"
 
 //------------- DEFS
 
-#define ORDERLYTASKSTACKSIZE  128//640//576 //128 //192 640 //
+#define ORDERLYTASKSTACKSIZE  160//128//640//576 //128 //192 640 //
 
 //---------  vars
 
@@ -95,21 +96,7 @@ void orderly_routine(void* pvParameters ){
             switch(msegment->command.order)
             {
             case eoSegment: // new Command&data received.
-                //                sema = xSemaphoreTake(rcvd_semaphore_handler,5);
-                //                if(sema == pdPASS){
-                //                    if(MEMF_GetNumFreeBlocks() != 0)
-                //                        if(msegment->instrument1_parameter.head.linenumber >
-                //                                getHeadLineNumber())
-                //                        {
-                //                            if(rcvd_SegmentFlag == 0){
-                //                                memcpy(segmentBuffer,&msegment->instrument1_parameter,sizeof(struct sSegment));
-                //                                rcvd_SegmentFlag = 1;
-                //                            }
-                //                        }
-                //                    xSemaphoreGive(rcvd_semaphore_handler);
-                //                    xTaskNotify(sectorHandling,sg_segmentRecieved,eSetBits);
-                //                    xStatus = xQueueSend(segmentQueueHandler,&msegment->instrument1_parameter,0);
-                ss = (uint8_t*)MEMF_Alloc();
+                 ss = (uint8_t*)MEMF_Alloc();
                 memcpy(ss, &msegment->payload.instrument1_parameter, sizeof(struct sSegment));
                 if(pMs_State->instrumrnt1 == eIns1_stoped){
                     pblockSegment(plan_get_current_block());
@@ -119,28 +106,28 @@ void orderly_routine(void* pvParameters ){
                 else{
                     NoOperation;
                 }
-
+#ifdef sendStatus_p
                 sendStatus();
-
+#endif
                 break;
 
             case eoProfile:
                 NoOperation; // TODO hotend parameters
-
+#ifdef sendStatus_p
                 sendStatus();
-
+#endif
                 break;
             }
 
             NoOperation;
         }
-
+/*
         if(ulNotifiedValue & X_axis_int){
 //            axisX_rateHandler();
             taskcounter++;
 //            ms_nextSector();
         }
-
+*/
         if(ulNotifiedValue & X_axis_int_fin)
         {
 //            ms_finBlock = continueBlock;
@@ -169,15 +156,15 @@ void orderly_routine(void* pvParameters ){
 //            rgb_disable();
 //            NoOperation;
 //        }
-        if(ret == pdFALSE){
+//        if(ret == pdFALSE){
             // Отправка статуса устройства.
-            if(pMs_State->instrumrnt1 == eIns1_stoped){
+//            if(pMs_State->instrumrnt1 == eIns1_stoped){
                 ms_nextSector();    // Индикация
-            }else{
-                HWREGBITB(&be_portf3,3) = ~HWREGBITB(&be_portf3,3);
-                GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, be_portf3);
-            }
-        }
+//            }else{
+//                HWREGBITB(&be_portf3,3) = ~HWREGBITB(&be_portf3,3);
+//                GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, be_portf3);
+//            }
+//        }
 
     } // end for(;;);
 
