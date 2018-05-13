@@ -55,6 +55,16 @@ uint32_t taskcounter;
 
 static struct ComDataReq_t* msegment;
 
+//*****************************************************************************
+// The item size and queue size for the LED message queue.
+//*****************************************************************************
+#define orderly_ITEM_SIZE           sizeof(uint8_t)
+#define orderly_QUEUE_SIZE          5
+//*****************************************************************************
+// The queue that holds messages sent to the LED task.
+//*****************************************************************************
+xQueueHandle orderlyQueue;
+
 //--------- function
 
 
@@ -62,10 +72,12 @@ static struct ComDataReq_t* msegment;
 //static uint32_t cnt_delay;
 //static uint32_t delay_max;
 void orderly_routine(void* pvParameters ){
-    uint32_t ulNotifiedValue;
+//    uint32_t ulNotifiedValue;
+    uint8_t ulNotifiedValue;
 //    volatile eTaskState state;
     BaseType_t sema, xStatus;
     BaseType_t ret;
+
     static uint32_t be_portf3;
     uint8_t* ss;
 //    testPrepare();
@@ -77,13 +89,13 @@ void orderly_routine(void* pvParameters ){
     taskcounter = 0;
     for( ;; ){
 //portMAX_DELAY
-        ret = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotifiedValue,ORDERLY_DELAY );//portMAX_DELAY
-//        state = eTaskGetState(orderlyHandling);
-        //X_axis_int
-        //X_axis_int_fin
-        //SignalUSBbufferReady (1<<2) // Получена команда по каналу USB.
-        //ot_sgQueueEmpty     (1<<3) //выполнена ОБработка всех сегментов и новых сегментов нет.
-        //ot_sgTest
+//        ret = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotifiedValue,portMAX_DELAY );//portMAX_DELAY ORDERLY_DELAY
+xw:
+        if(xQueueReceive(orderlyQueue,&ulNotifiedValue,portMAX_DELAY)!= pdPASS)
+        {
+            NoOperation;
+            goto xw;
+        }
 
         if(ulNotifiedValue & SignalUSBbufferReady){
             msegment = (struct ComDataReq_t *)cmdBuffer_usb;
@@ -116,6 +128,10 @@ void orderly_routine(void* pvParameters ){
 #ifdef sendStatus_p
                 sendStatus();
 #endif
+                break;
+            case eoState:
+                NoOperation;
+                ms_nextSector();    // Индикация
                 break;
             }
 
@@ -156,7 +172,8 @@ void orderly_routine(void* pvParameters ){
 //            rgb_disable();
 //            NoOperation;
 //        }
-//        if(ret == pdFALSE){
+#ifdef INDICATE_NOTHING
+        if(ret == pdFALSE){
             // Отправка статуса устройства.
 //            if(pMs_State->instrumrnt1 == eIns1_stoped){
                 ms_nextSector();    // Индикация
@@ -164,7 +181,8 @@ void orderly_routine(void* pvParameters ){
 //                HWREGBITB(&be_portf3,3) = ~HWREGBITB(&be_portf3,3);
 //                GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_3, be_portf3);
 //            }
-//        }
+        }
+#endif
 
     } // end for(;;);
 
@@ -186,6 +204,13 @@ uint32_t createtask_orderly(void)
 
 //        tskTaskControlBlock* tt = prvGetTCBFromHandle(orderlyHandling);
         init_Status();
+        /* Create the queue, storing the returned handle in the xQueue variable. */
+        orderlyQueue = xQueueCreate( orderly_QUEUE_SIZE, orderly_ITEM_SIZE );
+        if( orderlyQueue == NULL )
+        {
+        /* The queue could not be created – do something. */
+            return (1);
+        }
         return (0);
     }
 

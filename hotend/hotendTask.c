@@ -56,6 +56,8 @@ TaskHandle_t hotendHadling;
 
 static float_t temperature;
 static float_t current_temperature;
+static float_t current_resistance;
+static uint32_t adc;
 
 
 // Structure to strore PID data and pointer to PID structure
@@ -86,6 +88,7 @@ void setCurrentHotendTemperature(float_t temp)
 float_t getCurrentHotendTemperature(void)
 {
     return current_temperature;
+//    return current_resistance;
 }
 
 
@@ -151,7 +154,6 @@ process_output(float out){
 
 //static float temperature;
 
-static uint32_t adc;
 
 
 static uint32_t ticks = 100;
@@ -175,9 +177,9 @@ static void hotend_routine(void* pvParameters)
         ret = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotifiedValue, HOTEND_DELAY);
 
         adc = get_hotend_adc();
-        current_temperature = ((float)4.7)/(((float)4096.0/((float)adc+0.5) - 1));
+        current_resistance = ((float)4.7)/(((float)4096.0/((float)adc+0.5) - 1));
 
-            current_temperature = get_temperature(current_temperature);
+            current_temperature = get_temperature(current_resistance);
 
         if(!isnan(current_temperature )){
             counter ++;

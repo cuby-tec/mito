@@ -14,6 +14,7 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "queue.h"
 
 #define X_axis_int      (1) // from axisX_intrrupt_handler to orderlyTask
 #define X_axis_int_fin  (1<<1) // from axisX_intrrupt_handler to orderlyTask
@@ -23,7 +24,9 @@
 #define ender_xmin_test (1<<5)
 
 //---------- vars
+
 extern TaskHandle_t orderlyHandling;
+extern xQueueHandle orderlyQueue;
 
 //--------- Function
 extern uint32_t createtask_orderly(void);

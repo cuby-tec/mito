@@ -45,6 +45,7 @@ volatile uint32_t size_list[3];
 
 static uint8_t *pvMsgData_tmp;
 
+static uint8_t message;
 //*****************************************************************************
 //
 // Global flag indicating that a USB configuration has been set.
@@ -176,8 +177,10 @@ EchoNewDataToHost(tUSBDBulkDevice *psDevice, uint8_t *pui8Data,
     if(g_ui32RxCount < sizeof(struct ComDataReq_t)){
         return g_ui32RxCount;
     }
-#ifdef sendStatus_p
-    xTaskNotifyFromISR(orderlyHandling,SignalUSBbufferReady,eSetBits,NULL);
+#ifndef sendStatus_p
+//    xTaskNotifyFromISR(orderlyHandling,SignalUSBbufferReady,eSetBits,NULL);
+    message = SignalUSBbufferReady;
+    xQueueSendFromISR(orderlyQueue,&message,NULL);
 #endif
     pvMsgData_tmp = pui8Data;
 #ifndef sendStatus_p

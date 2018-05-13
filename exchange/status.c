@@ -37,13 +37,13 @@ const struct Status_t default_status = {default_frameNumber, default_freeSegment
 };
 
 struct Status_t bu_status;
-uint32_t frame_number = 0;
 
 //-------------- function
 
 struct Status_t* getStatus(void)
 {
     struct Status_t* result = &bu_status;
+    static uint32_t frame_number = 0;
 
 //    memcpy(result, &default_status, sizeof(struct Status_t));
 
