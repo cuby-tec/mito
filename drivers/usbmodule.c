@@ -43,9 +43,13 @@ volatile uint32_t packet_counter = 0;
 
 volatile uint32_t size_list[3];
 
-static uint8_t *pvMsgData_tmp;
+static uint32_t *pvMsgData_tmp;
 
-static uint8_t message;
+static uint32_t message;
+static int32_t tmpcounter = 0;
+
+/* No tasks have yet been unblocked. */
+BaseType_t xHigherPriorityTaskWoken;
 //*****************************************************************************
 //
 // Global flag indicating that a USB configuration has been set.
@@ -179,8 +183,15 @@ EchoNewDataToHost(tUSBDBulkDevice *psDevice, uint8_t *pui8Data,
     }
 #ifndef sendStatus_p
 //    xTaskNotifyFromISR(orderlyHandling,SignalUSBbufferReady,eSetBits,NULL);
-    message = SignalUSBbufferReady;
-    xQueueSendFromISR(orderlyQueue,&message,NULL);
+
+    xHigherPriorityTaskWoken = pdFALSE;
+
+    if(xQueueSendFromISR(orderlyQueue,&cmdBuffer_usb, &xHigherPriorityTaskWoken)) //;//&xHigherPriorityTaskWoken
+    {
+        tmpcounter++;
+    }else{
+        tmpcounter--;
+    }
 #endif
     pvMsgData_tmp = pui8Data;
 #ifndef sendStatus_p

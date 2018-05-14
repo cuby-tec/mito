@@ -36,8 +36,8 @@
 #include "drivers/usbmodule.h"
 
 //------------- DEFS
-
-#define ORDERLYTASKSTACKSIZE  160//128//640//576 //128 //192 640 //
+//#define configMINIMAL_STACK_SIZE            ( ( unsigned short ) 200 )
+#define ORDERLYTASKSTACKSIZE  640//320//256//192//160//128//640//576 //128 //192 640 //
 
 //---------  vars
 
@@ -58,10 +58,11 @@ static struct ComDataReq_t* msegment;
 //*****************************************************************************
 // The item size and queue size for the LED message queue.
 //*****************************************************************************
-#define orderly_ITEM_SIZE           sizeof(uint8_t)
-#define orderly_QUEUE_SIZE          5
+//#define orderly_ITEM_SIZE           sizeof(uint32_t)
+#define orderly_ITEM_SIZE           sizeof(struct ComDataReq_t)
+#define orderly_QUEUE_SIZE          12
 //*****************************************************************************
-// The queue that holds messages sent to the LED task.
+// The queue that holds messages sent to the task.
 //*****************************************************************************
 xQueueHandle orderlyQueue;
 
@@ -73,7 +74,7 @@ xQueueHandle orderlyQueue;
 //static uint32_t delay_max;
 void orderly_routine(void* pvParameters ){
 //    uint32_t ulNotifiedValue;
-    uint8_t ulNotifiedValue;
+    struct ComDataReq_t ulNotifiedValue;
 //    volatile eTaskState state;
     BaseType_t sema, xStatus;
     BaseType_t ret;
@@ -90,15 +91,17 @@ void orderly_routine(void* pvParameters ){
     for( ;; ){
 //portMAX_DELAY
 //        ret = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotifiedValue,portMAX_DELAY );//portMAX_DELAY ORDERLY_DELAY
+
 xw:
-        if(xQueueReceive(orderlyQueue,&ulNotifiedValue,portMAX_DELAY)!= pdPASS)
+        if(xQueueReceive(orderlyQueue,&ulNotifiedValue,ORDERLY_DELAY)!= pdPASS)
         {
             NoOperation;
+            ms_nextSector();    // Индикация
             goto xw;
         }
-
-        if(ulNotifiedValue & SignalUSBbufferReady){
-            msegment = (struct ComDataReq_t *)cmdBuffer_usb;
+//        if(ulNotifiedValue & SignalUSBbufferReady){
+//            msegment = (struct ComDataReq_t *)cmdBuffer_usb;
+        msegment = &ulNotifiedValue;
             /* Потсупила новая команда.
              * Parse command;
              * TakeSemaphore_rcvd
@@ -108,7 +111,7 @@ xw:
             switch(msegment->command.order)
             {
             case eoSegment: // new Command&data received.
-                 ss = (uint8_t*)MEMF_Alloc();
+      /*           ss = (uint8_t*)MEMF_Alloc();
                 memcpy(ss, &msegment->payload.instrument1_parameter, sizeof(struct sSegment));
                 if(pMs_State->instrumrnt1 == eIns1_stoped){
                     pblockSegment(plan_get_current_block());
@@ -117,7 +120,8 @@ xw:
                 }
                 else{
                     NoOperation;
-                }
+                }*/
+                NoOperation;
 #ifdef sendStatus_p
                 sendStatus();
 #endif
@@ -136,7 +140,8 @@ xw:
             }
 
             NoOperation;
-        }
+//        }
+        continue;
 /*
         if(ulNotifiedValue & X_axis_int){
 //            axisX_rateHandler();
@@ -144,6 +149,7 @@ xw:
 //            ms_nextSector();
         }
 */
+/*
         if(ulNotifiedValue & X_axis_int_fin)
         {
 //            ms_finBlock = continueBlock;
@@ -168,6 +174,7 @@ xw:
         if(ender_xmin_test & ulNotifiedValue){
             NoOperation;
         }
+*/
 //        if(ulNotifiedValue & 0x02){
 //            rgb_disable();
 //            NoOperation;

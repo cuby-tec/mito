@@ -24,7 +24,7 @@
 
 //------------- defs
 
-#define HOTENDTASKSTACKSIZE 80//64
+#define HOTENDTASKSTACKSIZE 180//80//64
 
 #define HOTEND_DELAY        500
 

@@ -291,10 +291,11 @@ NmiSR(void)
 static void
 FaultISR(void)
 {
+    int a = 1;
     //
     // Enter an infinite loop.
     //
-    while(1)
+    while(a)
     {
     }
 }

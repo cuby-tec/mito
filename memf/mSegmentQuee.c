@@ -59,7 +59,7 @@ MEMF_GetNumFreeBlocks(void)
 uint32_t
 getHeadLineNumber(void)
 {
-    uint32_t result = NULL;
+    uint32_t result = 3333;
 /*
     struct sSegment* segment = cmdQuee[block_buffer_head];
 
@@ -68,9 +68,9 @@ getHeadLineNumber(void)
         result = segment->head.linenumber;
 */
     // If queue dosn't empty.
-    if(semaphore_counter!=SEGMENT_QUEE_SIZE-1){
+/*    if(semaphore_counter!=SEGMENT_QUEE_SIZE-1){
         result = (cmdQuee[block_buffer_tail]->head.linenumber);
-    }
+    }*/
     return (result);
 }
 
