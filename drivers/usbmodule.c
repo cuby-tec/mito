@@ -58,10 +58,10 @@ BaseType_t xHigherPriorityTaskWoken;
 static volatile bool g_bUSBConfigured = false;
 
 //-------------- function
-//#define  sendStatus_p_NO
 
+// #define  sendStatus_p in orderlyTask.h
 
-#ifdef sendStatus_p
+#if (sendStatus_p == 1)
 
 uint32_t
 sendStatus()
@@ -181,7 +181,7 @@ EchoNewDataToHost(tUSBDBulkDevice *psDevice, uint8_t *pui8Data,
     if(g_ui32RxCount < sizeof(struct ComDataReq_t)){
         return g_ui32RxCount;
     }
-#ifndef sendStatus_p
+#if (sendStatus_p ==  1)
 //    xTaskNotifyFromISR(orderlyHandling,SignalUSBbufferReady,eSetBits,NULL);
 
     xHigherPriorityTaskWoken = pdFALSE;
@@ -192,9 +192,10 @@ EchoNewDataToHost(tUSBDBulkDevice *psDevice, uint8_t *pui8Data,
     }else{
         tmpcounter--;
     }
+
 #endif
     pvMsgData_tmp = pui8Data;
-#ifndef sendStatus_p
+#if ( sendStatus_p == 0)
     packet_counter = 0;
     g_ui32RxCount = 0;
     //

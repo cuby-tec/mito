@@ -52,8 +52,11 @@
 #endif
 //-------------- vars
 TaskHandle_t hotendHadling;
+#ifdef StackType_t
+StackType_t hotStack[HOTENDTASKSTACKSIZE];
 
-
+StaticTask_t hotTaskBuffer;
+#endif
 static float_t temperature;
 static float_t current_temperature;
 static float_t current_resistance;
@@ -180,7 +183,7 @@ static void hotend_routine(void* pvParameters)
         current_resistance = ((float)4.7)/(((float)4096.0/((float)adc+0.5) - 1));
 
             current_temperature = get_temperature(current_resistance);
-
+/*
         if(!isnan(current_temperature )){
             counter ++;
             // Check if need to compute PID
@@ -198,27 +201,60 @@ static void hotend_routine(void* pvParameters)
                 ticks += SAMPLETIME;
             } // end of if
         }
-
+*/
     } // end of for(;;)
 }
+#ifdef StackType_t
+#define IDLE_TASK_SIZE 200
 
+#if configSUPPORT_STATIC_ALLOCATION
+    /* static memory allocation for the IDLE task */
+    static StaticTask_t xIdleTaskTCBBuffer;
+    static StackType_t xIdleStack[configMINIMAL_STACK_SIZE];//IDLE_TASK_SIZE configMINIMAL_STACK_SIZE
 
-
+    void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize) {
+        *ppxIdleTaskTCBBuffer = &xIdleTaskTCBBuffer;
+        *ppxIdleTaskStackBuffer = &xIdleStack[0];
+        *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;//IDLE_TASK_SIZE
+    }
+#endif
+#endif
 
 
 uint32_t createtask_hotend(void)
 {
+
     //
     // Create the Orderly task.
     //
-    if(xTaskCreate(hotend_routine, (const portCHAR *)"Hotend", HOTENDTASKSTACKSIZE, NULL,
-                   tskIDLE_PRIORITY + PRIORITY_HOTEND_TASK, &hotendHadling) != pdTRUE)
+    TaskHandle_t t;
+    void* pvParameters = NULL;
+
+#ifdef StackType_t
+    const portCHAR* pcName = (const portCHAR *)"Hotend";
+    hotendHadling = xTaskCreateStatic(hotend_routine, pcName, HOTENDTASKSTACKSIZE, pvParameters, tskIDLE_PRIORITY + PRIORITY_HOTEND_TASK, hotStack, &hotTaskBuffer);
+
+    //    if(xTaskCreate(hotend_routine, (const portCHAR *)"Hotend", HOTENDTASKSTACKSIZE, NULL,
+    //                   tskIDLE_PRIORITY + PRIORITY_HOTEND_TASK, &hotendHadling) != pdTRUE)
+    if(hotendHadling == pdFALSE)
     {
         return(1);// failure
     }else{
         init_hotend();
         return (0);
     }
+
+#else
+    if(xTaskCreate(hotend_routine, (const portCHAR *)"Hotend", HOTENDTASKSTACKSIZE, NULL,
+                       tskIDLE_PRIORITY + PRIORITY_HOTEND_TASK, &hotendHadling) != pdTRUE)
+    {
+        return(1);// failure
+    }else{
+        init_hotend();
+        return (0);
+    }
+
+#endif
 
 
 }

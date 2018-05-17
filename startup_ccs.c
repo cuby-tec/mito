@@ -30,6 +30,8 @@
 #include <msmotor/isrTimer.h>
 #include "drivers/HALmodele.h"
 #include "hotend/hotendHW.h"
+#include "driverlib/sysexc.h"
+
 
 //*****************************************************************************
 //
@@ -278,6 +280,7 @@ NmiSR(void)
     //
     while(1)
     {
+
     }
 }
 
@@ -291,12 +294,15 @@ NmiSR(void)
 static void
 FaultISR(void)
 {
+    uint32_t sys = SysExcIntStatus(true);
+
     int a = 1;
     //
     // Enter an infinite loop.
     //
     while(a)
     {
+//        __asm("LDR R0,=MPUNUMBER");
     }
 }
 

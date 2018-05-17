@@ -37,7 +37,7 @@
 
 //------------- DEFS
 //#define configMINIMAL_STACK_SIZE            ( ( unsigned short ) 200 )
-#define ORDERLYTASKSTACKSIZE  640//320//256//192//160//128//640//576 //128 //192 640 //
+#define ORDERLYTASKSTACKSIZE  128//640//320//256//192//160//128//640//576 //128 //192 640 //
 
 //---------  vars
 
@@ -54,6 +54,12 @@ uint32_t taskcounter;
 
 
 static struct ComDataReq_t* msegment;
+
+#ifdef StackType_t
+StackType_t orderlyStack[ORDERLYTASKSTACKSIZE];
+
+StaticTask_t orderlyBuffer;
+#endif
 
 //*****************************************************************************
 // The item size and queue size for the LED message queue.
@@ -97,6 +103,9 @@ xw:
         {
             NoOperation;
             ms_nextSector();    // Индикация
+//            BaseType_t t = pdMS_TO_TICKS(500);//500msec
+//            UBaseType_t t = uxQueueMessagesWaiting( orderlyQueue );
+
             goto xw;
         }
 //        if(ulNotifiedValue & SignalUSBbufferReady){
@@ -107,6 +116,8 @@ xw:
              * TakeSemaphore_rcvd
              * send status
              */
+
+
 
             switch(msegment->command.order)
             {
@@ -122,22 +133,22 @@ xw:
                     NoOperation;
                 }*/
                 NoOperation;
-#ifdef sendStatus_p
-                sendStatus();
-#endif
+                ms_nextSector();    // Индикация
                 break;
 
             case eoProfile:
                 NoOperation; // TODO hotend parameters
-#ifdef sendStatus_p
-                sendStatus();
-#endif
                 break;
+
             case eoState:
                 NoOperation;
                 ms_nextSector();    // Индикация
                 break;
             }
+
+#if (sendStatus_p == 1)
+                sendStatus();
+#endif
 
             NoOperation;
 //        }
@@ -195,16 +206,22 @@ xw:
 
 }
 
-
 uint32_t createtask_orderly(void)
 {
     //orderlyTask()
-
+    void* pvParameters = NULL;
     //
     // Create the Orderly task.
     //
-    if(xTaskCreate(orderly_routine, (const portCHAR *)"Orderly", ORDERLYTASKSTACKSIZE, NULL,
-                   tskIDLE_PRIORITY + PRIORITY_ORDERLY_TASK, &orderlyHandling) != pdTRUE)
+#ifdef StackType_t
+    orderlyHandling = xTaskCreateStatic(orderly_routine, (const portCHAR *)"Orderly",ORDERLYTASKSTACKSIZE,pvParameters
+                                        ,tskIDLE_PRIORITY + PRIORITY_ORDERLY_TASK,orderlyStack, &orderlyBuffer);
+
+//    if(xTaskCreate(orderly_routine, (const portCHAR *)"Orderly", ORDERLYTASKSTACKSIZE, NULL,
+//                   tskIDLE_PRIORITY + PRIORITY_ORDERLY_TASK, &orderlyHandling) != pdTRUE)
+//    {
+
+    if(orderlyHandling == pdFALSE)
     {
         return(1);
     }else{
@@ -220,7 +237,25 @@ uint32_t createtask_orderly(void)
         }
         return (0);
     }
+#else
+        if(xTaskCreate(orderly_routine, (const portCHAR *)"Orderly", ORDERLYTASKSTACKSIZE, NULL,
+                       tskIDLE_PRIORITY + PRIORITY_ORDERLY_TASK, &orderlyHandling) != pdTRUE)
+        {
 
+            return(1);
+        }else{
 
+    //        tskTaskControlBlock* tt = prvGetTCBFromHandle(orderlyHandling);
+            init_Status();
+            /* Create the queue, storing the returned handle in the xQueue variable. */
+            orderlyQueue = xQueueCreate( orderly_QUEUE_SIZE, orderly_ITEM_SIZE );
+            if( orderlyQueue == NULL )
+            {
+            /* The queue could not be created – do something. */
+                return (1);
+            }
+            return (0);
+        }
 
+#endif
 }

@@ -23,6 +23,9 @@
 #define ot_sgTest       (1<<4)
 #define ender_xmin_test (1<<5)
 
+#define  sendStatus_p   0
+
+
 //---------- vars
 
 extern TaskHandle_t orderlyHandling;
