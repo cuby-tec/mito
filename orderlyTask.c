@@ -17,6 +17,7 @@
 //#include "driverlib/gpio.h"
 #include "inc/hw_memmap.h"
 #include "driverlib/gpio.h"
+#include "inc/hw_nvic.h"
 //#include "inc/sysDrivers.h"
 
 #include "orderlyTask.h"
@@ -37,7 +38,7 @@
 
 //------------- DEFS
 //#define configMINIMAL_STACK_SIZE            ( ( unsigned short ) 200 )
-#define ORDERLYTASKSTACKSIZE  128//640//320//256//192//160//128//640//576 //128 //192 640 //
+#define ORDERLYTASKSTACKSIZE  160//128//640//320//256//192//160//128//640//576 //128 //192 640 //
 
 //---------  vars
 
@@ -76,8 +77,13 @@ xQueueHandle orderlyQueue;
 
 
 #define ORDERLY_DELAY   500
+
 //static uint32_t cnt_delay;
 //static uint32_t delay_max;
+
+/**
+ *
+ */
 void orderly_routine(void* pvParameters ){
 //    uint32_t ulNotifiedValue;
     struct ComDataReq_t ulNotifiedValue;
@@ -90,6 +96,10 @@ void orderly_routine(void* pvParameters ){
 //    testPrepare();
 //    initBlock();
 
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+#if (sendStatus_p == 3)
+static int tmpcounter = 0;
+#endif
     initStepper(N_AXIS);
     ms_finBlock = exitBlock;
 //    start_t1(0);
@@ -98,15 +108,26 @@ void orderly_routine(void* pvParameters ){
 //portMAX_DELAY
 //        ret = xTaskNotifyWait(0x00, ULONG_MAX, &ulNotifiedValue,portMAX_DELAY );//portMAX_DELAY ORDERLY_DELAY
 
-xw:
+
         if(xQueueReceive(orderlyQueue,&ulNotifiedValue,ORDERLY_DELAY)!= pdPASS)
         {
             NoOperation;
             ms_nextSector();    // Индикация
 //            BaseType_t t = pdMS_TO_TICKS(500);//500msec
 //            UBaseType_t t = uxQueueMessagesWaiting( orderlyQueue );
-
-            goto xw;
+#if (sendStatus_p == 3)
+            if(commandFlag)
+            {
+                commandFlag = false;
+                if(xQueueSendFromISR(orderlyQueue,&cmdBuffer_usb, &xHigherPriorityTaskWoken)) //;//&xHigherPriorityTaskWoken
+                {
+                    tmpcounter++;
+                }else{
+                    tmpcounter--;
+                }
+            }
+#endif
+            continue;
         }
 //        if(ulNotifiedValue & SignalUSBbufferReady){
 //            msegment = (struct ComDataReq_t *)cmdBuffer_usb;
@@ -146,7 +167,7 @@ xw:
                 break;
             }
 
-#if (sendStatus_p == 1)
+#if (sendStatus_p == 1 || sendStatus_p == 2 || sendStatus_p == 3 || sendStatus_p == 4)
                 sendStatus();
 #endif
 
@@ -206,10 +227,29 @@ xw:
 
 }
 
+static void initIRQ()
+{
+
+    uint32_t priority;
+    //
+    // Enable the interrupts.
+    //
+    ROM_IntEnable(IRQ59);
+    ROM_IntPrioritySet(IRQ59, 0x07);
+
+    priority = ROM_IntPriorityGet(60);
+//    HWREG(NVIC_SW_TRIG) = IRQ59 - 16;
+    priority = HWREG(NVIC_PRI15);// = IRQ59 - 16;
+
+}
+
 uint32_t createtask_orderly(void)
 {
     //orderlyTask()
     void* pvParameters = NULL;
+
+    initIRQ();
+
     //
     // Create the Orderly task.
     //
@@ -258,4 +298,32 @@ uint32_t createtask_orderly(void)
         }
 
 #endif
+
 }
+
+
+/**
+ * Interrupt handler for IRQ59.
+ * Код обработки прерывания для отправки сообщения в OrderlyTask
+ * после приёма команды по USB каналу.
+ */
+void
+IntIRQ59(void)
+{
+    static int32_t tmpcounter = 0;
+
+    static BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+    NoOperation;
+
+    if(xQueueSendFromISR(orderlyQueue,&cmdBuffer_usb, &xHigherPriorityTaskWoken)) //;//&xHigherPriorityTaskWoken
+    {
+        tmpcounter++;
+    }else{
+        tmpcounter--;
+    }
+
+
+}
+
+

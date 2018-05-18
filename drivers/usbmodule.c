@@ -12,6 +12,10 @@
 #include <FreeRTOS.h>
 #include <task.h>
 
+#include "inc/hw_ints.h"
+#include "inc/hw_memmap.h"
+#include "inc/hw_nvic.h"
+#include "inc/hw_types.h"
 #include "driverlib/sysctl.h"
 
 #include "usblib/usblib.h"
@@ -28,7 +32,7 @@
 #include "msmotor/sSegment.h"
 #include "msmotor/msport.h"
 #include "msmotor/mempool.h"
-#include "orderlyTask.h"
+
 //------------- defs
 
 //-------------- vars
@@ -46,10 +50,20 @@ volatile uint32_t size_list[3];
 static uint32_t *pvMsgData_tmp;
 
 static uint32_t message;
+#if (sendStatus_p == 1)
 static int32_t tmpcounter = 0;
-
 /* No tasks have yet been unblocked. */
 BaseType_t xHigherPriorityTaskWoken;
+#endif
+
+#if (sendStatus_p == 3 || sendStatus_p == 4)
+bool commandFlag = false;
+#endif
+
+
+//#pragma LOCATION(zzStack,0x20006068)
+//#pragma LOCATION(zzStack,0x20006070)
+//volatile uint32_t zzStack[50] ; // It's used by USB af f stck.
 //*****************************************************************************
 //
 // Global flag indicating that a USB configuration has been set.
@@ -61,7 +75,7 @@ static volatile bool g_bUSBConfigured = false;
 
 // #define  sendStatus_p in orderlyTask.h
 
-#if (sendStatus_p == 1)
+#if (sendStatus_p == 1 || sendStatus_p == 2 || sendStatus_p == 3 || sendStatus_p == 4)
 
 uint32_t
 sendStatus()
@@ -166,7 +180,6 @@ EchoNewDataToHost(tUSBDBulkDevice *psDevice, uint8_t *pui8Data,
 
 //    struct Status_t* tx_status;
     uint8_t* tx_status;
-
 //    size_list[packet_counter] = ui32NumBytes;
 
     // Копирование полученных данных в накопительный буфер.uint8_t cmdBuffer_usb
@@ -192,8 +205,16 @@ EchoNewDataToHost(tUSBDBulkDevice *psDevice, uint8_t *pui8Data,
     }else{
         tmpcounter--;
     }
-
 #endif
+
+#if (sendStatus_p == 2)
+    HWREG(NVIC_SW_TRIG) = IRQ59 - 16;
+#endif
+
+#if (sendStatus_p == 3 || sendStatus_p == 4)
+    commandFlag = true;
+#endif
+
     pvMsgData_tmp = pui8Data;
 #if ( sendStatus_p == 0)
     packet_counter = 0;

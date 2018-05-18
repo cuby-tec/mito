@@ -23,7 +23,13 @@
 #define ot_sgTest       (1<<4)
 #define ender_xmin_test (1<<5)
 
-#define  sendStatus_p   0
+/**
+ * 3 - check flag
+ * 2 - send by IRQ59
+ * 1 - send response from orderlyTask
+ * 0 - send it from usbmodule.
+ */
+#define  sendStatus_p   4
 
 
 //---------- vars
@@ -33,6 +39,8 @@ extern xQueueHandle orderlyQueue;
 
 //--------- Function
 extern uint32_t createtask_orderly(void);
+
+extern void IntIRQ59(void);
 
 
 #endif /* ORDERLYTASK_H_ */

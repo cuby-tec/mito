@@ -31,7 +31,7 @@
 #include "drivers/HALmodele.h"
 #include "hotend/hotendHW.h"
 #include "driverlib/sysexc.h"
-
+#include "orderlyTask.h"
 
 //*****************************************************************************
 //
@@ -76,6 +76,8 @@ extern void TimerEIntHandler(void);
 extern void Timer_callback(void);
 extern void PortEnderIntHandler(void);
 extern void intHotendHandler(void);
+extern void IntIRQ59(void);// from USB module.
+
 //*****************************************************************************
 //
 // The vector table.  Note that the proper constructs must be placed on this to
@@ -162,7 +164,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // GPIO Port L
     IntDefaultHandler,                      // SSI2 Rx and Tx
     IntDefaultHandler,                      // SSI3 Rx and Tx
-    IntDefaultHandler,                      // UART3 Rx and Tx
+    IntIRQ59,                      // UART3 Rx and Tx
     IntDefaultHandler,                      // UART4 Rx and Tx
     IntDefaultHandler,                      // UART5 Rx and Tx
     IntDefaultHandler,                      // UART6 Rx and Tx
@@ -323,3 +325,4 @@ IntDefaultHandler(void)
     {
     }
 }
+

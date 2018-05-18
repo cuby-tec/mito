@@ -277,13 +277,21 @@ main(void)
         while(1){
         }
     }
-
     // Create hotendTask
     if(createtask_hotend() != 0){
         while(1){
             NoOperation;
         }
     }
+
+#if (sendStatus_p == 4)
+    if(createCommandWatch() != 0){
+        while(1){
+            NoOperation;
+        }
+    }
+
+#endif
 
     //
     // Start the scheduler.  This should not return.

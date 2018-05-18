@@ -2,12 +2,17 @@
 #define TYPEDEFS_H_
 
 /**
- * Project: 052KTF
+ * Project: 175 3d-printer
  */
 
 //#include "rtos.h"
 #include <stdint.h>
 #include <stdbool.h>
+
+
+// Vector number TM4
+#define IRQ59   75
+#define IRQ60   76
 
 #define FALSE	0
 #define TRUE	1
