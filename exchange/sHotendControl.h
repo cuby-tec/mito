@@ -23,6 +23,7 @@ struct sHotendSwitch {
 /**
  * Передача параметров управления инструментом Hotend.
  */
+#ifdef float32
 struct sHotendControl_t {
     float temperature;
     float kp;     // Коэффициент пропорциональной составляющей.
@@ -30,7 +31,16 @@ struct sHotendControl_t {
     float kd;     // Коэффициент дифференциальной составляющей.
     struct sHotendSwitch _switch;    // Включение/выключение нагревателя/вентилятора. false/true.
 };
+#else
+struct sHotendControl_t {
+    int32_t temperature;
+    int32_t kp;     // Коэффициент пропорциональной составляющей.
+    int32_t ki;     // Коэффициент интегральной составляющей.
+    int32_t kd;     // Коэффициент дифференциальной составляющей.
+    struct sHotendSwitch _switch;    // Включение/выключение нагревателя/вентилятора. false/true.
+};
 
+#endif
 //-------------- vars
 
 

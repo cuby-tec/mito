@@ -7,7 +7,13 @@
 
 #include "mempool.h"
 #include "msmotor/block_state.h"
+#include "exchange/ComDataReq_t.h"
 
+///---------- derfs
+
+//segment_QUEUE_SIZE, segment_ITEM_SIZE
+#define segment_QUEUE_SIZE  10
+#define segment_ITEM_SIZE   sizeof(struct sSegment)
 
 //-------- Vars
 #ifdef KTF7
@@ -15,6 +21,8 @@ OS_MEMF cmdPool;
 #else
 // stub
 uint16_t cmdPool[10];
+
+
 #endif
 /*
 union{
@@ -90,13 +98,27 @@ struct sMs_State* pMs_State = &ms_state;
 uint8_t rcvd_SegmentFlag = 0;
 
 
+QueueHandle_t segmentQueue;
+
 //-------------- Function
 
 
-void createCommandPool(){
+bool
+createCommandPool(){
 #ifdef KTF7
 	OS_MEMF_Create(&cmdPool,block_buffer,BLOCK_BUFFER_SIZE,sizeof(block_state));
 #else
+
+	segmentQueue = xQueueCreate( segment_QUEUE_SIZE, segment_ITEM_SIZE );
+
+	if(segmentQueue == NULL)
+	{
+	    return (false);
+	}else
+	{
+	    return (true);
+	}
+
 	NoOperation;
 #endif
 

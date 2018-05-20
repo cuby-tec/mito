@@ -14,6 +14,7 @@
 #ifdef KTF7
 #include <rtos.h>
 #endif
+
 //#include <msmotor/block_state.h>
 //#include <exchange/ComData_t.h>/
 #include "exchange/ComDataReq_t.h"
@@ -21,6 +22,10 @@
 #include "stepper_state.h"
 #include "msport.h"
 #include "ms_state.h"
+#include <FreeRTOS.h>
+#include <task.h>
+#include "queue.h"
+
 ///------------- Defs
 
 
@@ -98,10 +103,12 @@ extern struct sMs_State* pMs_State;
 
 extern uint8_t rcvd_SegmentFlag;
 
+extern QueueHandle_t segmentQueue;
+
 //-------- Functions
 
 
-void createCommandPool();
+extern bool createCommandPool();
 
 
 

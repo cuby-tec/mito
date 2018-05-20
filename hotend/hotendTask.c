@@ -71,6 +71,16 @@ _pid_t pid;
 //-------------- function
 
 
+void parcerHotendParams(struct sHotendControl_t* thermo)
+{
+    // TODO
+//  thermo->_switch
+    pid_tune(pid, ((float)thermo->kp)/1000, ((float)thermo->ki)/1000, ((float)thermo->kd)/1000);
+    pid->setpoint = ((float)thermo->temperature)/1000;
+    NoOperation;
+}
+
+
 void setTargetHotendTemperature(float_t temp)
 {
     NoOperation;
@@ -183,7 +193,7 @@ static void hotend_routine(void* pvParameters)
         current_resistance = ((float)4.7)/(((float)4096.0/((float)adc+0.5) - 1));
 
             current_temperature = get_temperature(current_resistance);
-/*
+
         if(!isnan(current_temperature )){
             counter ++;
             // Check if need to compute PID
@@ -201,7 +211,7 @@ static void hotend_routine(void* pvParameters)
                 ticks += SAMPLETIME;
             } // end of if
         }
-*/
+
     } // end of for(;;)
 }
 #ifdef StackType_t

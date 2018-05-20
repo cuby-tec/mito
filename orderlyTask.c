@@ -27,6 +27,8 @@
 #include "memf/mSegmentQuee.h"
 #include "msmotor/ms_model.h"
 #include "exchange/ComDataReq_t.h"
+//#include "exchange/sHotendControl.h"
+#include "hotend/hotendTask.h"
 
 #include "priorities.h"
 #include <limits.h>
@@ -37,8 +39,11 @@
 #include "drivers/usbmodule.h"
 
 //------------- DEFS
+
 //#define configMINIMAL_STACK_SIZE            ( ( unsigned short ) 200 )
 #define ORDERLYTASKSTACKSIZE  160//128//640//320//256//192//160//128//640//576 //128 //192 640 //
+#define ORDERLY_DELAY   500
+
 
 //---------  vars
 
@@ -62,12 +67,16 @@ StackType_t orderlyStack[ORDERLYTASKSTACKSIZE];
 StaticTask_t orderlyBuffer;
 #endif
 
+//static uint32_t cnt_delay;
+//static uint32_t delay_max;
+
+
 //*****************************************************************************
 // The item size and queue size for the LED message queue.
 //*****************************************************************************
 //#define orderly_ITEM_SIZE           sizeof(uint32_t)
 #define orderly_ITEM_SIZE           sizeof(struct ComDataReq_t)
-#define orderly_QUEUE_SIZE          12
+#define orderly_QUEUE_SIZE          3
 //*****************************************************************************
 // The queue that holds messages sent to the task.
 //*****************************************************************************
@@ -75,11 +84,6 @@ xQueueHandle orderlyQueue;
 
 //--------- function
 
-
-#define ORDERLY_DELAY   500
-
-//static uint32_t cnt_delay;
-//static uint32_t delay_max;
 
 /**
  *
@@ -158,7 +162,8 @@ static int tmpcounter = 0;
                 break;
 
             case eoProfile:
-                NoOperation; // TODO hotend parameters
+                NoOperation; // hotend parameters
+                parcerHotendParams(&msegment->payload.instrument_hotend);
                 break;
 
             case eoState:

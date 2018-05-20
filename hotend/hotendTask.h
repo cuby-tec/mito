@@ -12,7 +12,7 @@
 #include <math.h>
 #include "FreeRTOS.h"
 #include "task.h"
-
+#include "exchange/sHotendControl.h"
 //------------- defs
 
 //-------------- vars
@@ -33,5 +33,7 @@ extern float_t getCurrentHotendTemperature(void);
 extern void start_hotende(void);
 
 extern void stop_hotend(void);
+
+extern void parcerHotendParams(struct sHotendControl_t* thermo);
 
 #endif /* HOTEND_HOTENDTASK_H_ */

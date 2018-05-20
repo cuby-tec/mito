@@ -11,6 +11,7 @@
 
 #include "Status_t.h"
 #include "hotend/hotendTask.h"
+#include "msmotor/mempool.h"
 
 //------------- defs
 
@@ -47,7 +48,8 @@ struct Status_t* getStatus(void)
 
 //    memcpy(result, &default_status, sizeof(struct Status_t));
 
-    result->freeSegments = MEMF_GetNumFreeBlocks();
+//    result->freeSegments = MEMF_GetNumFreeBlocks();
+    result->freeSegments = uxQueueSpacesAvailable( segmentQueue );
     result->currentSegmentNumber = getHeadLineNumber();
     result->frameNumber = ++frame_number;
     result->temperature = getCurrentHotendTemperature();

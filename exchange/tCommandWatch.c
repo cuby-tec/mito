@@ -14,11 +14,11 @@
 #include "drivers/usbmodule.h"
 #include "msmotor/mempool.h"
 #include "orderlyTask.h"
-
+#include "exchange/ComDataReq_t.h"
 
 //----------- defs
 
-#define COMMANDWATCHSTACKSIZE   64//128//40
+#define COMMANDWATCHSTACKSIZE   128//40
 /*
  *     xHigherPriorityTaskWoken = pdFALSE;
 
@@ -35,21 +35,71 @@
 
 //------------- function
 
-static void
-commandWatch_routine()
+static uint16_t
+controlCommandParcer()
 {
+    //orderlyQueue,&cmdBuffer_usb
+    struct ComDataReq_t * req = (struct ComDataReq_t *)&cmdBuffer_usb;
+    return (req->command.order);
+}
+
+
+
+static void
+commandWatch_routine(void * pvParameters)
+{
+    static struct ComDataReq_t* request;
+
     for(;;){
 
         vTaskDelay(10);
         if(commandFlag)
         {
-            if(xQueueSend(orderlyQueue,&cmdBuffer_usb,portMAX_DELAY)==pdPASS)
+            switch(controlCommandParcer())
             {
-                commandFlag = false;
+            case eoState:
+                sendStatus();
+                NoOperation;
+                break;
+            case eoProfile:
+                if(xQueueSend(orderlyQueue,&cmdBuffer_usb,portMAX_DELAY)!=pdPASS)
+                {
+                    // Exception
+                    while(1){
+                        NoOperation;
+                    }
+                }
+                NoOperation;
+                break;
+
+            case eoSegment:
+                //QueueHandle_t segmentQueue;
+                request =  (struct ComDataReq_t *)&cmdBuffer_usb;
+                if(xQueueSend(segmentQueue,&request->payload.instrument1_parameter,NULL) == pdFAIL)
+                {
+                    sendStatus();
+                }else{
+                    sendStatus();
+                }
+
+                UBaseType_t size = uxQueueSpacesAvailable( segmentQueue );
+                size++;
+
+                break;
+
+            default:
+                if(xQueueSend(orderlyQueue,&cmdBuffer_usb,portMAX_DELAY)!=pdPASS)
+                {
+                    // Exception
+                    while(1){
+                        NoOperation;
+                    }
+                }
+                NoOperation;
+                break;
 
             }
-            NoOperation;
-
+            commandFlag = false;
         }
 
     }// end of for(;;)
@@ -68,6 +118,13 @@ createCommandWatch()
        return (1);
    }
    else{
+       if(!createCommandPool())
+       {
+           while(1)
+           {
+               NoOperation;
+           }
+       }
        return (0);
    }
 
