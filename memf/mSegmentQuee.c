@@ -2,6 +2,7 @@
  * mSegmentQuee.c
  *
  *  Created on: 11 сент. 2017 г.
+ *  Changed: 28.05.2018
  *      Author: walery
  *  Description:     Операции с буфером Сегментов.
  */
@@ -91,6 +92,7 @@ uint32_t
 move_pblock(void)
 {
     uint32_t result = FALSE;
+#ifndef QUEUE_SEGMENT
     if(semaphore_counter){
         block_buffer_tail = next_block_index(block_buffer_tail);
         // сегмент next_segment актуален.
@@ -98,6 +100,15 @@ move_pblock(void)
         semaphore_counter--;
         result = TRUE;
     }
+#else
+    // from ISR
+    if(xQueueReceiveFromISR(segmentQueue, plan_get_current_block(), NULL) == pdPASS)
+    {
+        init_next_block(0);
+        result = TRUE;
+    }
+
+#endif
     return (result);
 }
 
@@ -108,8 +119,9 @@ move_pblock(void)
  */
 struct sSegment* getSegment(void)
 {
-    uint8_t next_head;
     struct sSegment* result = NULL;
+#ifndef QUEUE_SEGMENT
+    uint8_t next_head;
         /* The mutex was successfully obtained so the shared resource can be
          * accessed safely. */
         next_head = next_block_index(block_buffer_head);
@@ -118,6 +130,9 @@ struct sSegment* getSegment(void)
             block_buffer_head = next_head;
             result = cmdQuee[block_buffer_head];
         }
+#else
+        result = cmdQuee[0];
+#endif
 
     return (result);
 }
@@ -128,7 +143,8 @@ struct sSegment* getSegment(void)
  * если места нет, то ожидать семафора.
  */
 void* MEMF_Alloc(void)
-{
+{//SEGMENT_QUEE_SIZE
+#ifndef QUEUE_SEGMENT
 //    BaseType_t sem;
     //cmdQuee[block_buffer_head]=OS_MEMF_Alloc(&cmdPool,1);
 
@@ -152,6 +168,9 @@ void* MEMF_Alloc(void)
     }
     return (NULL);
 #endif
+#else
+    return (void*)cmdQuee[0];
+#endif
 }
 
 
@@ -159,7 +178,11 @@ struct sSegment* plan_get_current_block(void)
 {
 //    struct sSegment* result;
 //    next_buffer_head = next_block_index(next_buffer_head);
+#ifndef QUEUE_SEGMENT
     return (cmdQuee[block_buffer_tail]);
+#else
+    return (cmdQuee[0]);
+#endif
 //    return(result);
 }
 

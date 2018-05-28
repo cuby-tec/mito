@@ -34,7 +34,9 @@
 //static BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
 //------------- function
-
+/**
+ * Определение типа команды.
+ */
 static uint16_t
 controlCommandParcer()
 {

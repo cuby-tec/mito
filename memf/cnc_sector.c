@@ -175,6 +175,7 @@ void buildSegment_MoveToXmin(struct sSegment* psc)
     psc->head.linenumber = 0x20;
     psc->head.axis_mask = X_FLAG;
     psc->head.reserved = 0x20;
+    psc->head.reserved &= ~EXIT_CONTINUE; // stop after execution.
 
     pctl = &psc->axis[X_AXIS];
     load_defaults(pctl);

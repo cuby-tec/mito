@@ -2,6 +2,8 @@
  * ms_model.c
  *
  *  Created on: 21 июн. 2017 г.
+ *  Changed : 28 may 2018
+ *      use Queue
  *      Author: walery
  */
 
@@ -33,7 +35,6 @@
 //#include "msmotor/mem_flash.h"
 
 #include "msmotor/ms_model.h"
-#include "msmotor/msport.h"
 #include "msmotor/mempool.h"
 #include "msmotor/ms_init.h"
 #include "isrTimer.h"
@@ -72,19 +73,13 @@
 
 //-------------- vars
 
-//static float start_speed = 0.0066;
-byte direction = false;
+uint32_t current_pos[N_AXIS];// = {0xffffffff,0xffffffff,0xffffffff,0xffffffff};
 
-//static void (*ms_finBlock)(void);
+byte direction = false;
 
 static uint32_t multy = 1;
 
 static uint32_t sync_axis;
-//static uint8_t rest = 0;
-
-//static uint32_t speedRate;
-
-
 
 uint32_t g_ui32Flags;
 
@@ -169,8 +164,16 @@ void start_t1(uint8_t pusc)
 #endif
 
 //    initStepper(N_AXIS);  // next block
+#ifndef QUEUE_SEGMENT
     struct sSegment* segment = plan_get_current_block();
+#else
+    xQueueReceive(segmentQueue,segment,portMAX_DELAY);
+#endif
     pblockSegment(segment);
+    if(segment->head.reserved == EXIT_CONTINUE)
+        ms_finBlock = continueBlock;
+    else
+        ms_finBlock = exitBlock;
 
     if(pusc == 0){
         Timer1IntHandler();
@@ -237,7 +240,15 @@ void continueBlock(void)
         move_result = move_pblock();
         if(move_result == TRUE){
             pMs_State->instrumrnt1 = eIns1_work; // work
-            struct sSegment* segment = plan_get_current_block();
+
+//            struct sSegment* segment = plan_get_current_block();
+            segment = plan_get_current_block();
+
+            if(segment->head.reserved == EXIT_CONTINUE)
+                ms_finBlock = continueBlock;
+            else
+                ms_finBlock = exitBlock;
+
             pblockSegment(segment);
         }
         else{

@@ -12,13 +12,15 @@
 #include <stdbool.h>
 #include "msmotor/msport.h"
 #include "modelState.h"
+#include "sModelCompState.h"
 
 struct Status_t {
     uint32_t    frameNumber;
     uint32_t    freeSegments;   // Free segments value.
     uint32_t    coordinatus[N_AXIS];
 //    enum eModelState    modelState;
-    uint32_t    modelState;
+//    uint32_t    modelState;
+    struct sModelCompState modelState;
     uint32_t    currentSegmentNumber;
     uint32_t    instrument2_parameter;
     uint32_t    instrument3_parameter;

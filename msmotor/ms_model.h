@@ -10,8 +10,9 @@
 
 
 #include <stdint.h>
-//#include <std.h>
 #include "stepper_state.h"
+#include "msmotor/msport.h"
+
 
 
 //--------- defs
@@ -20,10 +21,12 @@
 
 #define MS_COMMAND_SEMA_SET     NoOperation
 
+
 //--------- vars
 
 extern void (*ms_finBlock)(void);
 
+extern uint32_t current_pos[N_AXIS];
 
 //extern stepper_state sts;
 

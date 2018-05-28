@@ -24,6 +24,10 @@
 #include "msmotor/ms_model.h"
 //------------- defs
 
+#define update_currentPos(axes)      if(segment->axis[axes].direction == forward)\
+                current_pos[axes]++;\
+            else\
+                current_pos[axes]--
 
 //-------------- vars
 static uint32_t rest;
@@ -49,6 +53,8 @@ void update_Eaxis(void)
     //             GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, ~GPIO_PIN_2);
     //               return;
             }//else
+
+            update_currentPos(E_AXIS);
 
             switch(pblock_e->schem[sts_e.state]){
             case 1:
@@ -135,6 +141,8 @@ void update_Zaxis(void)
     //               return;
             }//else
 
+            update_currentPos(Z_AXIS);
+
             switch(pblock_e->schem[sts_z.state]){
             case 1:
                 //      RISE_SPEED_FIRST;
@@ -219,6 +227,8 @@ void update_Yaxis(void)
 //             GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, ~GPIO_PIN_2);
 //               return;
         }//else
+
+        update_currentPos(Y_AXIS);
 
         switch(pblock_e->schem[sts_y.state]){
         case 1:
@@ -305,6 +315,8 @@ void update_Xaxis(void)
         //             GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, ~GPIO_PIN_2);
         //               return;
     }//else
+
+    update_currentPos(X_AXIS);
 
     switch(pblock->schem[sts.state]){
     case 1:

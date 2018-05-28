@@ -2,6 +2,7 @@
  * msport.h
  *
  *  Created on: 27 июн. 2017 г.
+ *  Changed: 28.05.2018
  *      Author: walery
  *
  *     Назначение портов шаговых двигателей.
@@ -10,7 +11,14 @@
 #ifndef MSMOTOR_MSPORT_H_
 #define MSMOTOR_MSPORT_H_
 
+// Использование очереди FreeRTOS QUEUE
+#define QUEUE_SEGMENT
+
+#ifdef QUEUE_SEGMENT
+#define SEGMENT_QUEE_SIZE     1//10 //2 10
+#else
 #define SEGMENT_QUEE_SIZE     10 //2 10
+#endif
 
 // Время ожидания получения места для нового Сегмента
 // По истечении времени поисходит отправка состояния без загрузки сегмента в Очередь Сегментов.

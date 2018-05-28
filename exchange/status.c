@@ -12,6 +12,8 @@
 #include "Status_t.h"
 #include "hotend/hotendTask.h"
 #include "msmotor/mempool.h"
+#include "eModelstate.h"
+#include "msmotor/ms_model.h"
 
 //------------- defs
 
@@ -53,6 +55,15 @@ struct Status_t* getStatus(void)
     result->currentSegmentNumber = getHeadLineNumber();
     result->frameNumber = ++frame_number;
     result->temperature = getCurrentHotendTemperature();
+    result->modelState.modelState = ehIdle;
+
+    result->coordinatus[X_AXIS] = current_pos[X_AXIS];
+    result->coordinatus[Y_AXIS] = current_pos[Y_AXIS];
+    result->coordinatus[Z_AXIS] = current_pos[Z_AXIS];
+    result->coordinatus[E_AXIS] = current_pos[E_AXIS];
+
+//    result-> // TODO Queue status
+    result->modelState.queueState = 0; // TODO queue busy
 
     return result;
 }
