@@ -17,7 +17,7 @@
 struct Status_t {
     uint32_t    frameNumber;
     uint32_t    freeSegments;   // Free segments value.
-    uint32_t    coordinatus[N_AXIS];
+    int32_t    coordinatus[N_AXIS];
 //    enum eModelState    modelState;
 //    uint32_t    modelState;
     struct sModelCompState modelState;

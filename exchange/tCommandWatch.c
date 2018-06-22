@@ -15,6 +15,7 @@
 #include "msmotor/mempool.h"
 #include "orderlyTask.h"
 #include "exchange/ComDataReq_t.h"
+#include "msmotor/ms_model.h"
 
 //----------- defs
 
@@ -80,12 +81,18 @@ commandWatch_routine(void * pvParameters)
                 if(xQueueSend(segmentQueue,&request->payload.instrument1_parameter,NULL) == pdFAIL)
                 {
                     sendStatus();
+
                 }else{
+                    if(request->command.reserved & EXECUTE_IMMEDIATELY){
+                        start_t1(0);
+                    }
                     sendStatus();
                 }
 
                 UBaseType_t size = uxQueueSpacesAvailable( segmentQueue );
                 size++;
+
+
 
                 break;
 

@@ -73,7 +73,7 @@
 
 //-------------- vars
 
-uint32_t current_pos[N_AXIS];// = {0xffffffff,0xffffffff,0xffffffff,0xffffffff};
+int32_t current_pos[N_AXIS];// = {0xffffffff,0xffffffff,0xffffffff,0xffffffff};
 
 byte direction = false;
 
@@ -167,20 +167,26 @@ void start_t1(uint8_t pusc)
 #ifndef QUEUE_SEGMENT
     struct sSegment* segment = plan_get_current_block();
 #else
-    xQueueReceive(segmentQueue,segment,portMAX_DELAY);
+    if(xQueueReceive(segmentQueue,segment,portMAX_DELAY) != pdPASS)
+    {
+        while(1);
+    }
 #endif
     pblockSegment(segment);
+    initStepper(N_AXIS);
     if(segment->head.reserved == EXIT_CONTINUE)
         ms_finBlock = continueBlock;
     else
         ms_finBlock = exitBlock;
 
+/*
     if(pusc == 0){
         Timer1IntHandler();
         TimerYIntHandler();
         TimerZIntHandler();
         TimerEIntHandler();
     }
+*/
 
 /*
         sync[1] |= X_FLAG;
@@ -188,28 +194,50 @@ void start_t1(uint8_t pusc)
         sync[1] |= Z_FLAG;
         sync[1] |= E_FLAG;
 */
-    mask_axis[0] |= X_FLAG|Y_FLAG|Z_FLAG|E_FLAG;
-    mask_axis[1] |= X_FLAG|Y_FLAG|Z_FLAG|E_FLAG;
+//    mask_axis[0] |= X_FLAG|Y_FLAG|Z_FLAG|E_FLAG;
+//    mask_axis[1] |= X_FLAG|Y_FLAG|Z_FLAG|E_FLAG;
+
+    mask_axis[0] = 0;
+    mask_axis[1] = 0;
+
+    mask_axis[0] |= pblock->axis;//X_FLAG;
+    mask_axis[1] |= pblock->axis;//X_FLAG;
+
+    mask_axis[0] |= pblock_y->axis;//X_FLAG;
+    mask_axis[1] |= pblock_y->axis;//X_FLAG;
+
+    mask_axis[0] |= pblock_z->axis;//X_FLAG;
+    mask_axis[1] |= pblock_z->axis;//X_FLAG;
+
+    mask_axis[0] |= pblock_e->axis;//X_FLAG;
+    mask_axis[1] |= pblock_e->axis;//X_FLAG;
+
+
     sync_axis = 0;
-//    if(sync[0] & X_FLAG){
+
+    if(mask_axis[1] & X_FLAG){
 //        TimerEnable(TIMER_BASE_X_AXIS, TIMER_X);
-    HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
-//    }
+        Timer1IntHandler();
+        HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
+    }
 
-//    if(sync[0] & Y_FLAG){
+    if(mask_axis[1] & Y_FLAG){
 //        TimerEnable(TIMER_BASE_Y_AXIS, TIMER_Y);
-    HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
-//    }
+        TimerYIntHandler();
+        HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
+    }
 
-//    if(sync[0] & Z_FLAG){
+    if(mask_axis[1] & Z_FLAG){
 //        TimerEnable(TIMER_BASE_Z_AXIS, TIMER_Z);
-    HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
-//    }
+        TimerZIntHandler();
+        HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
+    }
 
-//    if(sync[0] & E_FLAG){
+    if(mask_axis[1] & E_FLAG){
 //        TimerEnable(TIMER_BASE_E_AXIS, TIMER_E);
-    HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
-//    }
+        TimerEIntHandler();
+        HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
+    }
 
 #ifdef V3
 //    if(pusc)

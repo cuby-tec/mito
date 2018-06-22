@@ -52,9 +52,8 @@ void update_Eaxis(void)
                  (*ms_finBlock)();
     //             GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, ~GPIO_PIN_2);
     //               return;
-            }//else
-
-            update_currentPos(E_AXIS);
+            }else
+                update_currentPos(E_AXIS);
 
             switch(pblock_e->schem[sts_e.state]){
             case 1:
@@ -139,9 +138,8 @@ void update_Zaxis(void)
                  (*ms_finBlock)();
     //             GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, ~GPIO_PIN_2);
     //               return;
-            }//else
-
-            update_currentPos(Z_AXIS);
+            }else
+                update_currentPos(Z_AXIS);
 
             switch(pblock_e->schem[sts_z.state]){
             case 1:
@@ -226,9 +224,8 @@ void update_Yaxis(void)
              (*ms_finBlock)();
 //             GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, ~GPIO_PIN_2);
 //               return;
-        }//else
-
-        update_currentPos(Y_AXIS);
+        }else
+            update_currentPos(Y_AXIS);
 
         switch(pblock_e->schem[sts_y.state]){
         case 1:
@@ -314,9 +311,8 @@ void update_Xaxis(void)
         (*ms_finBlock)();
         //             GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, ~GPIO_PIN_2);
         //               return;
-    }//else
-
-    update_currentPos(X_AXIS);
+    }else
+        update_currentPos(X_AXIS);
 
     switch(pblock->schem[sts.state]){
     case 1:

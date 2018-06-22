@@ -26,7 +26,7 @@
 
 extern void (*ms_finBlock)(void);
 
-extern uint32_t current_pos[N_AXIS];
+extern int32_t current_pos[N_AXIS];
 
 //extern stepper_state sts;
 
