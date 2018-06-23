@@ -200,16 +200,16 @@ void start_t1(uint8_t pusc)
     mask_axis[0] = 0;
     mask_axis[1] = 0;
 
-    mask_axis[0] |= pblock->axis;//X_FLAG;
+//    mask_axis[0] |= pblock->axis;//X_FLAG;
     mask_axis[1] |= pblock->axis;//X_FLAG;
 
-    mask_axis[0] |= pblock_y->axis;//X_FLAG;
+//    mask_axis[0] |= pblock_y->axis;//X_FLAG;
     mask_axis[1] |= pblock_y->axis;//X_FLAG;
 
-    mask_axis[0] |= pblock_z->axis;//X_FLAG;
+//    mask_axis[0] |= pblock_z->axis;//X_FLAG;
     mask_axis[1] |= pblock_z->axis;//X_FLAG;
 
-    mask_axis[0] |= pblock_e->axis;//X_FLAG;
+//    mask_axis[0] |= pblock_e->axis;//X_FLAG;
     mask_axis[1] |= pblock_e->axis;//X_FLAG;
 
 

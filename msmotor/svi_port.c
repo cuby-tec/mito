@@ -141,7 +141,7 @@ void update_Zaxis(void)
             }else
                 update_currentPos(Z_AXIS);
 
-            switch(pblock_e->schem[sts_z.state]){
+            switch(pblock_z->schem[sts_z.state]){
             case 1:
                 //      RISE_SPEED_FIRST;
                 //      TIMER_Y += sts.rate_y;
@@ -227,18 +227,18 @@ void update_Yaxis(void)
         }else
             update_currentPos(Y_AXIS);
 
-        switch(pblock_e->schem[sts_y.state]){
+        switch(pblock_y->schem[sts_y.state]){
         case 1:
             //      RISE_SPEED_FIRST;
             //      TIMER_Y += sts.rate_y;
             rest = 0;
-            if(pblock_e->accelerate_until<=sts_y.counter){
+            if(pblock_y->accelerate_until<=sts_y.counter){
                 sts_y.state++;
                 speedRate[Y_AXIS] = sts_y.rate;
-                sts_y.rate = pblock_e->nominal_rate;
-                sts_y.speedLevel = pblock_e->speedLevel;
+                sts_y.rate = pblock_y->nominal_rate;
+                sts_y.speedLevel = pblock_y->speedLevel;
             }else{
-                if(sts_y.speedLevel < pblock_e->speedLevel){
+                if(sts_y.speedLevel < pblock_y->speedLevel){
                     sts_y.speedLevel++;
                     if(sts_y.speedLevel == 1){
                         sts_y.rate *= 0.4056;
@@ -259,7 +259,7 @@ void update_Yaxis(void)
         case 2: case 5:// flast motion
             //      FLAT_MOTION;
             //      TIMER_Y += sts.rate_y;
-            if(sts_y.counter>=pblock_e->decelerate_after){
+            if(sts_y.counter>=pblock_y->decelerate_after){
                 sts_y.state++;
 //                if(sts.rate_y>psettings->initial_rate)
 //                    sts.rate_y = psettings->initial_rate;
@@ -278,16 +278,16 @@ void update_Yaxis(void)
             //      DOWN_SPEED_LAST;
             rest = 2;
             sts_y.speedLevel--;
-            if(sts_y.speedLevel>pblock_e->final_speedLevel){
+            if(sts_y.speedLevel>pblock_y->final_speedLevel){
 #ifdef DOUBLE
-                sts_y.rate = pblock_e->initial_rate*(sqrtf(sts_y.speedLevel+1)-sqrtf(sts_y.speedLevel));
+                sts_y.rate = pblock_y->initial_rate*(sqrtf(sts_y.speedLevel+1)-sqrtf(sts_y.speedLevel));
 #else
 //                sts_y.rate_y = sts_y.rate_y + (((2 * (long)sts_y.rate_y) + rest)/(4 * sts_y.speedLevel + 1));
                 sts_y.rate = sts_y.rate + (((2 * (long)sts_y.rate))/(4 * sts_y.speedLevel + 1 + rest));
 //                rest = ((2 * (long)sts_y.rate_y)+rest)%(4 * sts_y.speedLevel + 1);
 #endif
             }else{
-                sts_y.rate = pblock_e->final_rate;
+                sts_y.rate = pblock_y->final_rate;
             }
             break;
         }
@@ -300,25 +300,17 @@ void update_Yaxis(void)
 
 void update_Xaxis(void)
 {
-
-    // Обработка следующегошага.
-
-//    HWREGBITW(&g_ui32Flags,X_AXIS) ^= 1;
-//    GPIOPinWrite(DIRECTION_PORT, DIRECTION_X,(g_ui32Flags & X_FLAG)<<4);
-    //            0x400253fc
+    // Обработка следующего шага.
 
     if(sts.counter > sts.point){
         (*ms_finBlock)();
-        //             GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, ~GPIO_PIN_2);
-        //               return;
     }else
         update_currentPos(X_AXIS);
 
     switch(pblock->schem[sts.state]){
     case 1:
         //      RISE_SPEED_FIRST;
-        //      TIMER_Y += sts.rate_y;
-        rest = 0;
+//        rest = 0;
         if(pblock->accelerate_until<=sts.counter){
             sts.state++;
             speedRate[X_AXIS] = sts.rate;
@@ -334,10 +326,8 @@ void update_Xaxis(void)
 #ifdef DOUBLE
 sts.rate = pblock->initial_rate*(sqrtf(sts.speedLevel+1)-sqrtf(sts.speedLevel));
 #else
-sts.rate = sts.rate - (((2 * (long)sts.rate) + rest)/(4 * sts.speedLevel + 1));
+ sts.rate = sts.rate - (((2 * (long)sts.rate))/(4 * sts.speedLevel + 1));
 #endif
-//                    rest = ((2 * (long)sts.rate_y)+rest)%(4 * sts.speedLevel + 1);
-//              sts.rate_y = (word)CO*(sqrtf(sts.speedLevel+1)-sqrtf(sts.speedLevel));
                 }
             }
         }
@@ -348,16 +338,12 @@ sts.rate = sts.rate - (((2 * (long)sts.rate) + rest)/(4 * sts.speedLevel + 1));
         //      TIMER_Y += sts.rate_y;
         if(sts.counter>=pblock->decelerate_after){
             sts.state++;
-            //                if(sts.rate_y>psettings->initial_rate)
-            //                    sts.rate_y = psettings->initial_rate;
-            //                sts.rate_y = pblock->final_rate;
             sts.rate = speedRate[X_AXIS];
 #ifdef DOUBLE
             sts.speedLevel--;
 #else
             sts.speedLevel--;
 #endif
-            //          max_rate = sts.rate_y;
         }
         break;
 
@@ -369,18 +355,13 @@ sts.rate = sts.rate - (((2 * (long)sts.rate) + rest)/(4 * sts.speedLevel + 1));
 #ifdef DOUBLE
             sts.rate = pblock->initial_rate*(sqrtf(sts.speedLevel+1)-sqrtf(sts.speedLevel));
 #else
-            //                sts.rate_y = sts.rate_y + (((2 * (long)sts.rate_y) + rest)/(4 * sts.speedLevel + 1));
-            sts.rate = sts.rate + (((2 * (long)sts.rate))/(4 * sts.speedLevel + 1 + rest));
-            //                rest = ((2 * (long)sts.rate_y)+rest)%(4 * sts.speedLevel + 1);
+            sts.rate = sts.rate + (((2 * (long)sts.rate))/(4 * sts.speedLevel + 1));
 #endif
         }else{
             sts.rate = pblock->final_rate;
         }
         break;
     }
-
-    //    GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_2, ~GPIO_PIN_2);
-
 }
 
 /**
