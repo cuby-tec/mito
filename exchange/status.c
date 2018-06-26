@@ -41,6 +41,7 @@ const struct Status_t default_status = {default_frameNumber, default_freeSegment
 
 struct Status_t bu_status;
 
+struct Status_t* ms_status = &bu_status;
 //-------------- function
 
 struct Status_t* getStatus(void)
@@ -55,20 +56,19 @@ struct Status_t* getStatus(void)
     result->currentSegmentNumber = getHeadLineNumber();
     result->frameNumber = ++frame_number;
     result->temperature = getCurrentHotendTemperature();
-    result->modelState.modelState = ehIdle;
+    result->modelState.queueState = uxQueueSpacesAvailable( segmentQueue );
 
-    result->coordinatus[X_AXIS] = current_pos[X_AXIS];
-    result->coordinatus[Y_AXIS] = current_pos[Y_AXIS];
-    result->coordinatus[Z_AXIS] = current_pos[Z_AXIS];
-    result->coordinatus[E_AXIS] = current_pos[E_AXIS];
-
-//    result-> // TODO Queue status
-    result->modelState.queueState = 0; // TODO queue busy
+//    result->modelState.modelState = ehIdle;
+//    result->coordinatus[X_AXIS] = current_pos[X_AXIS];
+//    result->coordinatus[Y_AXIS] = current_pos[Y_AXIS];
+//    result->coordinatus[Z_AXIS] = current_pos[Z_AXIS];
+//    result->coordinatus[E_AXIS] = current_pos[E_AXIS];
 
     return result;
 }
 
 void init_Status()
 {
-    memcpy(&bu_status, &default_status, sizeof(struct Status_t));
+//    memcpy(&bu_status, &default_status, sizeof(struct Status_t));
+    bu_status.modelState.modelState = eIdle;
 }

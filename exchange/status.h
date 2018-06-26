@@ -10,10 +10,13 @@
 
 
 #include "Status_t.h"
+#include "eModelstate.h"
 
 //---------- var
 
 extern const struct Status_t    default_status;
+
+extern struct Status_t* ms_status;
 
 //----------- function
 extern struct Status_t* getStatus(void);

@@ -39,12 +39,22 @@
 #include "mempool.h"
 #include "ms_model.h"
 
+
+
 //------------- defs
 
+/*
 #define update_currentPos(axes)      if(segment->axis[axes].direction == forward)\
                 current_pos[axes]++;\
             else\
                 current_pos[axes]--
+*/
+#define update_currentPos(axes)      if(segment->axis[axes].direction == forward)\
+                ms_status->coordinatus[axes]++;\
+            else\
+                ms_status->coordinatus[axes]--
+
+
 //-------------- vars
 static uint32_t multy = 1;
 

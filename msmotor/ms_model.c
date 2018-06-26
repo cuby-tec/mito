@@ -75,6 +75,7 @@
 
 int32_t current_pos[N_AXIS];// = {0xffffffff,0xffffffff,0xffffffff,0xffffffff};
 
+
 byte direction = false;
 
 static uint32_t multy = 1;
@@ -134,6 +135,7 @@ static void ms_async_block(){
 //Запуск таймера оси.
 void start_t1(uint8_t pusc)
 {
+     ms_status->modelState.modelState = ehIwork; //ehIdle,
 #ifndef V3
     uint32_t timerValue,timerValueMatch;
     flag = 0;
@@ -439,6 +441,7 @@ void exitBlock(void)
         sync_axis = 0;
 //        xTaskNotifyFromISR(orderlyHandling,X_axis_int_fin,eSetBits,NULL);// debug
     }
+    ms_status->modelState.modelState = ehIdle; //ehIdle,
 }
 
 void stop_xkalibrovka(uint8_t axle)

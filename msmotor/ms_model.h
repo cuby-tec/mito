@@ -13,6 +13,7 @@
 #include "stepper_state.h"
 #include "msmotor/msport.h"
 
+#include "exchange/status.h"
 
 
 //--------- defs
@@ -27,6 +28,7 @@
 extern void (*ms_finBlock)(void);
 
 extern int32_t current_pos[N_AXIS];
+
 
 //extern stepper_state sts;
 
