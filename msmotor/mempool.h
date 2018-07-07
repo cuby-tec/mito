@@ -99,7 +99,7 @@ extern uint8_t cmdBuffer_usb[sizeof(struct ComDataReq_t)];
 // буфер передачи сегмента от Хоста
 //extern uint8_t segmentBuffer[sizeof(struct sSegment)];
 
-extern struct sMs_State* pMs_State;
+//extern struct sMs_State* pMs_State;
 
 extern uint8_t rcvd_SegmentFlag;
 

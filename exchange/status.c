@@ -46,7 +46,7 @@ struct Status_t* ms_status = &bu_status;
 
 struct Status_t* getStatus(void)
 {
-    struct Status_t* result = &bu_status;
+    struct Status_t* result = ms_status;//&bu_status;
     static uint32_t frame_number = 0;
 
 //    memcpy(result, &default_status, sizeof(struct Status_t));
@@ -57,6 +57,7 @@ struct Status_t* getStatus(void)
     result->frameNumber = ++frame_number;
     result->temperature = getCurrentHotendTemperature();
     result->modelState.queueState = uxQueueSpacesAvailable( segmentQueue );
+//    result->modelState.modelState = pMs_State->instrumrnt1;
 
 //    result->modelState.modelState = ehIdle;
 //    result->coordinatus[X_AXIS] = current_pos[X_AXIS];

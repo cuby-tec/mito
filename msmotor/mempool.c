@@ -92,9 +92,9 @@ uint8_t cmdBuffer_usb[sizeof(struct ComDataReq_t)];
 
 //uint8_t segmentBuffer[sizeof(struct sSegment)];
 
-static struct sMs_State ms_state;
+//static struct sMs_State ms_state = {.instrumrnt1=eIns1_stoped};//ms_status->modelState.modelState = ehIdle; //ehIdle,
 
-struct sMs_State* pMs_State = &ms_state;
+//struct sMs_State* pMs_State = &ms_state;
 
 uint8_t rcvd_SegmentFlag = 0;
 

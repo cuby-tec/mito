@@ -10,6 +10,7 @@
 #define MSMOTOR_MS_STATE_H_
 
 #include <stdint.h>
+//#include "../exchange/eModelstate.h"
 
 //------------- defs
 

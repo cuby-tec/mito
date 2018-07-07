@@ -115,7 +115,7 @@ Timer1IntHandler(void)
     // Обработка следующего шага.
 
     if(sts.counter > sts.point){
-        mask_axis[0] |= pblock->axis;//X_FLAG;
+        mask_axis[0] |= X_FLAG;//pblock->axis;//X_FLAG;
         (*ms_finBlock)();
     }else
         update_currentPos(X_AXIS);
@@ -201,7 +201,7 @@ void TimerEIntHandler(void)
 /*    HWREG(NVIC_SW_TRIG) = INT_GPIOA - 16; //Trigger the INT_GPIOA interrupt.*/
 //=================
     if(sts_e.counter > sts_e.point){
-        mask_axis[0] |= pblock_e->axis;//X_FLAG;
+        mask_axis[0] |= E_FLAG; //pblock_e->axis;//E_FLAG;
          (*ms_finBlock)();
     }else
         update_currentPos(E_AXIS);
@@ -291,7 +291,7 @@ void TimerYIntHandler(void)
 /*    HWREG(NVIC_SW_TRIG) = INT_GPIOA - 16; //Trigger the INT_GPIOA interrupt.*/
 //===================
     if(sts_y.counter > sts_y.point){
-        mask_axis[0] |= pblock_y->axis;//X_FLAG;
+        mask_axis[0] |= Y_FLAG; //pblock_y->axis;//Y_FLAG;
         (*ms_finBlock)();
     }else
         update_currentPos(Y_AXIS);
@@ -380,7 +380,7 @@ void TimerZIntHandler(void)
 
 //===================
     if(sts_z.counter > sts_z.point){
-        mask_axis[0] |= pblock_z->axis;//X_FLAG;
+        mask_axis[0] |= Z_FLAG; //pblock_z->axis;//Z_FLAG;
         (*ms_finBlock)();
     }else
         update_currentPos(Z_AXIS);

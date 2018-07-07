@@ -46,7 +46,7 @@ TaskStatus_t pxTaskStatusArray[6];
  * - TRUE - переход завершён.
  * - FALSE - переход выполняется.
  */
-bool sema_tail = TRUE;
+//bool sema_tail = TRUE;
 
 //-------------- function
 uint8_t lReceivedValue[sizeof(struct sSegment)];

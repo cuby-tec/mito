@@ -104,7 +104,7 @@ move_pblock(void)
     // from ISR
     if(xQueueReceiveFromISR(segmentQueue, plan_get_current_block(), NULL) == pdPASS)
     {
-        init_next_block(0);
+//        init_next_block(0);
         result = TRUE;
     }
 

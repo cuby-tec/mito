@@ -12,6 +12,9 @@
 #include "Status_t.h"
 #include "eModelstate.h"
 
+//---------- defs
+#define COMMAND_ACKNOWLEDGED    (1<<0)
+
 //---------- var
 
 extern const struct Status_t    default_status;

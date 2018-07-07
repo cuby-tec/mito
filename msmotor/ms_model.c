@@ -135,35 +135,10 @@ static void ms_async_block(){
 //Запуск таймера оси.
 void start_t1(uint8_t pusc)
 {
-     ms_status->modelState.modelState = ehIwork; //ehIdle,
-#ifndef V3
-    uint32_t timerValue,timerValueMatch;
-    flag = 0;
-#endif
+    uint32_t timerValue;
 
-
-#ifdef V3_
-
-    TimerLoadSet(TIMER_BASE_X_AXIS,TIMER_A,timerLoad);
-    TimerMatchSet(TIMER_BASE_X_AXIS, TIMER_A, timermatch);
-    TimerPrescaleSet(TIMER_BASE_X_AXIS, TIMER_A, 0);
-    TimerPrescaleMatchSet(TIMER_BASE_X_AXIS, TIMER_A, 0);
-#endif
-
-#ifndef V3
-    timerValue = sts.rate*multy;
-    timerValueMatch = timerValue/3;
-
-    HWREG(TIMER_BASE_X_AXIS + TIMER_O_TAILR) = (uint16_t)(timerValue&0x0000FFFF);
-    timerValue >>=16;
-    TimerPrescaleSet(TIMER_BASE_X_AXIS, TIMER_A, (uint16_t)(timerValue&0x000000FF));
-
-    TimerMatchSet(TIMER_BASE_X_AXIS, TIMER_A, (timerValueMatch&0x0000FFFF));
-    timerValueMatch >>=16;
-    TimerPrescaleMatchSet(TIMER_BASE_X_AXIS, TIMER_A, (uint16_t)(timerValueMatch&0x000000FF));
-
-    dump[0] = TimerLoadGet(TIMER_BASE_X_AXIS, TIMER_A);
-#endif
+     ms_status->modelState.modelState = ehIwork; // ehIwork; //ehIdle,
+     ms_status->instrument2_parameter = 0;// DEBUG
 
 //    initStepper(N_AXIS);  // next block
 #ifndef QUEUE_SEGMENT
@@ -171,73 +146,91 @@ void start_t1(uint8_t pusc)
 #else
     if(xQueueReceive(segmentQueue,segment,portMAX_DELAY) != pdPASS)
     {
-        while(1);
+//        while(1);
+        return;
     }
 #endif
+
     pblockSegment(segment);
     initStepper(N_AXIS);
-    if(segment->head.reserved == EXIT_CONTINUE)
+
+    if(segment->head.reserved & EXIT_CONTINUE)
         ms_finBlock = continueBlock;
     else
         ms_finBlock = exitBlock;
 
-/*
-    if(pusc == 0){
-        Timer1IntHandler();
-        TimerYIntHandler();
-        TimerZIntHandler();
-        TimerEIntHandler();
-    }
-*/
-
-/*
-        sync[1] |= X_FLAG;
-        sync[1] |= Y_FLAG;
-        sync[1] |= Z_FLAG;
-        sync[1] |= E_FLAG;
-*/
-//    mask_axis[0] |= X_FLAG|Y_FLAG|Z_FLAG|E_FLAG;
-//    mask_axis[1] |= X_FLAG|Y_FLAG|Z_FLAG|E_FLAG;
 
     mask_axis[0] = 0;
     mask_axis[1] = 0;
 
-//    mask_axis[0] |= pblock->axis;//X_FLAG;
-    mask_axis[1] |= pblock->axis;//X_FLAG;
+    if(pblock->axis&X_FLAG){
+        initStepper(X_AXIS);
+        mask_axis[1] |= X_FLAG;
 
-//    mask_axis[0] |= pblock_y->axis;//X_FLAG;
-    mask_axis[1] |= pblock_y->axis;//X_FLAG;
+        sts.counter++;
+        timerValue = sts.rate*multy;
+        TimerLoadSet(TIMER_BASE_X_AXIS,TIMER_A,timerValue);
+        timerValue >>=16;
+        TimerPrescaleSet(TIMER_BASE_X_AXIS, TIMER_X, (timerValue&0x000000FF));
+    }
 
-//    mask_axis[0] |= pblock_z->axis;//X_FLAG;
-    mask_axis[1] |= pblock_z->axis;//X_FLAG;
+    if(pblock_y->axis&Y_FLAG){
+        initStepper(Y_AXIS);
+        mask_axis[1] |= Y_FLAG;
 
-//    mask_axis[0] |= pblock_e->axis;//X_FLAG;
-    mask_axis[1] |= pblock_e->axis;//X_FLAG;
+        sts_y.counter++;
+        timerValue = sts_y.rate*multy;
+        TimerLoadSet(TIMER_BASE_Y_AXIS,TIMER_B,timerValue);
+        timerValue >>=16;
+        TimerPrescaleSet(TIMER_BASE_Y_AXIS, TIMER_Y, (timerValue&0x000000FF));
+    }
+
+    if(pblock_z->axis&Z_FLAG){
+        initStepper(Z_AXIS);
+        mask_axis[1] |= Z_FLAG;
+
+        sts_z.counter++;
+        timerValue = sts_z.rate*multy;
+        TimerLoadSet(TIMER_BASE_Z_AXIS,TIMER_A,timerValue);
+        timerValue >>=16;
+        TimerPrescaleSet(TIMER_BASE_Z_AXIS, TIMER_Z, (timerValue&0x000000FF));
+    }
+
+    if(pblock_e->axis&E_FLAG){
+        initStepper(E_AXIS);
+        mask_axis[1] |= E_FLAG;
+
+        sts_e.counter++;
+        timerValue = sts_e.rate*multy;
+        TimerLoadSet(TIMER_BASE_E_AXIS,TIMER_E,timerValue);
+        timerValue >>=16;
+        TimerPrescaleSet(TIMER_BASE_E_AXIS, TIMER_E, (timerValue&0x000000FF));
+    }
 
 
     sync_axis = 0;
 
     if(mask_axis[1] & X_FLAG){
 //        TimerEnable(TIMER_BASE_X_AXIS, TIMER_X);
-        Timer1IntHandler();
+//        Timer1IntHandler();
         HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
     }
 
     if(mask_axis[1] & Y_FLAG){
 //        TimerEnable(TIMER_BASE_Y_AXIS, TIMER_Y);
-        TimerYIntHandler();
+//        TimerYIntHandler();
         HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
     }
 
     if(mask_axis[1] & Z_FLAG){
 //        TimerEnable(TIMER_BASE_Z_AXIS, TIMER_Z);
-        TimerZIntHandler();
+//        TimerZIntHandler();
         HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
     }
 
     if(mask_axis[1] & E_FLAG){
 //        TimerEnable(TIMER_BASE_E_AXIS, TIMER_E);
-        TimerEIntHandler();
+//        TimerEIntHandler();
         HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
     }
 
@@ -261,131 +254,162 @@ void continueBlock(void)
 {
     uint32_t timerValue;
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    bool move_result;
-//TODO Получить новый segment
+    uint32_t move_result;
+    //TODO Получить новый segment
     // проверить флаг sema_tail
     //      и вызвать функцию переопределения pblock_
     //      флаг sema_tail установить false
-    if(sema_tail){
+
+    if(mask_axis[0] & X_FLAG)
+    {// таймер остановлен
+//        initStepper(X_AXIS);    // sts.counter = 0;
+        //        mask_axis[1] &= ~X_FLAG;
+        sync_axis |= X_FLAG;
+        mask_axis[0] &= ~X_FLAG;
+
+    }
+
+    if(mask_axis[0] & Y_FLAG)
+    {
+//        initStepper(Y_AXIS);
+        //        mask_axis[1] &= ~Y_FLAG;
+        sync_axis |= Y_FLAG;
+        mask_axis[0] &= ~Y_FLAG;
+
+    }
+
+    if(mask_axis[0] & Z_FLAG)
+    {
+//        initStepper(Z_AXIS);
+        //        mask_axis[1] &= ~Z_FLAG;
+        sync_axis |= Z_FLAG;
+
+    }
+
+    if(mask_axis[0] & E_FLAG)
+    {
+//        initStepper(E_AXIS);
+        //        mask_axis[1] &= ~E_FLAG;
+        sync_axis |= E_FLAG;
+        mask_axis[0] &= ~E_FLAG;
+
+    }
+
+    if(!(sync_axis ^ mask_axis[1]))
+    {
+        // все оси обрвботаны и остановлены.
+        ms_status->instrument2_parameter++; // DEBUG
+
+        //================
+        //        if(sema_tail){
         move_result = move_pblock();
         if(move_result == TRUE){
-            pMs_State->instrumrnt1 = eIns1_work; // work
+            ms_status->modelState.modelState = ehIwork;
 
-//            struct sSegment* segment = plan_get_current_block();
+            //            struct sSegment* segment = plan_get_current_block();
             segment = plan_get_current_block();
 
-            if(segment->head.reserved == EXIT_CONTINUE)
+            if(segment->head.reserved & EXIT_CONTINUE)
                 ms_finBlock = continueBlock;
             else
                 ms_finBlock = exitBlock;
 
             pblockSegment(segment);
+
+            mask_axis[0] = 0;
+            mask_axis[1] = 0;
+
+            // initStepper(N_AXIS);
+            if(pblock->axis&X_FLAG){
+                initStepper(X_AXIS);
+                mask_axis[1] |= X_FLAG;
+
+                sts.counter++;
+                timerValue = sts.rate*multy;
+                TimerLoadSet(TIMER_BASE_X_AXIS,TIMER_A,timerValue);
+                timerValue >>=16;
+                TimerPrescaleSet(TIMER_BASE_X_AXIS, TIMER_X, (timerValue&0x000000FF));
+            }
+
+            if(pblock_y->axis&Y_FLAG){
+                initStepper(Y_AXIS);
+                mask_axis[1] |= Y_FLAG;
+
+                sts_y.counter++;
+                timerValue = sts_y.rate*multy;
+                TimerLoadSet(TIMER_BASE_Y_AXIS,TIMER_B,timerValue);
+                timerValue >>=16;
+                TimerPrescaleSet(TIMER_BASE_Y_AXIS, TIMER_Y, (timerValue&0x000000FF));
+            }
+
+            if(pblock_z->axis&Z_FLAG){
+                initStepper(Z_AXIS);
+                mask_axis[1] |= Z_FLAG;
+
+                sts_z.counter++;
+                timerValue = sts_z.rate*multy;
+                TimerLoadSet(TIMER_BASE_Z_AXIS,TIMER_A,timerValue);
+                timerValue >>=16;
+                TimerPrescaleSet(TIMER_BASE_Z_AXIS, TIMER_Z, (timerValue&0x000000FF));
+            }
+
+            if(pblock_e->axis&E_FLAG){
+                initStepper(E_AXIS);
+                mask_axis[1] |= E_FLAG;
+
+                sts_e.counter++;
+                timerValue = sts_e.rate*multy;
+                TimerLoadSet(TIMER_BASE_E_AXIS,TIMER_E,timerValue);
+                timerValue >>=16;
+                TimerPrescaleSet(TIMER_BASE_E_AXIS, TIMER_E, (timerValue&0x000000FF));
+            }
         }
         else{
-            pMs_State->instrumrnt1 = eIns1_stoped; // haven't segments.
+            ms_status->modelState.modelState = ehIdle;
+            ms_finBlock = exitBlock;
+//            exitBlock();
+            return;
         }
-        sema_tail = FALSE;
-    }
-//todo temporary blocked
-//    if(pMs_State->instrumrnt1 == eIns1_stoped){
-//        //todo аврийная ситуация: нет новых сегментов.
-//        NoOperation;
-//        return;
-//    }
-
-    if(axis_flags&X_FLAG){// таймер остановлен
-        initStepper(X_AXIS);    // sts.counter = 0;
-//        mask_axis[1] &= ~X_FLAG;
-        sync_axis |= X_FLAG;
-
-        sts.counter++;
-        timerValue = sts.rate*multy;
-        TimerLoadSet(TIMER_BASE_X_AXIS,TIMER_A,timerValue);
-        timerValue >>=16;
-        TimerPrescaleSet(TIMER_BASE_X_AXIS, TIMER_X, (timerValue&0x000000FF));
-    }
-    if(axis_flags&Y_FLAG){
-        initStepper(Y_AXIS);
-//        mask_axis[1] &= ~Y_FLAG;
-        sync_axis |= Y_FLAG;
-
-        sts_y.counter++;
-        timerValue = sts_y.rate*multy;
-        TimerLoadSet(TIMER_BASE_Y_AXIS,TIMER_B,timerValue);
-        timerValue >>=16;
-        TimerPrescaleSet(TIMER_BASE_Y_AXIS, TIMER_Y, (timerValue&0x000000FF));
-    }
-
-    if(axis_flags&Z_FLAG){
-        initStepper(Z_AXIS);
-//        mask_axis[1] &= ~Z_FLAG;
-        sync_axis |= Z_FLAG;
-
-        sts_z.counter++;
-        timerValue = sts_z.rate*multy;
-        TimerLoadSet(TIMER_BASE_Z_AXIS,TIMER_A,timerValue);
-        timerValue >>=16;
-        TimerPrescaleSet(TIMER_BASE_Z_AXIS, TIMER_Z, (timerValue&0x000000FF));
-    }
-
-    if(axis_flags&E_FLAG){
-        initStepper(E_AXIS);
-//        mask_axis[1] &= ~E_FLAG;
-        sync_axis |= E_FLAG;
-
-        sts_e.counter++;
-        timerValue = sts_e.rate*multy;
-        TimerLoadSet(TIMER_BASE_E_AXIS,TIMER_E,timerValue);
-        timerValue >>=16;
-        TimerPrescaleSet(TIMER_BASE_E_AXIS, TIMER_E, (timerValue&0x000000FF));
-
-    }
+        //            sema_tail = FALSE;
+        //        }
+        //=================
 
 
-//    if((sync_axis & X_FLAG)
-//            && (sync_axis & Y_FLAG)
-//            && (sync_axis & Z_FLAG)
-//            && (sync_axis & E_FLAG) )
-    if(sync_axis == mask_axis[0])
-    {
+
         sync_axis = 0;
-        if(pMs_State->instrumrnt1 == eIns1_work){
-            if(mask_axis[0] & X_FLAG){
-                //            TimerEnable(TIMER_BASE_X_AXIS, TIMER_X);
-                HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
-                //            sync_axis &= ~X_FLAG;
-            }
-            if(mask_axis[0] && Y_FLAG){
-                //            TimerEnable(TIMER_BASE_Y_AXIS, TIMER_Y);
-                HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
-                //            sync_axis &= ~Y_FLAG;
-            }
-            if(mask_axis[0] & Z_FLAG){
-                //            TimerEnable(TIMER_BASE_Z_AXIS, TIMER_Z);
-                HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
-                //            sync_axis &= ~Z_FLAG;
-            }
-            if(mask_axis[0] & E_FLAG){
-                //            TimerEnable(TIMER_BASE_E_AXIS, TIMER_E);
-                HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
-                //            mask_axis[1] |= E_FLAG;
-            }
-            // uint32_t sd = *((uint32_t*)sectorHandling+50);
-            vTaskNotifyGiveFromISR(sectorHandling,&xHigherPriorityTaskWoken);
-            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-       }else{
-           xTaskNotifyFromISR(orderlyHandling,ot_sgQueueEmpty,eSetBits,&xHigherPriorityTaskWoken);
-           NoOperation;
-       }
+        //        if(pMs_State->instrumrnt1 == eIns1_work){
+        //        if(ms_status->modelState.modelState == ehIwork)
+        //        {
+        if(mask_axis[0] & X_FLAG){
+            //            TimerEnable(TIMER_BASE_X_AXIS, TIMER_X);
+            HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
+            //            sync_axis &= ~X_FLAG;
+        }
+        if(mask_axis[0] & Y_FLAG){
+            //            TimerEnable(TIMER_BASE_Y_AXIS, TIMER_Y);
+            HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
+            //            sync_axis &= ~Y_FLAG;
+        }
+        if(mask_axis[0] & Z_FLAG){
+            //            TimerEnable(TIMER_BASE_Z_AXIS, TIMER_Z);
+            HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
+            //            sync_axis &= ~Z_FLAG;
+        }
+        if(mask_axis[0] & E_FLAG){
+            //            TimerEnable(TIMER_BASE_E_AXIS, TIMER_E);
+            HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
+            //            mask_axis[1] |= E_FLAG;
+        }
+        // uint32_t sd = *((uint32_t*)sectorHandling+50);
+        //            vTaskNotifyGiveFromISR(sectorHandling,&xHigherPriorityTaskWoken);
+        //            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+        //       }else{
+        //           xTaskNotifyFromISR(orderlyHandling,ot_sgQueueEmpty,eSetBits,&xHigherPriorityTaskWoken);
+        NoOperation;
+        //       }
 
-        state_task = eTaskGetState(sectorHandling);
-        sema_tail = TRUE;
-//        state_task = eTaskGetState(sectorHandling);
-//        if(state_task == eSuspended){
-//        ms_nextSector();    // Индикация
-//        vTaskNotifyGiveFromISR(sectorHandling, &xHigherPriorityTaskWoken);
-//        xSemaphoreGiveFromISR(memf_semaphor_handler,&xHigherPriorityTaskWoken);
-//        xTaskNotifyFromISR(sectorHandling,SECTOR_TO_RELEAS,eSetBits,&xHigherPriorityTaskWoken);
+        //        state_task = eTaskGetState(sectorHandling);
+//        sema_tail = TRUE;
     }
 }
 
@@ -441,7 +465,7 @@ void exitBlock(void)
         sync_axis = 0;
 //        xTaskNotifyFromISR(orderlyHandling,X_axis_int_fin,eSetBits,NULL);// debug
     }
-    ms_status->modelState.modelState = ehIdle; //ehIdle,
+    ms_status->modelState.modelState = ehIdle;  //ehIdle; //ehIdle,
 }
 
 void stop_xkalibrovka(uint8_t axle)

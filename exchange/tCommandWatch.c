@@ -80,12 +80,14 @@ commandWatch_routine(void * pvParameters)
                 request =  (struct ComDataReq_t *)&cmdBuffer_usb;
                 if(xQueueSend(segmentQueue,&request->payload.instrument1_parameter,NULL) == pdFAIL)
                 {
+                    ms_status->modelState.reserved1 &= ~COMMAND_ACKNOWLEDGED;
                     sendStatus();
 
                 }else{
                     if(request->command.reserved & EXECUTE_IMMEDIATELY){
                         start_t1(0);
                     }
+                    ms_status->modelState.reserved1 |= COMMAND_ACKNOWLEDGED;
                     sendStatus();
                 }
 
