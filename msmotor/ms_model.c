@@ -380,22 +380,22 @@ void continueBlock(void)
         //        if(pMs_State->instrumrnt1 == eIns1_work){
         //        if(ms_status->modelState.modelState == ehIwork)
         //        {
-        if(mask_axis[0] & X_FLAG){
+        if(mask_axis[1] & X_FLAG){
             //            TimerEnable(TIMER_BASE_X_AXIS, TIMER_X);
             HWREG(TIMER_BASE_X_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
             //            sync_axis &= ~X_FLAG;
         }
-        if(mask_axis[0] & Y_FLAG){
+        if(mask_axis[1] & Y_FLAG){
             //            TimerEnable(TIMER_BASE_Y_AXIS, TIMER_Y);
             HWREG(TIMER_BASE_Y_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
             //            sync_axis &= ~Y_FLAG;
         }
-        if(mask_axis[0] & Z_FLAG){
+        if(mask_axis[1] & Z_FLAG){
             //            TimerEnable(TIMER_BASE_Z_AXIS, TIMER_Z);
             HWREG(TIMER_BASE_Z_AXIS + TIMER_O_CTL) |= TIMER_CTL_TAEN;
             //            sync_axis &= ~Z_FLAG;
         }
-        if(mask_axis[0] & E_FLAG){
+        if(mask_axis[1] & E_FLAG){
             //            TimerEnable(TIMER_BASE_E_AXIS, TIMER_E);
             HWREG(TIMER_BASE_E_AXIS + TIMER_O_CTL) |= TIMER_CTL_TBEN;
             //            mask_axis[1] |= E_FLAG;
